@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Capstone Project</string>
+    <string name="submit_button">SUBMIT</string>
+    <string name="cancel_button">CANCEL</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="product">Product</string>
+    <string name="branch">Branch</string>
+    <string name="supplier">Supplier</string>
+    <string name="purchase_order">Purchase Order</string>
+    <string name="return_order">Return Order</string>
+    <string name="user">User</string>
+    <string name="report">Report</string>
+    <string name="category">Category</string>
+    <string name="pos">POS</string>
+    <string name="inventory">Inventory</string>
+    <string name="contact">Contact</string>
+    <string name="logout">Logout</string>
+</resources>
