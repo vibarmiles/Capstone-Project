@@ -1,25 +1,34 @@
 package com.example.capstoneproject.user_management.ui.users.composable
 
+import android.app.Application
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.composable.BaseTopAppBar
+import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModel
+import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModelFactory
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
 fun UserScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, add: () -> Unit, edit: () -> Unit) {
+    val viewModel: UserViewModel = viewModel(factory = UserViewModelFactory(LocalContext.current.applicationContext as Application))
+    val users = viewModel.users.collectAsState(listOf())
     Scaffold(
         topBar = {
             BaseTopAppBar(title = stringResource(id = R.string.user), scope = scope, scaffoldState = scaffoldState)
@@ -28,18 +37,22 @@ fun UserScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, add: () -> U
         FloatingActionButton(onClick = add) {
             Icon(Icons.Filled.Add, null)
         }
-    }) { paddingValues -> paddingValues
+    }) {
+        it
         LazyColumn(modifier = Modifier
             .padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            item { UserListItem() {
-                edit.invoke()
-            }}
+            itemsIndexed(users.value) {
+                    _, item ->
+                UserListItem(name = item.lastName + " " + item.firstName, email = "Cashier@email.com") {
+
+                }
+            }
         }
     }
 }
 
 @Composable
-fun UserListItem(name: String = "User's Name", title: String = "Cashier", edit: () -> Unit) {
+fun UserListItem(name: String = "User's Name", email: String = "Cashier@email.com", edit: () -> Unit) {
     Row(modifier = Modifier
         .fillMaxWidth()) {
         Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -51,7 +64,7 @@ fun UserListItem(name: String = "User's Name", title: String = "Cashier", edit: 
                 .weight(1f)
                 .padding(horizontal = 8.dp)) {
                 Text(text = name, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                Text(text = title, fontSize = 16.sp)
+                Text(text = email, fontSize = 16.sp)
             }
             IconButton(onClick = edit) {
                 Icon(Icons.Filled.Edit, contentDescription = null)

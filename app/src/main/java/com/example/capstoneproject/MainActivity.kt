@@ -1,5 +1,6 @@
 package com.example.capstoneproject
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,6 +9,8 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,6 +21,8 @@ import com.example.capstoneproject.product_management.ui.product.composable.Prod
 import com.example.capstoneproject.ui.theme.CapstoneProjectTheme
 import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
 import com.example.capstoneproject.user_management.ui.users.composable.UserScreen
+import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModel
+import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModelFactory
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
