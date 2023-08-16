@@ -12,7 +12,9 @@ sealed class Routes(val route: String) {
     object ReturnOrder : Routes((R.string.return_order).toString())
     object User : Routes((R.string.user).toString()) {
         object Add : Routes( this.route + "/Add")
-        object Edit : Routes( this.route + "/Edit")
+        object Edit : Routes( this.route + "/Edit/{userId}") {
+            fun createRoute(userId: Int) = Routes.User.route + "/Edit/$userId"
+        }
     }
     object Report : Routes((R.string.report).toString())
     object POS : Routes((R.string.pos).toString())

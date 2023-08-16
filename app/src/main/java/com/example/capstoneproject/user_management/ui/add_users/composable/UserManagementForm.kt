@@ -27,7 +27,7 @@ import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModel
 import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModelFactory
 
 @Composable
-fun UserManagementForm(cancel: () -> Unit) {
+fun UserManagementForm(userId: Int = 0, cancel: () -> Unit) {
     val viewModel: UserViewModel = viewModel(factory = UserViewModelFactory(LocalContext.current.applicationContext as Application))
     var firstName by rememberSaveable { mutableStateOf("") }
     var lastName by rememberSaveable { mutableStateOf("") }

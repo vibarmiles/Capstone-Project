@@ -19,14 +19,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.composable.BaseTopAppBar
+import com.example.capstoneproject.global.ui.list.Routes
 import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModel
 import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModelFactory
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun UserScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, add: () -> Unit, edit: () -> Unit) {
+fun UserScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, navController: NavController) {
     val viewModel: UserViewModel = viewModel(factory = UserViewModelFactory(LocalContext.current.applicationContext as Application))
     val users = viewModel.users.collectAsState(listOf())
     Scaffold(
@@ -34,7 +36,9 @@ fun UserScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, add: () -> U
             BaseTopAppBar(title = stringResource(id = R.string.user), scope = scope, scaffoldState = scaffoldState)
         },
         floatingActionButton = {
-        FloatingActionButton(onClick = add) {
+        FloatingActionButton(onClick = {
+            navController.navigate(Routes.User.Add.route)
+        }) {
             Icon(Icons.Filled.Add, null)
         }
     }) {
@@ -44,7 +48,7 @@ fun UserScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, add: () -> U
             itemsIndexed(users.value) {
                     _, item ->
                 UserListItem(name = item.lastName + " " + item.firstName, email = "Cashier@email.com") {
-
+                    navController.navigate(Routes.User.Edit.createRoute(item.id))
                 }
             }
         }
