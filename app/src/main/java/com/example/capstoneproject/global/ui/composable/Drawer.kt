@@ -29,8 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.list.getDrawerItems
-import com.example.capstoneproject.global.ui.list.getDrawerSubItems
+import com.example.capstoneproject.global.ui.navigation.getDrawerItems
+import com.example.capstoneproject.global.ui.navigation.getDrawerSubItems
 
 @Composable
 fun Drawer(onClick: (Int) -> Unit) {

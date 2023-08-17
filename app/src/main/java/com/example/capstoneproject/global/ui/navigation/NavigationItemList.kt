@@ -1,4 +1,4 @@
-package com.example.capstoneproject.global.ui.list
+package com.example.capstoneproject.global.ui.navigation
 
 import com.example.capstoneproject.R
 
