@@ -1,4 +1,4 @@
-package com.example.capstoneproject.global.ui.composable
+package com.example.capstoneproject.global.ui.Misc
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.*

@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -15,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.compose.rememberNavController
-import com.example.capstoneproject.global.ui.composable.Drawer
+import com.example.capstoneproject.global.ui.Misc.Drawer
 import com.example.capstoneproject.global.ui.navigation.NavigationHost
 import com.example.capstoneproject.ui.theme.CapstoneProjectTheme
 import kotlinx.coroutines.delay

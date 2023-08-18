@@ -7,7 +7,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.composable.BaseTopAppBar
+import com.example.capstoneproject.global.ui.Misc.BaseTopAppBar
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
