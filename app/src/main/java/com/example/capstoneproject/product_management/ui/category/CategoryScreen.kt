@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -89,7 +89,7 @@ fun CategoryListItem(category: String = "Category", edit: () -> Unit, delete: ()
     Row(modifier = Modifier
         .fillMaxWidth()
         .padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Outlined.Info, contentDescription = null, modifier = Modifier.size(50.dp))
+        Icon(Icons.Outlined.Bookmark, contentDescription = null, modifier = Modifier.size(50.dp))
         Text(text = category, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier
             .fillMaxWidth()
             .weight(1f)
@@ -125,7 +125,11 @@ fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, on
         text = {
             Column {
                 Text(text = "", fontSize = 1.sp)
-                OutlinedTextField(value = categoryName, onValueChange = { categoryName = it }, placeholder = { Text(text = "Enter Category") }, colors = TextFieldDefaults.outlinedTextFieldColors(unfocusedBorderColor = if (isValid) Color.Black else Color.Red, focusedBorderColor = if (isValid) Color.Black else Color.Red))
+                OutlinedTextField(value = categoryName, onValueChange = { categoryName = it }, placeholder = { Text(text = "Enter Category") }, colors = TextFieldDefaults.outlinedTextFieldColors(unfocusedBorderColor = if (isValid) Color.Black else Color.Red, focusedBorderColor = if (isValid) Color.Black else Color.Red), isError = !isValid, trailingIcon = { if (!isValid) Icon(
+                    imageVector = Icons.Filled.Error,
+                    contentDescription = null,
+                    tint = Color.Red
+                )})
                 Text(text = "", fontSize = 4.sp)
                 if (!isValid) {
                     Text(text = "Invalid Category!", color = Color.Red)
@@ -149,7 +153,7 @@ fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, on
             }
         },
         dismissButton = {
-            TextButton(onClick = onCancel, ) {
+            TextButton(onClick = onCancel ) {
                 Text(text = stringResource(id = R.string.cancel_button))
             }
         }

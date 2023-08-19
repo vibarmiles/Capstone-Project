@@ -13,9 +13,7 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,7 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,7 +54,7 @@ fun Drawer(onClick: (Int) -> Unit) {
                 .padding(16.dp)) {
             for (it in getDrawerItems()) {
                 item {
-                    NavigationItem(icon = ImageVector.vectorResource(it.getIcon), isExpandable = it.getParent, expand = when (it.getTitle) { R.string.inventory -> showSubItemForInventory; R.string.supplier -> showSubItemForSupplier; R.string.supplier -> showSubItemForSupplier; else -> false}, title = it.getTitle) {
+                    NavigationItem(icon = it.getIcon, isExpandable = it.getParent, expand = when (it.getTitle) { R.string.inventory -> showSubItemForInventory; R.string.supplier -> showSubItemForSupplier; R.string.supplier -> showSubItemForSupplier; else -> false}, title = it.getTitle) {
                         if (it.getParent && (it.getTitle == R.string.inventory)) {
                             showSubItemForInventory = !showSubItemForInventory
                             showSubItemForSupplier = false
@@ -77,7 +74,7 @@ fun Drawer(onClick: (Int) -> Unit) {
                             item {
                                 AnimatedVisibility(visible = showSubItemForInventory, enter = expandVertically(expandFrom = Alignment.CenterVertically), exit = shrinkVertically()) {
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    NavigationItem(icon = ImageVector.vectorResource(subItem.getIcon), title = subItem.getTitle) {
+                                    NavigationItem(icon = subItem.getIcon, title = subItem.getTitle) {
                                         onClick.invoke(subItem.getTitle)
                                     }
                                 }
@@ -86,7 +83,7 @@ fun Drawer(onClick: (Int) -> Unit) {
                             item {
                                 AnimatedVisibility(visible = showSubItemForSupplier, enter = expandVertically(expandFrom = Alignment.Top), exit = shrinkVertically()) {
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    NavigationItem(icon = ImageVector.vectorResource(subItem.getIcon), title = subItem.getTitle) {
+                                    NavigationItem(icon = subItem.getIcon, title = subItem.getTitle) {
                                         onClick.invoke(subItem.getTitle)
                                     }
                                 }
@@ -121,7 +118,7 @@ fun NavigationItem(icon: ImageVector, title: Int, isExpandable: Boolean = false,
             .fillMaxWidth()
             .weight(1f))
         if (isExpandable) {
-            Icon(imageVector = if (expand) { ImageVector.vectorResource(id = R.drawable.remove) } else { Icons.Filled.Add }, contentDescription = null)
+            Icon(imageVector = if (expand) { Icons.Filled.ArrowDropUp } else { Icons.Filled.ArrowDropDown }, contentDescription = null)
         }
     }
 }

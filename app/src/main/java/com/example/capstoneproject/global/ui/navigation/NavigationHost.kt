@@ -8,6 +8,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.capstoneproject.AppSplashScreen
 import com.example.capstoneproject.R
+import com.example.capstoneproject.product_management.ui.branch.BranchFormScreen
+import com.example.capstoneproject.product_management.ui.branch.BranchScreen
 import com.example.capstoneproject.product_management.ui.category.CategoryScreen
 import com.example.capstoneproject.product_management.ui.product.composable.ProductScreen
 import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
@@ -19,7 +21,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
     NavHost(navController = navController, startDestination = Routes.SplashScreen.route) {
         composable(Routes.SplashScreen.route) {
             AppSplashScreen {
-                navController.navigate(Routes.Category.route) {
+                navController.navigate(Routes.Branch.route) {
                     popUpTo(0)
                 }
             }
@@ -33,7 +35,13 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.Branch.route) {
+            BranchScreen(scope = scope, scaffoldState = scaffoldState, add = { navController.navigate(Routes.Branch.Add.route) })
+        }
 
+        composable(Routes.Branch.Add.route) {
+            BranchFormScreen() {
+                navController.popBackStack()
+            }
         }
 
         composable(Routes.Category.route) {
