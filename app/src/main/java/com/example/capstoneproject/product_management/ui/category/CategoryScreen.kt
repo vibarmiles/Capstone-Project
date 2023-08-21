@@ -1,6 +1,5 @@
 package com.example.capstoneproject.product_management.ui.category
 
-import android.app.Application
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -12,23 +11,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.Misc.BaseTopAppBar
 import com.example.capstoneproject.global.ui.Misc.ConfirmDeletion
 import com.example.capstoneproject.product_management.data.Room.category.Category
 import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModel
-import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModelFactory
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState) {
-    val viewModel: CategoryViewModel = viewModel(factory = CategoryViewModelFactory(LocalContext.current.applicationContext as Application))
+fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: CategoryViewModel) {
     val categories = viewModel.categories.collectAsState(listOf())
     var category: Category? = null
     var showDialog by remember {
@@ -48,11 +43,11 @@ fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState) {
             }
         }
     ) {
-        it
-        LazyColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        it -> it
+        LazyColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             itemsIndexed(categories.value) {
                 _, item ->
-                CategoryListItem(item.name, edit = {
+                CategoryListItem(item.categoryName, edit = {
                     showDialog = true
                     category = item
                 }) {
@@ -76,7 +71,7 @@ fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState) {
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = category?.name ?: "", onCancel = { showDeleteDialog = false }) {
+            ConfirmDeletion(item = category?.categoryName ?: "", onCancel = { showDeleteDialog = false }) {
                 viewModel.delete(category!!)
                 showDeleteDialog = false
             }
@@ -107,7 +102,7 @@ fun CategoryListItem(category: String = "Category", edit: () -> Unit, delete: ()
 fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, onCancel: () -> Unit) {
     var name = ""
     if (category != null) {
-        name = category.name
+        name = category.categoryName
     }
     var categoryName by remember {
         mutableStateOf(name)
@@ -125,15 +120,11 @@ fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, on
         text = {
             Column {
                 Text(text = "", fontSize = 1.sp)
-                OutlinedTextField(value = categoryName, onValueChange = { categoryName = it }, placeholder = { Text(text = "Enter Category") }, colors = TextFieldDefaults.outlinedTextFieldColors(unfocusedBorderColor = if (isValid) Color.Black else Color.Red, focusedBorderColor = if (isValid) Color.Black else Color.Red), isError = !isValid, trailingIcon = { if (!isValid) Icon(
+                OutlinedTextField(value = categoryName, onValueChange = { categoryName = it }, placeholder = { Text(text = "Enter Category") }, isError = !isValid, trailingIcon = { if (!isValid) Icon(
                     imageVector = Icons.Filled.Error,
                     contentDescription = null,
                     tint = Color.Red
                 )})
-                Text(text = "", fontSize = 4.sp)
-                if (!isValid) {
-                    Text(text = "Invalid Category!", color = Color.Red)
-                }
             }
         },
         confirmButton = {
@@ -141,9 +132,9 @@ fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, on
                 if (categoryName.isNotBlank()) {
                     isValid = true
                     if (category == null) {
-                        onConfirm.invoke(Category(name = categoryName))
+                        onConfirm.invoke(Category(categoryName = categoryName))
                     } else {
-                        onConfirm.invoke(Category(id = category.id, name = categoryName))
+                        onConfirm.invoke(Category(id = category.id, categoryName = categoryName))
                     }
                 } else {
                     isValid = false

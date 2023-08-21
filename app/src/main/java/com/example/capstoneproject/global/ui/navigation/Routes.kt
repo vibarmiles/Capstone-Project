@@ -8,6 +8,9 @@ sealed class Routes(val route: String) {
     object Product : Routes ((R.string.product).toString())
     object Branch : Routes((R.string.branch).toString()) {
         object Add : Routes(this.route + "/Add")
+        object Edit : Routes(this.route + "/Edit/{branchId}/{branchName}/{branchAddress}") {
+            fun createRoute(branchId: Int, branchName: String, branchAddress: String) = Routes.Branch.route + "/Edit/$branchId/$branchName/$branchAddress"
+        }
     }
     object Category : Routes((R.string.category).toString())
     object Contact : Routes((R.string.contact).toString())

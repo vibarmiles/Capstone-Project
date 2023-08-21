@@ -1,16 +1,25 @@
 package com.example.capstoneproject.global.ui.navigation
 
+import android.app.Application
 import androidx.compose.material.ScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.capstoneproject.AppSplashScreen
 import com.example.capstoneproject.R
+import com.example.capstoneproject.product_management.data.Room.branch.Branch
 import com.example.capstoneproject.product_management.ui.branch.BranchFormScreen
 import com.example.capstoneproject.product_management.ui.branch.BranchScreen
+import com.example.capstoneproject.product_management.ui.branch.viewmodel.BranchViewModel
+import com.example.capstoneproject.product_management.ui.branch.viewmodel.BranchViewModelFactory
 import com.example.capstoneproject.product_management.ui.category.CategoryScreen
+import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModel
+import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModelFactory
 import com.example.capstoneproject.product_management.ui.product.composable.ProductScreen
 import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
 import com.example.capstoneproject.user_management.ui.users.composable.UserScreen
@@ -18,6 +27,9 @@ import kotlinx.coroutines.CoroutineScope
 
 @Composable
 fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaffoldState: ScaffoldState) {
+    val application: Application = LocalContext.current.applicationContext as Application
+    var screenViewModel: AndroidViewModel
+
     NavHost(navController = navController, startDestination = Routes.SplashScreen.route) {
         composable(Routes.SplashScreen.route) {
             AppSplashScreen {
@@ -35,17 +47,33 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.Branch.route) {
-            BranchScreen(scope = scope, scaffoldState = scaffoldState, add = { navController.navigate(Routes.Branch.Add.route) })
+            screenViewModel = viewModel(factory = BranchViewModelFactory(application))
+            BranchScreen(scope = scope, scaffoldState = scaffoldState, screenViewModel as BranchViewModel, add = { navController.navigate(Routes.Branch.Add.route) }) {
+                id, name, address -> navController.navigate(Routes.Branch.Edit.createRoute(id, name, address))
+            }
         }
 
         composable(Routes.Branch.Add.route) {
-            BranchFormScreen() {
+            screenViewModel = viewModel(factory = BranchViewModelFactory(application))
+            BranchFormScreen(screenViewModel as BranchViewModel) {
+                navController.popBackStack()
+            }
+        }
+
+        composable((Routes.Branch.Edit.route)) {
+            it ->
+            screenViewModel = viewModel(factory = BranchViewModelFactory(application))
+            val id: Int = it.arguments?.getString("branchId")?.toInt() ?: 0
+            val name: String = it.arguments?.getString("branchName") ?: ""
+            val address: String = it.arguments?.getString("branchAddress") ?: ""
+            BranchFormScreen(viewModel = screenViewModel as BranchViewModel, branch = Branch(id = id, branchName = name, address = address), function = "Edit") {
                 navController.popBackStack()
             }
         }
 
         composable(Routes.Category.route) {
-            CategoryScreen(scope = scope, scaffoldState = scaffoldState)
+            screenViewModel = viewModel(factory = CategoryViewModelFactory(LocalContext.current.applicationContext as Application))
+            CategoryScreen(scope = scope, scaffoldState = scaffoldState, viewModel = screenViewModel as CategoryViewModel)
         }
 
         composable(Routes.Contact.route) {
@@ -79,8 +107,8 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.User.Edit.route) {
-                backStackEntry ->
-            AddEditUserScreen(decision = stringResource(id = R.string.edit), back = { navController.popBackStack() }, userId = backStackEntry.arguments?.getString("userId") ?: "")
+                it ->
+            AddEditUserScreen(decision = stringResource(id = R.string.edit), back = { navController.popBackStack() }, userId = it.arguments?.getString("userId") ?: "")
         }
     }
 }
