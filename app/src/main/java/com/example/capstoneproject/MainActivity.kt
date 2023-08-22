@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.compose.rememberNavController
-import com.example.capstoneproject.global.ui.Misc.Drawer
+import com.example.capstoneproject.global.ui.navigation.Drawer
 import com.example.capstoneproject.global.ui.navigation.NavigationHost
 import com.example.capstoneproject.ui.theme.CapstoneProjectTheme
 import kotlinx.coroutines.delay

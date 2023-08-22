@@ -1,4 +1,4 @@
-package com.example.capstoneproject.global.ui.Misc
+package com.example.capstoneproject.global.ui.navigation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -26,11 +26,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.navigation.getDrawerItems
-import com.example.capstoneproject.global.ui.navigation.getDrawerSubItems
 
 @Composable
 fun Drawer(onClick: (Int) -> Unit) {
+    val navigationList: List<NavigationItems> = listOf(NavigationItems.Dashboard, NavigationItems.Inventory, NavigationItems.Supplier, NavigationItems.Users, NavigationItems.Report, NavigationItems.POS)
+    val subNavigationList: List<NavigationItems> = listOf(NavigationItems.Inventory.Product, NavigationItems.Inventory.Branch, NavigationItems.Inventory.Category, NavigationItems.Supplier.Contact, NavigationItems.Supplier.PurchaseOrder, NavigationItems.Supplier.ReturnOrder)
     var showSubItemForInventory by remember { mutableStateOf(false) }
     var showSubItemForSupplier by remember { mutableStateOf(false) }
     Column {
@@ -52,39 +52,39 @@ fun Drawer(onClick: (Int) -> Unit) {
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(16.dp)) {
-            for (it in getDrawerItems()) {
+            for (it in navigationList) {
                 item {
-                    NavigationItem(icon = it.getIcon, isExpandable = it.getParent, expand = when (it.getTitle) { R.string.inventory -> showSubItemForInventory; R.string.supplier -> showSubItemForSupplier; R.string.supplier -> showSubItemForSupplier; else -> false}, title = it.getTitle) {
-                        if (it.getParent && (it.getTitle == R.string.inventory)) {
+                    NavigationItem(icon = it.icon, isExpandable = it.isParent, expand = when (it.title) { R.string.inventory -> showSubItemForInventory; R.string.supplier -> showSubItemForSupplier; else -> false}, title = it.title) {
+                        if (it.isParent && (it.title == R.string.inventory)) {
                             showSubItemForInventory = !showSubItemForInventory
                             showSubItemForSupplier = false
-                        } else if (it.getParent && (it.getTitle == R.string.supplier)) {
+                        } else if (it.isParent && (it.title == R.string.supplier)) {
                             showSubItemForSupplier = !showSubItemForSupplier
                             showSubItemForInventory = false
                         } else {
                             showSubItemForInventory = false
                             showSubItemForSupplier = false
-                            onClick.invoke(it.getTitle)
+                            onClick.invoke(it.title)
                         }}
                         Spacer(modifier = Modifier.height(8.dp))
                     }
-                if (it.getParent) {
-                    for (subItem in getDrawerSubItems()) {
-                        if (it.getTitle == subItem.getParentItem && subItem.getParentItem == R.string.inventory) {
+                if (it.isParent) {
+                    for (subItem in subNavigationList) {
+                        if (it.title == subItem.parentItem && subItem.parentItem == R.string.inventory) {
                             item {
                                 AnimatedVisibility(visible = showSubItemForInventory, enter = expandVertically(expandFrom = Alignment.CenterVertically), exit = shrinkVertically()) {
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    NavigationItem(icon = subItem.getIcon, title = subItem.getTitle) {
-                                        onClick.invoke(subItem.getTitle)
+                                    NavigationItem(icon = subItem.icon, title = subItem.title) {
+                                        onClick.invoke(subItem.title)
                                     }
                                 }
                             }
-                        } else if (it.getTitle == subItem.getParentItem && subItem.getParentItem == R.string.supplier) {
+                        } else if (it.title == subItem.parentItem && subItem.parentItem == R.string.supplier) {
                             item {
                                 AnimatedVisibility(visible = showSubItemForSupplier, enter = expandVertically(expandFrom = Alignment.Top), exit = shrinkVertically()) {
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    NavigationItem(icon = subItem.getIcon, title = subItem.getTitle) {
-                                        onClick.invoke(subItem.getTitle)
+                                    NavigationItem(icon = subItem.icon, title = subItem.title) {
+                                        onClick.invoke(subItem.title)
                                     }
                                 }
                             }

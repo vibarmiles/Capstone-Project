@@ -1,6 +1,5 @@
 package com.example.capstoneproject.product_management.ui.branch
 
-import android.app.Application
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -11,19 +10,16 @@ import androidx.compose.material.icons.outlined.Store
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.Misc.BaseTopAppBar
-import com.example.capstoneproject.global.ui.Misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.product_management.data.Room.branch.Branch
 import com.example.capstoneproject.product_management.ui.branch.viewmodel.BranchViewModel
-import com.example.capstoneproject.product_management.ui.branch.viewmodel.BranchViewModelFactory
 import kotlinx.coroutines.CoroutineScope
 
 @Composable

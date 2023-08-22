@@ -16,8 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.Misc.BaseTopAppBar
-import com.example.capstoneproject.global.ui.Misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
+import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
 import com.example.capstoneproject.product_management.data.Room.category.Category
 import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModel
 import kotlinx.coroutines.CoroutineScope

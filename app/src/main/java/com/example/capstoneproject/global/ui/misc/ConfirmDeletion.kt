@@ -1,4 +1,4 @@
-package com.example.capstoneproject.global.ui.Misc
+package com.example.capstoneproject.global.ui.misc
 
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button

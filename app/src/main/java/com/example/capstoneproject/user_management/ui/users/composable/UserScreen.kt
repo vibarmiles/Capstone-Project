@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.Misc.BaseTopAppBar
+import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.global.ui.navigation.Routes
 import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModel
 import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModelFactory

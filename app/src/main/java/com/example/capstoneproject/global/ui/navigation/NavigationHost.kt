@@ -20,7 +20,7 @@ import com.example.capstoneproject.product_management.ui.branch.viewmodel.Branch
 import com.example.capstoneproject.product_management.ui.category.CategoryScreen
 import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModel
 import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModelFactory
-import com.example.capstoneproject.product_management.ui.product.composable.ProductScreen
+import com.example.capstoneproject.product_management.ui.product.ProductScreen
 import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
 import com.example.capstoneproject.user_management.ui.users.composable.UserScreen
 import kotlinx.coroutines.CoroutineScope
@@ -33,7 +33,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
     NavHost(navController = navController, startDestination = Routes.SplashScreen.route) {
         composable(Routes.SplashScreen.route) {
             AppSplashScreen {
-                navController.navigate(Routes.Branch.route) {
+                navController.navigate(Routes.Product.route) {
                     popUpTo(0)
                 }
             }
@@ -43,7 +43,8 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.Product.route) {
-            ProductScreen(scope = scope, scaffoldState = scaffoldState)
+            screenViewModel = viewModel(factory = BranchViewModelFactory(application))
+            ProductScreen(scope = scope, scaffoldState = scaffoldState, viewModel = screenViewModel as BranchViewModel)
         }
 
         composable(Routes.Branch.route) {
