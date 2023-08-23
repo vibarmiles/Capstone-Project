@@ -5,7 +5,12 @@ import com.example.capstoneproject.R
 sealed class Routes(val route: String) {
     object SplashScreen : Routes("Splash")
     object Dashboard : Routes((R.string.dashboard).toString())
-    object Product : Routes ((R.string.product).toString())
+    object Product : Routes((R.string.product).toString()) {
+        object Add : Routes(this.route + "/Add")
+        object Edit : Routes(this.route + "/Edit") {
+            fun createRoute() = null
+        }
+    }
     object Branch : Routes((R.string.branch).toString()) {
         object Add : Routes(this.route + "/Add")
         object Edit : Routes(this.route + "/Edit/{branchId}/{branchName}/{branchAddress}") {

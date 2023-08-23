@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.product_management.data.Room.branch.Branch
 import com.example.capstoneproject.product_management.ui.branch.viewmodel.BranchViewModel
 
@@ -53,21 +54,13 @@ fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", branc
                 contentDescription = null,
                 tint = Color.Red
             )})
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = back, modifier = Modifier.weight(1f), border = BorderStroke(1.dp, Color.Black), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)) {
-                    Text(text = stringResource(id = R.string.cancel_button))
-                }
+            FormButtons(cancel = back) {
+                isNameValid = name.isNotBlank()
+                isAddressValid = address.isNotBlank()
 
-                Button(onClick = {
-                    isNameValid = name.isNotBlank()
-                    isAddressValid = address.isNotBlank()
-
-                    if (isNameValid && isAddressValid) {
-                        viewModel.insert(Branch(id = id, branchName = name, address = address))
-                        back.invoke()
-                    }
-                }, modifier = Modifier.weight(1f)) {
-                    Text(text = stringResource(id = R.string.submit_button))
+                if (isNameValid && isAddressValid) {
+                    viewModel.insert(Branch(id = id, branchName = name, address = address))
+                    back.invoke()
                 }
             }
         }

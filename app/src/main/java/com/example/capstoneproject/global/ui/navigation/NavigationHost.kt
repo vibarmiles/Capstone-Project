@@ -20,7 +20,10 @@ import com.example.capstoneproject.product_management.ui.branch.viewmodel.Branch
 import com.example.capstoneproject.product_management.ui.category.CategoryScreen
 import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModel
 import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModelFactory
+import com.example.capstoneproject.product_management.ui.product.ProductFormSreen
 import com.example.capstoneproject.product_management.ui.product.ProductScreen
+import com.example.capstoneproject.product_management.ui.product.viewModel.ProductViewModel
+import com.example.capstoneproject.product_management.ui.product.viewModel.ProductViewModelFactory
 import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
 import com.example.capstoneproject.user_management.ui.users.composable.UserScreen
 import kotlinx.coroutines.CoroutineScope
@@ -43,8 +46,18 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.Product.route) {
-            screenViewModel = viewModel(factory = BranchViewModelFactory(application))
-            ProductScreen(scope = scope, scaffoldState = scaffoldState, viewModel = screenViewModel as BranchViewModel)
+            screenViewModel = viewModel(factory = ProductViewModelFactory(application))
+            ProductScreen(scope = scope, scaffoldState = scaffoldState, viewModel = screenViewModel as ProductViewModel, add = { navController.navigate(Routes.Product.Add.route) })
+        }
+
+        composable(Routes.Product.Add.route) {
+            ProductFormSreen(function = "Add") {
+                navController.popBackStack()
+            }
+        }
+
+        composable(Routes.Product.Edit.route) {
+
         }
 
         composable(Routes.Branch.route) {
@@ -62,7 +75,6 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable((Routes.Branch.Edit.route)) {
-            it ->
             screenViewModel = viewModel(factory = BranchViewModelFactory(application))
             val id: Int = it.arguments?.getString("branchId")?.toInt() ?: 0
             val name: String = it.arguments?.getString("branchName") ?: ""
