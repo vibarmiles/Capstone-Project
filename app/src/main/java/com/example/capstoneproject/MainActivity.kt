@@ -43,11 +43,13 @@ fun GlobalContent() {
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
+    var selectedItem by remember { mutableStateOf(R.string.dashboard) }
     Scaffold(
         scaffoldState = scaffoldState,
         drawerScrimColor = Color.Black.copy(0.7f),
-        drawerContent = { Drawer {
-            navController.navigate(it.toString())
+        drawerContent = { Drawer(selectedItem = selectedItem) {
+            selectedItem = it
+            navController.navigate(selectedItem.toString())
             scope.launch {
                 delay(500)
                 scaffoldState.drawerState.close()

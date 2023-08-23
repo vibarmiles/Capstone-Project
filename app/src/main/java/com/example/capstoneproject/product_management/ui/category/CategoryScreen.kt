@@ -81,21 +81,16 @@ fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewMode
 
 @Composable
 fun CategoryListItem(category: String = "Category", edit: () -> Unit, delete: () -> Unit) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Outlined.Bookmark, contentDescription = null, modifier = Modifier.size(50.dp))
-        Text(text = category, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f)
-            .padding(horizontal = 8.dp))
-        IconButton(onClick = edit) {
-            Icon(Icons.Filled.Edit, contentDescription = null)
+    androidx.compose.material3.ListItem(leadingContent = { Icon(Icons.Outlined.Bookmark, contentDescription = null, modifier = Modifier.size(50.dp)) }, headlineContent = { Text(text = category, fontWeight = FontWeight.Bold) }, trailingContent = {
+        Row {
+            IconButton(onClick = edit) {
+                Icon(Icons.Filled.Edit, contentDescription = null)
+            }
+            IconButton(onClick = delete) {
+                Icon(Icons.Filled.Delete, contentDescription = null)
+            }
         }
-        IconButton(onClick = delete) {
-            Icon(Icons.Filled.Delete, contentDescription = null)
-        }
-    }
+    })
 }
 
 @Composable

@@ -68,22 +68,14 @@ fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel:
 
 @Composable
 fun BranchListItem(branch: String = "Branch", address: String = "#234 Address St., asdfasdfwerwer", edit: () -> Unit, delete: () -> Unit) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Outlined.Store, contentDescription = null, modifier = Modifier.size(50.dp))
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f)
-            .padding(horizontal = 8.dp)) {
-            Text(text = branch, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            Text(text = address, fontSize = 12.sp, overflow = TextOverflow.Ellipsis, maxLines = 1)
+    androidx.compose.material3.ListItem(headlineContent = { Text(text = branch, fontWeight = FontWeight.Bold, overflow = TextOverflow.Ellipsis, maxLines = 1) }, supportingContent = { Text(text = address, overflow = TextOverflow.Ellipsis, maxLines = 1) }, trailingContent = {
+        Row {
+            IconButton(onClick = edit) {
+                Icon(Icons.Filled.Edit, contentDescription = null)
+            }
+            IconButton(onClick = delete) {
+                Icon(Icons.Filled.Delete, contentDescription = null)
+            }
         }
-        IconButton(onClick = edit) {
-            Icon(Icons.Filled.Edit, contentDescription = null)
-        }
-        IconButton(onClick = delete) {
-            Icon(Icons.Filled.Delete, contentDescription = null)
-        }
-    }
+    }, leadingContent = { Icon(Icons.Outlined.Store, contentDescription = null, modifier = Modifier.size(50.dp)) })
 }
