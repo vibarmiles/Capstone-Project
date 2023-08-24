@@ -8,17 +8,20 @@ import com.example.capstoneproject.product_management.data.Room.branch.Branch
 import com.example.capstoneproject.product_management.data.Room.branch.BranchDao
 import com.example.capstoneproject.product_management.data.Room.category.Category
 import com.example.capstoneproject.product_management.data.Room.category.CategoryDao
+import com.example.capstoneproject.product_management.data.Room.product.Product
+import com.example.capstoneproject.product_management.data.Room.product.ProductDao
 import com.example.capstoneproject.user_management.data.Room.UserDao
 import com.example.capstoneproject.user_management.data.Room.User
 
 @Database(
-    entities = [User::class, Category::class, Branch::class],
-    version = 4
+    entities = [User::class, Category::class, Branch::class, Product::class],
+    version = 5
 )
 abstract class Database: RoomDatabase() {
     abstract fun getUserDao(): UserDao
     abstract fun getCategoryDao(): CategoryDao
     abstract fun getBranchDao(): BranchDao
+    abstract fun getProductDao(): ProductDao
 
     companion object {
         private var Instance: com.example.capstoneproject.global.data.Database? = null

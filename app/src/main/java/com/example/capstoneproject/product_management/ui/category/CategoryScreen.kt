@@ -1,8 +1,10 @@
 package com.example.capstoneproject.product_management.ui.category
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -20,6 +22,7 @@ import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
 import com.example.capstoneproject.product_management.data.Room.category.Category
 import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModel
+import com.example.capstoneproject.ui.theme.Purple500
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
@@ -44,7 +47,12 @@ fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewMode
         }
     ) {
         it -> it
-        LazyColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        LazyColumn(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            item {
+                val size = categories.value.size
+                Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered categories"; 1 -> "1 category is entered"; else -> "$size categories are entered"})
+            }
+            
             itemsIndexed(categories.value) {
                 _, item ->
                 CategoryListItem(item.categoryName, edit = {
@@ -81,7 +89,9 @@ fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewMode
 
 @Composable
 fun CategoryListItem(category: String = "Category", edit: () -> Unit, delete: () -> Unit) {
-    androidx.compose.material3.ListItem(leadingContent = { Icon(Icons.Outlined.Bookmark, contentDescription = null, modifier = Modifier.size(50.dp)) }, headlineContent = { Text(text = category, fontWeight = FontWeight.Bold) }, trailingContent = {
+    androidx.compose.material3.ListItem(leadingContent = { Box(modifier = Modifier
+        .size(50.dp)
+        .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Icon(imageVector = Icons.Filled.Bookmark, contentDescription = null, tint = Color.White) } }, headlineContent = { Text(text = category, fontWeight = FontWeight.Bold) }, trailingContent = {
         Row {
             IconButton(onClick = edit) {
                 Icon(Icons.Filled.Edit, contentDescription = null)

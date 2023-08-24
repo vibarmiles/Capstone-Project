@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
@@ -42,51 +43,34 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel
         }
     ) {
             it -> it
-        var index by remember { mutableStateOf(0) }
-        val listState = rememberLazyListState()
+        var branchId by rememberSaveable { mutableStateOf(0) }
         Column(modifier = Modifier.fillMaxSize()) {
-            TabLayout(tabs = branch.value, selectedTabIndex = index) {
-                index = it
-                scope.launch { listState.animateScrollToItem(index) }
+            TabLayout(tabs = branch.value) {
+                branchId = it
             }
-            ProductScreenContent(pages = branch.value.size, selectedTabIndex = index, lazyListState = listState)
+            ProductScreenContent(selectedTabIndex = branchId)
         }
     }
 }
 
 @Composable
-fun TabLayout(tabs: List<Branch>, selectedTabIndex: Int, onClick: (Int) -> Unit) {
-    ScrollableTabRow(selectedTabIndex = selectedTabIndex, edgePadding = 0.dp, modifier = Modifier
+fun TabLayout(tabs: List<Branch>, onClick: (Int) -> Unit) {
+    var selected by remember { mutableStateOf(0) }
+    ScrollableTabRow(selectedTabIndex = selected, edgePadding = 0.dp, modifier = Modifier
         .height(50.dp)
         .fillMaxWidth()) {
-        Tab(selected = selectedTabIndex == 0, onClick = { onClick.invoke(0) }, text = { Text(text = "All") })
+        Tab(selected = selected == 0, onClick = { onClick.invoke(0); selected = 0 }, text = { Text(text = "All") })
 
         tabs.forEachIndexed {
                 index, tab ->
-            Tab(selected = selectedTabIndex == index + 1, onClick = { onClick.invoke(index + 1) }, text = { Text(text = tab.branchName) })
+            Tab(selected = selected == index + 1, onClick = { onClick.invoke(tab.id); selected = index + 1 }, text = { Text(text = tab.branchName) })
         }
     }
 }
 
 @Composable
-fun ProductScreenContent(pages: Int, selectedTabIndex: Int, lazyListState: LazyListState) {
-    LazyRow(state = lazyListState, userScrollEnabled = false) {
-        item {
-            Box(modifier = Modifier
-                .fillMaxHeight()
-                .width(LocalConfiguration.current.screenWidthDp.dp)
-                .background(color = Color.White))
+fun ProductScreenContent(selectedTabIndex: Int) {
 
-        }
-        for (page in 1..pages) {
-            item {
-                Box(modifier = Modifier
-                    .fillMaxHeight()
-                    .width(LocalConfiguration.current.screenWidthDp.dp)
-                    .background(color = if (page % 2 == 1) Color.Black else Color.White))
-            }
-        }
-    }
 }
 
 @Composable

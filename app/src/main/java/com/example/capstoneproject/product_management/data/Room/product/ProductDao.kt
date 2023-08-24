@@ -1,4 +1,4 @@
-package com.example.capstoneproject.product_management.data.Room.branch
+package com.example.capstoneproject.product_management.data.Room.product
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -8,13 +8,13 @@ import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface BranchDao {
-    @Query("SELECT * FROM Branches")
-    fun getAll(): Flow<List<Branch>>
+interface ProductDao {
+    @Query("SELECT * FROM Products")
+    fun getAll(): Flow<List<Product>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertBranch(branch: Branch)
+    fun insertProduct(product: Product)
 
     @Delete
-    fun deleteBranch(branch: Branch)
+    fun deleteProduct(product: Product)
 }

@@ -51,7 +51,8 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.Product.Add.route) {
-            ProductFormSreen(function = "Add") {
+            screenViewModel = viewModel(factory = ProductViewModelFactory(LocalContext.current.applicationContext as Application))
+            ProductFormSreen(function = "Add", viewModel = screenViewModel as ProductViewModel) {
                 navController.popBackStack()
             }
         }

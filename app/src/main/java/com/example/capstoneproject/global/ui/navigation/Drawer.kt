@@ -50,7 +50,7 @@ fun Drawer(selectedItem: Int, onClick: (Int) -> Unit) {
                 Text(text = "ADMIN", fontSize = 14.sp)
             }
         }
-        LazyColumn {
+        LazyColumn(modifier = Modifier.padding(8.dp)) {
             navigationList.forEach {
                 item {
                     NavigationDrawerItem(icon = { Icon(imageVector = it.icon, contentDescription = null) }, label = { Row { Text(text = stringResource(id = it.title), modifier = Modifier.weight(1f)); if (it.isParent) Icon(imageVector = when (it.title) { R.string.inventory -> if (showSubItemForInventory) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown; R.string.supplier -> if (showSubItemForSupplier) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown; else -> {} } as ImageVector, contentDescription = null) } }, selected = it.title == selectedItem, onClick = {
@@ -89,8 +89,11 @@ fun Drawer(selectedItem: Int, onClick: (Int) -> Unit) {
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)) {
             Divider()
+            Spacer(modifier = Modifier.height(8.dp))
             NavigationDrawerItem(icon = { Icon(imageVector = Icons.Filled.ExitToApp, contentDescription = null) }, label = { Text(text = stringResource(id = R.string.logout)) }, onClick = {  }, selected = false)
         }
     }
