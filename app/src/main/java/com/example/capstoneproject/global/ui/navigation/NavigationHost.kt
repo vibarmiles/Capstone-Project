@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.capstoneproject.AppSplashScreen
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
 import com.example.capstoneproject.product_management.data.Room.branch.Branch
 import com.example.capstoneproject.product_management.ui.branch.BranchFormScreen
 import com.example.capstoneproject.product_management.ui.branch.BranchScreen
@@ -29,7 +30,7 @@ import com.example.capstoneproject.user_management.ui.users.composable.UserScree
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaffoldState: ScaffoldState) {
+fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaffoldState: ScaffoldState, appViewModel: AppViewModel) {
     val application: Application = LocalContext.current.applicationContext as Application
     var screenViewModel: AndroidViewModel
 
@@ -39,6 +40,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
                 navController.navigate(Routes.Product.route) {
                     popUpTo(0)
                 }
+                appViewModel.isLoading.value = false
             }
         }
         composable(Routes.Dashboard.route) {

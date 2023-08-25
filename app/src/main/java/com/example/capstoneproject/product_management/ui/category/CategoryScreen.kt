@@ -105,17 +105,8 @@ fun CategoryListItem(category: String = "Category", edit: () -> Unit, delete: ()
 
 @Composable
 fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, onCancel: () -> Unit) {
-    var name = ""
-    if (category != null) {
-        name = category.categoryName
-    }
-    var categoryName by remember {
-        mutableStateOf(name)
-    }
-
-    var isValid by remember {
-        mutableStateOf(true)
-    }
+    var categoryName by remember { mutableStateOf(category?.categoryName ?: "") }
+    var isValid by remember { mutableStateOf(true) }
 
     AlertDialog(
         onDismissRequest = onCancel,
@@ -136,11 +127,7 @@ fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, on
             Button(onClick = {
                 if (categoryName.isNotBlank()) {
                     isValid = true
-                    if (category == null) {
-                        onConfirm.invoke(Category(categoryName = categoryName))
-                    } else {
-                        onConfirm.invoke(Category(id = category.id, categoryName = categoryName))
-                    }
+                    onConfirm.invoke(Category(id = category?.id ?: 0, categoryName = categoryName))
                 } else {
                     isValid = false
                 }

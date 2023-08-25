@@ -22,10 +22,6 @@ import com.example.capstoneproject.product_management.ui.branch.viewmodel.Branch
 
 @Composable
 fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", branch: Branch? = null, back: () -> Unit) {
-    val id: Int = branch?.id ?: 0
-    val name: String = branch?.branchName ?: ""
-    val address: String = branch?.address ?: ""
-
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "$function Branch")}, navigationIcon = {
@@ -36,8 +32,8 @@ fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", branc
         }
     ) {
         it -> it
-        var name by rememberSaveable { mutableStateOf(name) }
-        var address by rememberSaveable { mutableStateOf(address) }
+        var name by rememberSaveable { mutableStateOf(branch?.branchName ?: "") }
+        var address by rememberSaveable { mutableStateOf(branch?.address ?: "") }
         var isNameValid by rememberSaveable { mutableStateOf(true) }
         var isAddressValid by rememberSaveable { mutableStateOf(true) }
         Column(modifier = Modifier
@@ -59,7 +55,7 @@ fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", branc
                 isAddressValid = address.isNotBlank()
 
                 if (isNameValid && isAddressValid) {
-                    viewModel.insert(Branch(id = id, branchName = name, address = address))
+                    viewModel.insert(Branch(id = branch?.id ?: 0, branchName = name, address = address))
                     back.invoke()
                 }
             }
