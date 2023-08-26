@@ -4,7 +4,6 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,10 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.layout.BeyondBoundsLayout
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -29,7 +26,6 @@ import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.product_management.data.Room.product.Product
 import com.example.capstoneproject.product_management.ui.product.viewModel.ProductViewModel
-import com.example.capstoneproject.ui.theme.Purple500
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -108,10 +104,10 @@ fun ProductFormSreen(function: String, viewModel: ProductViewModel, back: () -> 
             FormButtons(cancel = back) {
                 isNameValid = name.isNotBlank()
                 isPriceValid = if (price.isNotBlank()) price.toDouble() > 0 else false
-                isQuantityValid = if (quantity.isNotBlank()) quantity.toInt() > 0 else false
+                isQuantityValid = if (quantity.isNotBlank()) quantity.toInt() >= 0 else false
 
                 if (isNameValid && isPriceValid && isQuantityValid) {
-                    viewModel.insert(product = Product(image = imageUri?.path.toString() ?: "", productName = name, price = price.toDouble(), category = categoryId, quantity = quantity.toInt()))
+                    viewModel.insert(product = Product(image = imageUri?.path, productName = name, price = price.toDouble(), category = categoryId, quantity = quantity.toInt()))
                     back.invoke()
                 }
             }
