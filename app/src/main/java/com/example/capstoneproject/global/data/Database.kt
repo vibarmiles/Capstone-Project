@@ -15,7 +15,7 @@ import com.example.capstoneproject.user_management.data.Room.User
 
 @Database(
     entities = [User::class, Category::class, Branch::class, Product::class],
-    version = 5
+    version = 6
 )
 abstract class Database: RoomDatabase() {
     abstract fun getUserDao(): UserDao
