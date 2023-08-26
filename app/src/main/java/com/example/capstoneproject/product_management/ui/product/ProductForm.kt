@@ -1,5 +1,6 @@
 package com.example.capstoneproject.product_management.ui.product
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.LayoutDirection
@@ -52,7 +54,7 @@ fun ProductFormSreen(function: String, viewModel: ProductViewModel, back: () -> 
             var quantity by remember { mutableStateOf("") }
             var isQuantityValid by remember { mutableStateOf(true) }
             var imageUri by remember { mutableStateOf<Uri?>(null) }
-            val imageUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent(), onResult = { imageUri = it })
+            val imageUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument(), onResult = { imageUri = it })
 
             Box(modifier = Modifier
                 .fillMaxWidth()
@@ -77,7 +79,7 @@ fun ProductFormSreen(function: String, viewModel: ProductViewModel, back: () -> 
                             .contentPadding()
                             .calculateLeftPadding(layoutDirection = LayoutDirection.Ltr)
                     ))
-                Button(modifier = Modifier.fillMaxHeight(), onClick = { imageUriLauncher.launch("image/*") }) {
+                Button(modifier = Modifier.fillMaxHeight(), onClick = { imageUriLauncher.launch(arrayOf("image/*")) }) {
                     Text(text = "Upload Image")
                 }
             }
@@ -101,13 +103,17 @@ fun ProductFormSreen(function: String, viewModel: ProductViewModel, back: () -> 
 
             OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = quantity, onValueChange = { quantity = it }, placeholder = { Text(text = "Enter Current Quantity") }, label = { Text(text = "Quantity") }, isError = !isQuantityValid, trailingIcon = { if (!isQuantityValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
 
+            val context = LocalContext.current
+
             FormButtons(cancel = back) {
                 isNameValid = name.isNotBlank()
                 isPriceValid = if (price.isNotBlank()) price.toDouble() > 0 else false
                 isQuantityValid = if (quantity.isNotBlank()) quantity.toInt() >= 0 else false
 
+                context.contentResolver.takePersistableUriPermission(imageUri!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
                 if (isNameValid && isPriceValid && isQuantityValid) {
-                    viewModel.insert(product = Product(image = imageUri?.path, productName = name, price = price.toDouble(), category = categoryId, quantity = quantity.toInt()))
+                    viewModel.insert(product = Product(image = imageUri.toString(), productName = name, price = price.toDouble(), category = categoryId, quantity = quantity.toInt()))
                     back.invoke()
                 }
             }

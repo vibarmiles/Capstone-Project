@@ -81,7 +81,9 @@ fun AppSplashScreen(onLoad: (Boolean) -> Unit) {
         Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier.fillMaxSize()) {
             Box(
                 contentAlignment = Alignment.TopCenter,
-                modifier = Modifier.fillMaxWidth().height(200.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
             ) {
                 CircularProgressIndicator()
             }
