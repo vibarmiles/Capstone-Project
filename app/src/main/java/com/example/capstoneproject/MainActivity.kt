@@ -1,8 +1,12 @@
 package com.example.capstoneproject
 
+import android.app.Application
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
@@ -12,8 +16,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.capstoneproject.global.ui.navigation.Drawer
@@ -67,12 +73,33 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
 @Composable
 fun AppSplashScreen(onLoad: (Boolean) -> Unit) {
     var fade: Boolean by remember { mutableStateOf(true) }
-    LaunchedEffect(key1 = true) {
-        delay(3000)
-        fade = false
-        delay(500)
-        onLoad.invoke(true)
+    val context = LocalContext.current
+    var hasPermission by remember { mutableStateOf(true) }
+    val permissions = arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+    for (permission in permissions) {
+        if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(context, permission)) {
+            hasPermission = false
+        }
     }
+    val permissionState = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions(), onResult = {
+        it -> it.forEach {
+            if (it.value) {
+                hasPermission = false
+            }
+        }
+    })
+
+    if (hasPermission) {
+        LaunchedEffect(key1 = true, block = {
+            delay(3000)
+            fade = false
+            delay(500)
+            onLoad.invoke(true)
+        })
+    } else {
+        LaunchedEffect(key1 = true, block = { permissionState.launch(permissions) })
+    }
+
     AnimatedVisibility(visible = fade,exit = fadeOut()) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
             Image(painter = painterResource(id = R.drawable.ic_launcher_background), contentDescription = null)

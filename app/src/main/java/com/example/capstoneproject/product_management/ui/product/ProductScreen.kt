@@ -1,9 +1,6 @@
 package com.example.capstoneproject.product_management.ui.product
 
 import android.content.Intent
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -17,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -81,7 +77,6 @@ fun TabLayout(tabs: List<Branch>, onClick: (Int) -> Unit) {
 
 @Composable
 fun ProductScreenContent(selectedTabIndex: Int, category: List<Category>, product: List<Product>, delete: (Boolean) -> Unit) {
-    val flag = Intent.FLAG_GRANT_READ_URI_PERMISSION
     LazyColumn(modifier = Modifier
         .fillMaxSize()
         .padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
