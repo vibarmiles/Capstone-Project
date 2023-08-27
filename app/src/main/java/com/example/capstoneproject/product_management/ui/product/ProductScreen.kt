@@ -1,6 +1,6 @@
 package com.example.capstoneproject.product_management.ui.product
 
-import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -29,9 +29,9 @@ import kotlinx.coroutines.CoroutineScope
 @Composable
 fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: ProductViewModel, add: () -> Unit) {
     val branch = viewModel.branches.collectAsState(initial = listOf())
-    val category = viewModel.categories.collectAsState(initial = listOf())
-    val product = viewModel.products.collectAsState(initial = listOf())
+    val product = viewModel.products.collectAsState(initial = mapOf())
     var showDeleteDialog by remember { mutableStateOf(false) }
+    Log.d("Product", product.value.toString())
 
     Scaffold(
         topBar = {
@@ -53,7 +53,7 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel
             TabLayout(tabs = branch.value) {
                 branchId = it
             }
-            ProductScreenContent(selectedTabIndex = branchId, category = category.value, product = product.value) {
+            ProductScreenContent(selectedTabIndex = branchId, product = product.value) {
                 showDeleteDialog = true
             }
         }
@@ -76,13 +76,21 @@ fun TabLayout(tabs: List<Branch>, onClick: (Int) -> Unit) {
 }
 
 @Composable
-fun ProductScreenContent(selectedTabIndex: Int, category: List<Category>, product: List<Product>, delete: (Boolean) -> Unit) {
+fun ProductScreenContent(selectedTabIndex: Int, product: Map<Category, List<Product>>, delete: (Boolean) -> Unit) {
     LazyColumn(modifier = Modifier
         .fillMaxSize()
         .padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        itemsIndexed(product) {
-            _, it ->
-            Products(it, edit = {  }, delete = { delete.invoke(true) })
+
+        for (category in product.keys) {
+            item {
+                Row(modifier = Modifier.padding(16.dp)) {
+                    Text(text = category.categoryName)
+                }
+            }
+            itemsIndexed(product.getValue(category)) {
+                    _, it ->
+                Products(it, edit = {  }, delete = { delete.invoke(true) })
+            }
         }
     }
 }

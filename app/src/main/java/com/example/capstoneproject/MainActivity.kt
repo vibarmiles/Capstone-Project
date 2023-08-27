@@ -76,11 +76,6 @@ fun AppSplashScreen(onLoad: (Boolean) -> Unit) {
     val context = LocalContext.current
     var hasPermission by remember { mutableStateOf(true) }
     val permissions = arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.READ_EXTERNAL_STORAGE)
-    for (permission in permissions) {
-        if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(context, permission)) {
-            hasPermission = false
-        }
-    }
     val permissionState = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions(), onResult = {
         it -> it.forEach {
             if (it.value) {
@@ -89,7 +84,9 @@ fun AppSplashScreen(onLoad: (Boolean) -> Unit) {
         }
     })
 
-    if (hasPermission) {
+    LaunchedEffect(key1 = true, block = { permissionState.launch(permissions) })
+
+    if (PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permissions[1])) {
         LaunchedEffect(key1 = true, block = {
             delay(3000)
             fade = false
@@ -97,7 +94,7 @@ fun AppSplashScreen(onLoad: (Boolean) -> Unit) {
             onLoad.invoke(true)
         })
     } else {
-        LaunchedEffect(key1 = true, block = { permissionState.launch(permissions) })
+
     }
 
     AnimatedVisibility(visible = fade,exit = fadeOut()) {

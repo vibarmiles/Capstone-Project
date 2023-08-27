@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 class ProductViewModel(application: Application) : AndroidViewModel(application) {
     val branches: Flow<List<Branch>>
     val categories: Flow<List<Category>>
-    val products: Flow<List<Product>>
+    val products: Flow<Map<Category, List<Product>>>
     private val branchRepository: BranchRepository
     private val categoryRepository: CategoryRepository
     private val productRepository: ProductRepository

@@ -110,7 +110,9 @@ fun ProductFormSreen(function: String, viewModel: ProductViewModel, back: () -> 
                 isPriceValid = if (price.isNotBlank()) price.toDouble() > 0 else false
                 isQuantityValid = if (quantity.isNotBlank()) quantity.toInt() >= 0 else false
 
-                context.contentResolver.takePersistableUriPermission(imageUri!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                if (imageUri != null) {
+                    context.contentResolver.takePersistableUriPermission(imageUri!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
 
                 if (isNameValid && isPriceValid && isQuantityValid) {
                     viewModel.insert(product = Product(image = imageUri.toString(), productName = name, price = price.toDouble(), category = categoryId, quantity = quantity.toInt()))
