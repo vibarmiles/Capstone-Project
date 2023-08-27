@@ -19,7 +19,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
+import com.example.capstoneproject.global.ui.navigation.Routes
 import com.example.capstoneproject.product_management.data.Room.branch.Branch
 import com.example.capstoneproject.product_management.data.Room.category.Category
 import com.example.capstoneproject.product_management.data.Room.product.Product
@@ -27,11 +29,11 @@ import com.example.capstoneproject.product_management.ui.product.viewModel.Produ
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: ProductViewModel, add: () -> Unit) {
+fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: ProductViewModel, edit: (Int, String, String, Double, Int, Int) -> Unit, add: () -> Unit) {
     val branch = viewModel.branches.collectAsState(initial = listOf())
-    val product = viewModel.products.collectAsState(initial = mapOf())
+    val products = viewModel.products.collectAsState(initial = mapOf())
     var showDeleteDialog by remember { mutableStateOf(false) }
-    Log.d("Product", product.value.toString())
+    var product: Product? = null
 
     Scaffold(
         topBar = {
@@ -53,8 +55,18 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel
             TabLayout(tabs = branch.value) {
                 branchId = it
             }
-            ProductScreenContent(selectedTabIndex = branchId, product = product.value) {
+            ProductScreenContent(selectedTabIndex = branchId, products = products.value, edit = {
+                edit.invoke(it.id, it.productName, it.image ?: "", it.price, it.category, it.quantity)
+            }) {
+                product = it
                 showDeleteDialog = true
+            }
+        }
+
+        if (showDeleteDialog) {
+            ConfirmDeletion(item = product!!.productName, onCancel = { showDeleteDialog = false }) {
+                viewModel.delete(product = product!!)
+                showDeleteDialog = false
             }
         }
     }
@@ -76,34 +88,36 @@ fun TabLayout(tabs: List<Branch>, onClick: (Int) -> Unit) {
 }
 
 @Composable
-fun ProductScreenContent(selectedTabIndex: Int, product: Map<Category, List<Product>>, delete: (Boolean) -> Unit) {
+fun ProductScreenContent(selectedTabIndex: Int, products: Map<Category, List<Product>>, edit: (Product) -> Unit, delete: (Product) -> Unit) {
     LazyColumn(modifier = Modifier
         .fillMaxSize()
         .padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
 
-        for (category in product.keys) {
+        for (category in products.keys) {
+            Log.d("key", products.keys.toString())
             item {
                 Row(modifier = Modifier.padding(16.dp)) {
                     Text(text = category.categoryName)
                 }
             }
-            itemsIndexed(product.getValue(category)) {
+            itemsIndexed(products.getValue(category)) {
                     _, it ->
-                Products(it, edit = {  }, delete = { delete.invoke(true) })
+                Log.d("id", products.toString())
+                Products(it, edit = { edit.invoke(it) }, delete = { delete.invoke(it) })
             }
         }
     }
 }
 
 @Composable
-fun Products(product: Product, edit: (Product) -> Unit, delete: (Product) -> Unit) {
-    androidx.compose.material3.ListItem(leadingContent = { AsyncImage(error = rememberVectorPainter(image = Icons.Filled.BrokenImage), model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier
+fun Products(product: Product, edit: () -> Unit, delete: () -> Unit) {
+    androidx.compose.material3.ListItem(leadingContent = { AsyncImage(error = rememberVectorPainter(image = Icons.Filled.Image), model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier
         .clip(RoundedCornerShape(5.dp))
         .size(50.dp), placeholder = rememberVectorPainter(Icons.Default.Image), contentDescription = null) }, headlineContent = { Text(text = "Qty: " + product.quantity.toString(), fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = product.productName) }, trailingContent = { Row {
-        IconButton(onClick = { edit.invoke(product) }) {
+        IconButton(onClick = edit) {
             Icon(Icons.Filled.Edit, contentDescription = null)
         }
-        IconButton(onClick = { delete.invoke(product) }) {
+        IconButton(onClick = delete) {
             Icon(Icons.Filled.Delete, contentDescription = null)
         }
     } })

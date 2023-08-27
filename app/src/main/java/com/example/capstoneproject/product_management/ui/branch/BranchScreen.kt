@@ -68,7 +68,7 @@ fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel:
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = branch?.branchName ?: "", onCancel = { showDeleteDialog = false }) {
+            ConfirmDeletion(item = branch!!.branchName, onCancel = { showDeleteDialog = false }) {
                 viewModel.delete(branch!!)
                 showDeleteDialog = false
             }

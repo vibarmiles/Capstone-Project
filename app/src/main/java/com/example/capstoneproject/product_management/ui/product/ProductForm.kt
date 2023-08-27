@@ -31,7 +31,7 @@ import com.example.capstoneproject.product_management.ui.product.viewModel.Produ
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ProductFormSreen(function: String, viewModel: ProductViewModel, back: () -> Unit) {
+fun ProductFormSreen(function: String, viewModel: ProductViewModel, product: Product? = null, back: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "$function Product") }, navigationIcon = {
@@ -44,22 +44,22 @@ fun ProductFormSreen(function: String, viewModel: ProductViewModel, back: () -> 
         it -> it
         Column(modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             val category = viewModel.categories.collectAsState(initial = listOf())
-            var name by remember { mutableStateOf("") }
+            var name by remember { mutableStateOf(product?.productName ?: "") }
             var isNameValid by remember { mutableStateOf(true) }
-            var price by remember { mutableStateOf("") }
+            var price by remember { mutableStateOf((product?.price ?: "").toString()) }
             var isPriceValid by remember { mutableStateOf(true) }
             var expanded by remember { mutableStateOf(false) }
-            var categoryId: Int by remember { mutableStateOf(0) }
-            var selectedCategory by remember { mutableStateOf("None") }
-            var quantity by remember { mutableStateOf("") }
+            var categoryId: Int by remember { mutableStateOf(product?.category ?: 0) }
+            var selectedCategory by remember { mutableStateOf(if (categoryId == 0) "None" else "Current Category") }
+            var quantity by remember { mutableStateOf((product?.quantity ?: "").toString()) }
             var isQuantityValid by remember { mutableStateOf(true) }
-            var imageUri by remember { mutableStateOf<Uri?>(null) }
+            var imageUri by remember { mutableStateOf<Uri?>(if (product == null) null else Uri.parse(product?.image)) }
             val imageUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument(), onResult = { imageUri = it })
 
             Box(modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp), contentAlignment = Alignment.Center) {
-                AsyncImage(error = rememberVectorPainter(image = Icons.Filled.BrokenImage), model = imageUri, contentDescription = null, fallback = rememberVectorPainter(Icons.Filled.Image), modifier = Modifier
+                AsyncImage(error = rememberVectorPainter(image = Icons.Filled.Image), model = imageUri, contentDescription = null, fallback = rememberVectorPainter(Icons.Filled.Image), modifier = Modifier
                     .fillMaxHeight()
                     .width(200.dp), contentScale = ContentScale.Crop)
             }
@@ -115,7 +115,7 @@ fun ProductFormSreen(function: String, viewModel: ProductViewModel, back: () -> 
                 }
 
                 if (isNameValid && isPriceValid && isQuantityValid) {
-                    viewModel.insert(product = Product(image = imageUri.toString(), productName = name, price = price.toDouble(), category = categoryId, quantity = quantity.toInt()))
+                    viewModel.insert(product = Product(id = product?.id ?: 0, image = imageUri.toString(), productName = name, price = price.toDouble(), category = categoryId, quantity = quantity.toInt()))
                     back.invoke()
                 }
             }

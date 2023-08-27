@@ -12,7 +12,7 @@ interface UserDao {
     @Query("SELECT * FROM Users")
     fun getAll(): Flow<List<User>>
 
-    @Query("SELECT * FROM Users WHERE id = :id")
+    @Query("SELECT * FROM Users WHERE userId = :id")
     fun getUser(id: Int): Flow<User>
 
     @Insert()

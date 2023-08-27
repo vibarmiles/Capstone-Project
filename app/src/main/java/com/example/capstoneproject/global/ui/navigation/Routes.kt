@@ -1,14 +1,15 @@
 package com.example.capstoneproject.global.ui.navigation
 
 import com.example.capstoneproject.R
+import com.example.capstoneproject.product_management.data.Room.product.Product
 
 sealed class Routes(val route: String) {
     object SplashScreen : Routes("Splash")
     object Dashboard : Routes((R.string.dashboard).toString())
     object Product : Routes((R.string.product).toString()) {
         object Add : Routes(this.route + "/Add")
-        object Edit : Routes(this.route + "/Edit") {
-            fun createRoute() = null
+        object Edit : Routes(this.route + "/Edit/{productId}/{name}/{image}/{price}/{categoryId}/{quantity}") {
+            fun createRoute(productId: Int, name: String, image: String, price: Double, categoryId: Int, quantity: Int) = Routes.Product.route + "/Edit/$productId/$name/$image/$price/$categoryId/$quantity"
         }
     }
     object Branch : Routes((R.string.branch).toString()) {

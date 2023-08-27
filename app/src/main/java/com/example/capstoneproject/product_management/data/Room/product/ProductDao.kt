@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProductDao {
-    @Query("SELECT Products.*, Categories.id, Coalesce(Categories.categoryName, 'Default') as categoryName  FROM Products LEFT JOIN Categories ON Products.category = Categories.id ORDER BY Categories.categoryName, Products.productName ASC")
+    @Query("SELECT Products.*, Categories.categoryId, Coalesce(Categories.categoryName, 'Default') as categoryName  FROM Products LEFT JOIN Categories ON Products.category = Categories.categoryId ORDER BY Categories.categoryName, Products.productName ASC")
     fun getAll(): Flow<Map<Category, List<Product>>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
