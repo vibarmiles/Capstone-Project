@@ -1,11 +1,8 @@
 package com.example.capstoneproject.global.ui.navigation
 
-import android.app.Application
 import androidx.compose.material.ScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -13,19 +10,16 @@ import androidx.navigation.compose.composable
 import com.example.capstoneproject.AppSplashScreen
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
-import com.example.capstoneproject.product_management.data.Room.branch.Branch
-import com.example.capstoneproject.product_management.data.Room.product.Product
+import com.example.capstoneproject.product_management.data.firebase.branch.Branch
+import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchFormScreen
 import com.example.capstoneproject.product_management.ui.branch.BranchScreen
-import com.example.capstoneproject.product_management.ui.branch.viewmodel.BranchViewModel
-import com.example.capstoneproject.product_management.ui.branch.viewmodel.BranchViewModelFactory
+import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.category.CategoryScreen
-import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModel
-import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModelFactory
+import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductFormSreen
 import com.example.capstoneproject.product_management.ui.product.ProductScreen
-import com.example.capstoneproject.product_management.ui.product.viewModel.ProductViewModel
-import com.example.capstoneproject.product_management.ui.product.viewModel.ProductViewModelFactory
+import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
 import com.example.capstoneproject.user_management.ui.users.composable.UserScreen
 import kotlinx.coroutines.CoroutineScope
@@ -33,9 +27,10 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 @Composable
-fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaffoldState: ScaffoldState, appViewModel: AppViewModel) {
-    val application: Application = LocalContext.current.applicationContext as Application
-    var screenViewModel: AndroidViewModel
+fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: AppViewModel) {
+    val branchViewModel: BranchViewModel = viewModel()
+    val categoryViewModel: CategoryViewModel = viewModel()
+    val productViewModel: ProductViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = Routes.SplashScreen.route) {
         composable(Routes.SplashScreen.route) {
@@ -43,7 +38,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
                 navController.navigate(Routes.Product.route) {
                     popUpTo(0)
                 }
-                appViewModel.isLoading.value = false
+                viewModel.isLoading.value = false
             }
         }
         composable(Routes.Dashboard.route) {
@@ -51,59 +46,53 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.Product.route) {
-            screenViewModel = viewModel(factory = ProductViewModelFactory(application))
-            ProductScreen(scope = scope, scaffoldState = scaffoldState, viewModel = screenViewModel as ProductViewModel, edit = {
-                id, productName, image, price, category, quantity -> navController.navigate(Routes.Product.Edit.createRoute(productId = id, name = productName, image = URLEncoder.encode(image, StandardCharsets.UTF_8.toString()), price = price, categoryId = category, quantity = quantity))
+            ProductScreen(scope = scope, scaffoldState = scaffoldState, branchViewModel = branchViewModel, productViewModel = productViewModel, edit = {
+                id, productName, image, price, category, quantity -> navController.navigate(Routes.Product.Edit.createRoute(
+                productId = id, name = productName, image = URLEncoder.encode(image, StandardCharsets.UTF_8.toString()), price = price, categoryId = category, quantity = quantity))
             }, add = { navController.navigate(Routes.Product.Add.route) })
         }
 
         composable(Routes.Product.Add.route) {
-            screenViewModel = viewModel(factory = ProductViewModelFactory(application))
-            ProductFormSreen(function = "Add", viewModel = screenViewModel as ProductViewModel) {
+            ProductFormSreen(function = "Add", productViewModel = productViewModel, categoryViewModel = categoryViewModel) {
                 navController.popBackStack()
             }
         }
 
         composable(Routes.Product.Edit.route) {
-            screenViewModel = viewModel(factory = ProductViewModelFactory(application))
-            val productId: Int = it.arguments?.getString("productId")!!.toInt()
+            val productId: String = it.arguments?.getString("productId")!!
             val image: String = it.arguments?.getString("image")!!
             val productName: String = it.arguments?.getString("name")!!
             val price: Double = it.arguments?.getString("price")!!.toDouble()
-            val category: Int = it.arguments?.getString("categoryId")!!.toInt()
+            val category: String = it.arguments?.getString("categoryId")!!
             val quantity: Int = it.arguments?.getString("quantity")!!.toInt()
-            ProductFormSreen(function = "Edit", viewModel = screenViewModel as ProductViewModel, product = Product(id = productId, image = image, productName = productName, price = price, category = category, quantity = quantity)) {
+            ProductFormSreen(function = "Edit", productViewModel = productViewModel, categoryViewModel = categoryViewModel, product = Product(id = productId, image = image, productName = productName, price = price, category = category, quantity = quantity)) {
                 navController.popBackStack()
             }
         }
 
         composable(Routes.Branch.route) {
-            screenViewModel = viewModel(factory = BranchViewModelFactory(application))
-            BranchScreen(scope = scope, scaffoldState = scaffoldState, screenViewModel as BranchViewModel, add = { navController.navigate(Routes.Branch.Add.route) }) {
+            BranchScreen(scope = scope, scaffoldState = scaffoldState, branchViewModel, add = { navController.navigate(Routes.Branch.Add.route) }) {
                 id, name, address -> navController.navigate(Routes.Branch.Edit.createRoute(id, name, address))
             }
         }
 
         composable(Routes.Branch.Add.route) {
-            screenViewModel = viewModel(factory = BranchViewModelFactory(application))
-            BranchFormScreen(screenViewModel as BranchViewModel) {
+            BranchFormScreen(viewModel = branchViewModel) {
                 navController.popBackStack()
             }
         }
 
         composable((Routes.Branch.Edit.route)) {
-            screenViewModel = viewModel(factory = BranchViewModelFactory(application))
-            val id: Int = it.arguments?.getString("branchId")!!.toInt()
+            val id: String = it.arguments?.getString("branchId")!!
             val name: String = it.arguments?.getString("branchName")!!
             val address: String = it.arguments?.getString("branchAddress")!!
-            BranchFormScreen(viewModel = screenViewModel as BranchViewModel, branch = Branch(id = id, branchName = name, address = address), function = "Edit") {
+            BranchFormScreen(viewModel = branchViewModel, branch = Branch(id = id, name = name, address = address), function = "Edit") {
                 navController.popBackStack()
             }
         }
 
         composable(Routes.Category.route) {
-            screenViewModel = viewModel(factory = CategoryViewModelFactory(LocalContext.current.applicationContext as Application))
-            CategoryScreen(scope = scope, scaffoldState = scaffoldState, viewModel = screenViewModel as CategoryViewModel)
+            CategoryScreen(scope = scope, scaffoldState = scaffoldState, viewModel = categoryViewModel)
         }
 
         composable(Routes.Contact.route) {
@@ -137,7 +126,6 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.User.Edit.route) {
-                it ->
             AddEditUserScreen(decision = stringResource(id = R.string.edit), back = { navController.popBackStack() }, userId = it.arguments?.getString("userId") ?: "")
         }
     }

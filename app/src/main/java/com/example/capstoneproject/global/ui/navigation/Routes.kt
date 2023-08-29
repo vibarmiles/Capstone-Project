@@ -1,7 +1,6 @@
 package com.example.capstoneproject.global.ui.navigation
 
 import com.example.capstoneproject.R
-import com.example.capstoneproject.product_management.data.Room.product.Product
 
 sealed class Routes(val route: String) {
     object SplashScreen : Routes("Splash")
@@ -9,13 +8,13 @@ sealed class Routes(val route: String) {
     object Product : Routes((R.string.product).toString()) {
         object Add : Routes(this.route + "/Add")
         object Edit : Routes(this.route + "/Edit/{productId}/{name}/{image}/{price}/{categoryId}/{quantity}") {
-            fun createRoute(productId: Int, name: String, image: String, price: Double, categoryId: Int, quantity: Int) = Routes.Product.route + "/Edit/$productId/$name/$image/$price/$categoryId/$quantity"
+            fun createRoute(productId: String, name: String, image: String, price: Double, categoryId: String, quantity: Int) = Routes.Product.route + "/Edit/$productId/$name/$image/$price/$categoryId/$quantity"
         }
     }
     object Branch : Routes((R.string.branch).toString()) {
         object Add : Routes(this.route + "/Add")
         object Edit : Routes(this.route + "/Edit/{branchId}/{branchName}/{branchAddress}") {
-            fun createRoute(branchId: Int, branchName: String, branchAddress: String) = Routes.Branch.route + "/Edit/$branchId/$branchName/$branchAddress"
+            fun createRoute(branchId: String, branchName: String, branchAddress: String) = Routes.Branch.route + "/Edit/$branchId/$branchName/$branchAddress"
         }
     }
     object Category : Routes((R.string.category).toString())

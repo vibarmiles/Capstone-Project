@@ -1,6 +1,5 @@
 package com.example.capstoneproject.product_management.ui.branch
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,12 +12,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.FormButtons
-import com.example.capstoneproject.product_management.data.Room.branch.Branch
-import com.example.capstoneproject.product_management.ui.branch.viewmodel.BranchViewModel
+import com.example.capstoneproject.product_management.data.firebase.branch.Branch
 
 @Composable
 fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", branch: Branch? = null, back: () -> Unit) {
@@ -32,7 +28,7 @@ fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", branc
         }
     ) {
         it -> it
-        var name by rememberSaveable { mutableStateOf(branch?.branchName ?: "") }
+        var name by rememberSaveable { mutableStateOf(branch?.name ?: "") }
         var address by rememberSaveable { mutableStateOf(branch?.address ?: "") }
         var isNameValid by rememberSaveable { mutableStateOf(true) }
         var isAddressValid by rememberSaveable { mutableStateOf(true) }
@@ -55,7 +51,7 @@ fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", branc
                 isAddressValid = address.isNotBlank()
 
                 if (isNameValid && isAddressValid) {
-                    viewModel.insert(Branch(id = branch?.id ?: 0, branchName = name, address = address))
+                    viewModel.insert(Branch(id = branch?.id ?: "", name = name, address = address))
                     back.invoke()
                 }
             }

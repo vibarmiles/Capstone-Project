@@ -1,5 +1,7 @@
 package com.example.capstoneproject.product_management.ui.branch
 
+import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,8 +10,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Store
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,14 +24,14 @@ import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
-import com.example.capstoneproject.product_management.data.Room.branch.Branch
-import com.example.capstoneproject.product_management.ui.branch.viewmodel.BranchViewModel
+import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
+import com.example.capstoneproject.product_management.data.firebase.branch.Branch
 import com.example.capstoneproject.ui.theme.Purple500
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: BranchViewModel, add: () -> Unit, edit: (Int, String, String) -> Unit) {
-    val branches = viewModel.branches.collectAsState(listOf())
+fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: BranchViewModel, add: () -> Unit, edit: (String, String, String) -> Unit) {
+    val branches by viewModel.branches.observeAsState(listOf())
     var branch: Branch? = null
     var showDeleteDialog by remember {
         mutableStateOf(false)
@@ -48,14 +50,14 @@ fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel:
         it
         LazyColumn(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             item {
-                val size = branches.value.size
+                val size = branches.size
                 Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered branches"; 1 -> "1 branch is entered"; else -> "$size branches are entered"})
             }
 
-            itemsIndexed(branches.value) {
+            itemsIndexed(branches) {
                 _, item ->
-                BranchListItem(branch = item.branchName, address = item.address, edit = {
-                    edit.invoke(item.id, item.branchName, item.address)
+                BranchListItem(branch = item.name, address = item.address, edit = {
+                    edit.invoke(item.id, item.name, item.address)
                 }) {
                     branch = item
                     showDeleteDialog = true
@@ -68,7 +70,7 @@ fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel:
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = branch!!.branchName, onCancel = { showDeleteDialog = false }) {
+            ConfirmDeletion(item = branch!!.name, onCancel = { showDeleteDialog = false }) {
                 viewModel.delete(branch!!)
                 showDeleteDialog = false
             }
@@ -87,5 +89,7 @@ fun BranchListItem(branch: String = "Branch", address: String = "#234 Address St
                 Icon(Icons.Filled.Delete, contentDescription = null)
             }
         }
-    }, leadingContent = { Box(modifier = Modifier.size(50.dp).background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Text(text = branch.substring(startIndex = 0, endIndex = 1), fontSize = 16.sp, color = Color.White, textAlign = TextAlign.Center) } } )
+    }, leadingContent = { Box(modifier = Modifier
+        .size(50.dp)
+        .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Text(text = branch.substring(startIndex = 0, endIndex = 1), fontSize = 16.sp, color = Color.White, textAlign = TextAlign.Center) } } )
 }

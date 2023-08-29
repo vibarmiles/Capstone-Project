@@ -22,12 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
 import com.example.capstoneproject.user_management.data.Room.User
-import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModel
-import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModelFactory
 
 @Composable
 fun UserManagementForm(userId: Int = 0, cancel: () -> Unit) {
-    val viewModel: UserViewModel = viewModel(factory = UserViewModelFactory(LocalContext.current.applicationContext as Application))
     var firstName by rememberSaveable { mutableStateOf("") }
     var lastName by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
@@ -49,7 +46,7 @@ fun UserManagementForm(userId: Int = 0, cancel: () -> Unit) {
             Button(onClick = {
                 if (firstName.isNotBlank() && lastName.isNotBlank() && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank() && password == confirmPassword) {
                     val user: User = User(lastName = lastName, firstName = firstName, email = email, password = password, salt = "salt")
-                    viewModel.insert(user)
+                    //viewModel.insert(user)
                 }
             }, modifier = Modifier.weight(1f)) {
                 Text(text = stringResource(R.string.submit_button), modifier = Modifier.padding(4.dp))

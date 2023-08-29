@@ -1,35 +1,25 @@
 package com.example.capstoneproject.user_management.ui.users.composable
 
-import android.app.Application
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
-import com.example.capstoneproject.global.ui.navigation.Routes
-import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModel
-import com.example.capstoneproject.user_management.ui.viewmodel.UserViewModelFactory
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
 fun UserScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, add: () -> Unit, edit: (String) -> Unit) {
-    val viewModel: UserViewModel = viewModel(factory = UserViewModelFactory(LocalContext.current.applicationContext as Application))
-    val users = viewModel.users.collectAsState(listOf())
     Scaffold(
         topBar = {
             BaseTopAppBar(title = stringResource(id = R.string.user), scope = scope, scaffoldState = scaffoldState)
@@ -40,12 +30,8 @@ fun UserScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, add: () -> U
         }
     }) {
         it
-        LazyColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { itemsIndexed(users.value) {
-                    _, item ->
-                UserListItem(name = item.lastName + " " + item.firstName, email = "Cashier@email.com") {
-                    edit.invoke(Routes.User.Edit.createRoute(item.id))
-                }
-            }
+        LazyColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+
         }
     }
 }

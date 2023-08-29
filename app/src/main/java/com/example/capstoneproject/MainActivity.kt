@@ -66,7 +66,7 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
         }}
     ) {
         it
-        NavigationHost(navController = navController, scope = scope, scaffoldState = scaffoldState, appViewModel = appViewModel)
+        NavigationHost(navController = navController, scope = scope, scaffoldState = scaffoldState, viewModel = appViewModel)
     }
 }
 

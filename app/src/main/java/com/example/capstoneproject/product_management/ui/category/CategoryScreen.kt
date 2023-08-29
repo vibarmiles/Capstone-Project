@@ -9,6 +9,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,14 +20,14 @@ import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
-import com.example.capstoneproject.product_management.data.Room.category.Category
-import com.example.capstoneproject.product_management.ui.category.viewmodel.CategoryViewModel
+import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
+import com.example.capstoneproject.product_management.data.firebase.category.Category
 import com.example.capstoneproject.ui.theme.Purple500
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
 fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: CategoryViewModel) {
-    val categories = viewModel.categories.collectAsState(listOf())
+    val categories = viewModel.categories.observeAsState(listOf())
     var category: Category? = null
     var showDialog by remember {
         mutableStateOf(false)
@@ -126,7 +127,7 @@ fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, on
             Button(onClick = {
                 if (categoryName.isNotBlank()) {
                     isValid = true
-                    onConfirm.invoke(Category(id = category?.id ?: 0, categoryName = categoryName))
+                    onConfirm.invoke(Category(id = category?.id ?: "", categoryName = categoryName))
                 } else {
                     isValid = false
                 }

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,12 +27,13 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.FormButtons
-import com.example.capstoneproject.product_management.data.Room.product.Product
-import com.example.capstoneproject.product_management.ui.product.viewModel.ProductViewModel
+import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
+import com.example.capstoneproject.product_management.data.firebase.product.Product
+import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ProductFormSreen(function: String, viewModel: ProductViewModel, product: Product? = null, back: () -> Unit) {
+fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, product: Product? = null, back: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "$function Product") }, navigationIcon = {
@@ -42,15 +44,17 @@ fun ProductFormSreen(function: String, viewModel: ProductViewModel, product: Pro
         }
     ) {
         it -> it
-        Column(modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            val category = viewModel.categories.collectAsState(initial = listOf())
+        Column(modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            val category = categoryViewModel.categories.observeAsState(listOf())
             var name by remember { mutableStateOf(product?.productName ?: "") }
             var isNameValid by remember { mutableStateOf(true) }
             var price by remember { mutableStateOf((product?.price ?: "").toString()) }
             var isPriceValid by remember { mutableStateOf(true) }
             var expanded by remember { mutableStateOf(false) }
-            var categoryId: Int by remember { mutableStateOf(product?.category ?: 0) }
-            var selectedCategory by remember { mutableStateOf(if (categoryId == 0) "None" else "Current Category") }
+            var categoryId: String by remember { mutableStateOf(product?.category.toString() ?: "") }
+            var selectedCategory by remember { mutableStateOf(if (categoryId.isBlank()) "None" else "Current Category") }
             var quantity by remember { mutableStateOf((product?.quantity ?: "").toString()) }
             var isQuantityValid by remember { mutableStateOf(true) }
             var imageUri by remember { mutableStateOf<Uri?>(if (product == null) null else Uri.parse(product?.image)) }
@@ -93,7 +97,7 @@ fun ProductFormSreen(function: String, viewModel: ProductViewModel, product: Pro
                 DropdownMenu(modifier = Modifier
                     .exposedDropdownSize()
                     .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
-                    androidx.compose.material3.DropdownMenuItem(text = { Text(text = "None") }, onClick = { categoryId = 0; selectedCategory = "None" })
+                    androidx.compose.material3.DropdownMenuItem(text = { Text(text = "None") }, onClick = { categoryId = ""; selectedCategory = "None" })
 
                     category.value.forEach {
                         androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.categoryName) }, onClick = { categoryId = it.id; selectedCategory = it.categoryName })
@@ -115,7 +119,7 @@ fun ProductFormSreen(function: String, viewModel: ProductViewModel, product: Pro
                 }
 
                 if (isNameValid && isPriceValid && isQuantityValid) {
-                    viewModel.insert(product = Product(id = product?.id ?: 0, image = imageUri.toString(), productName = name, price = price.toDouble(), category = categoryId, quantity = quantity.toInt()))
+                    productViewModel.insert(product = Product(id = product?.id ?: "", image = imageUri.toString(), productName = name, price = price.toDouble(), category = categoryId, quantity = quantity.toInt()))
                     back.invoke()
                 }
             }

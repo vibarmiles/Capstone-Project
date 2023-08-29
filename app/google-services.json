@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1004425230241",
+    "project_id": "thesis-9e4b1",
+    "storage_bucket": "thesis-9e4b1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1004425230241:android:d933436b305e7f9a54bde0",
+        "android_client_info": {
+          "package_name": "com.example.capstoneproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1004425230241-i3gl3dfkjlau18ndgjo0os137k9t23g7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnAZ_INeX2iWvCtiavVS6wDS9nJm6tud4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1004425230241-i3gl3dfkjlau18ndgjo0os137k9t23g7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
