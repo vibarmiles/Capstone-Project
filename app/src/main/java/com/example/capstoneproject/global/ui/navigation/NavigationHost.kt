@@ -47,8 +47,8 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
 
         composable(Routes.Product.route) {
             ProductScreen(scope = scope, scaffoldState = scaffoldState, branchViewModel = branchViewModel, productViewModel = productViewModel, edit = {
-                id, productName, image, price, category, quantity -> navController.navigate(Routes.Product.Edit.createRoute(
-                productId = id, name = productName, image = URLEncoder.encode(image, StandardCharsets.UTF_8.toString()), price = price, categoryId = category, quantity = quantity))
+                id, productName, image, price, category -> navController.navigate(Routes.Product.Edit.createRoute(
+                productId = id, name = productName, image = URLEncoder.encode(image, StandardCharsets.UTF_8.toString()), price = price, categoryId = category))
             }, add = { navController.navigate(Routes.Product.Add.route) })
         }
 
@@ -64,8 +64,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
             val productName: String = it.arguments?.getString("name")!!
             val price: Double = it.arguments?.getString("price")!!.toDouble()
             val category: String = it.arguments?.getString("categoryId")!!
-            val quantity: Int = it.arguments?.getString("quantity")!!.toInt()
-            ProductFormSreen(function = "Edit", productViewModel = productViewModel, categoryViewModel = categoryViewModel, product = Product(id = productId, image = image, productName = productName, price = price, category = category, quantity = quantity)) {
+            ProductFormSreen(function = "Edit", productViewModel = productViewModel, categoryViewModel = categoryViewModel, product = Product(id = productId, image = image, productName = productName, price = price, category = category)) {
                 navController.popBackStack()
             }
         }

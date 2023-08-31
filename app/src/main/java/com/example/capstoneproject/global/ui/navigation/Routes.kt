@@ -7,8 +7,8 @@ sealed class Routes(val route: String) {
     object Dashboard : Routes((R.string.dashboard).toString())
     object Product : Routes((R.string.product).toString()) {
         object Add : Routes(this.route + "/Add")
-        object Edit : Routes(this.route + "/Edit/{productId}/{name}/{image}/{price}/{categoryId}/{quantity}") {
-            fun createRoute(productId: String, name: String, image: String, price: Double, categoryId: String, quantity: Int) = Routes.Product.route + "/Edit/$productId/$name/$image/$price/$categoryId/$quantity"
+        object Edit : Routes(this.route + "/Edit/{productId}/{name}/{image}/{price}/{categoryId}") {
+            fun createRoute(productId: String, name: String, image: String, price: Double, categoryId: String) = Routes.Product.route + "/Edit/$productId/$name/$image/$price/$categoryId"
         }
     }
     object Branch : Routes((R.string.branch).toString()) {

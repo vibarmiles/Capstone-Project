@@ -53,9 +53,8 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
             var price by remember { mutableStateOf((product?.price ?: "").toString()) }
             var isPriceValid by remember { mutableStateOf(true) }
             var expanded by remember { mutableStateOf(false) }
-            var categoryId: String by remember { mutableStateOf(product?.category.toString() ?: "") }
+            var categoryId: String by remember { mutableStateOf(product?.category ?: "") }
             var selectedCategory by remember { mutableStateOf(if (categoryId.isBlank()) "None" else "Current Category") }
-            var quantity by remember { mutableStateOf((product?.quantity ?: "").toString()) }
             var isQuantityValid by remember { mutableStateOf(true) }
             var imageUri by remember { mutableStateOf<Uri?>(if (product == null) null else Uri.parse(product?.image)) }
             val imageUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument(), onResult = { imageUri = it })
@@ -105,21 +104,19 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
                 }
             }
 
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = quantity, onValueChange = { quantity = it }, placeholder = { Text(text = "Enter Current Quantity") }, label = { Text(text = "Quantity") }, isError = !isQuantityValid, trailingIcon = { if (!isQuantityValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
 
             val context = LocalContext.current
 
             FormButtons(cancel = back) {
                 isNameValid = name.isNotBlank()
                 isPriceValid = if (price.isNotBlank()) price.toDouble() > 0 else false
-                isQuantityValid = if (quantity.isNotBlank()) quantity.toInt() >= 0 else false
 
                 if (imageUri != null) {
                     context.contentResolver.takePersistableUriPermission(imageUri!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
 
                 if (isNameValid && isPriceValid && isQuantityValid) {
-                    productViewModel.insert(product = Product(id = product?.id ?: "", image = imageUri.toString(), productName = name, price = price.toDouble(), category = categoryId, quantity = quantity.toInt()))
+                    productViewModel.insert(product = Product(id = product?.id ?: "", image = imageUri?.path ?: "", productName = name, price = price.toDouble(), category = categoryId))
                     back.invoke()
                 }
             }

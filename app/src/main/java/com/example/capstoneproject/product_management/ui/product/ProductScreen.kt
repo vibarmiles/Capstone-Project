@@ -31,9 +31,9 @@ import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, edit: (String, String, String, Double, String, Int) -> Unit, add: () -> Unit) {
+fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, edit: (String, String, String, Double, String) -> Unit, add: () -> Unit) {
     val branch = branchViewModel.branches.observeAsState(listOf())
-    val products = productViewModel.products.observeAsState(mapOf())
+    val products = productViewModel.products.observeAsState(listOf())
     var showDeleteDialog by remember { mutableStateOf(false) }
     var product: Product? = null
 
@@ -57,8 +57,8 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
             TabLayout(tabs = branch.value) {
                 branchId = it
             }
-            ProductScreenContent(selectedTabIndex = branchId, products = products.value, edit = {
-                edit.invoke(it.id, it.productName, it.image ?: "", it.price, it.category, it.quantity)
+            ProductScreenContent(selectedTabIndex = branchId, products = products.value ?: listOf(), edit = {
+                edit.invoke(it.id, it.productName, it.image ?: "", it.price, it.category)
             }) {
                 product = it
                 showDeleteDialog = true
@@ -90,22 +90,15 @@ fun TabLayout(tabs: List<Branch>, onClick: (Int) -> Unit) {
 }
 
 @Composable
-fun ProductScreenContent(selectedTabIndex: Int, products: Map<Category, List<Product>>, edit: (Product) -> Unit, delete: (Product) -> Unit) {
+fun ProductScreenContent(selectedTabIndex: Int, products: List<Product>, edit: (Product) -> Unit, delete: (Product) -> Unit) {
     LazyColumn(modifier = Modifier
         .fillMaxSize()
         .padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
 
-        for (category in products.keys) {
-            item {
-                Row(modifier = Modifier.padding(16.dp)) {
-                    Text(text = category.categoryName)
-                }
-            }
-            itemsIndexed(products.getValue(category)) {
-                    _, it ->
-                Log.d("id", products.toString())
-                Products(it, edit = { edit.invoke(it) }, delete = { delete.invoke(it) })
-            }
+        itemsIndexed(products) {
+                _, it ->
+            Log.d("id", products.toString())
+            Products(it, edit = { edit.invoke(it) }, delete = { delete.invoke(it) })
         }
     }
 }
@@ -114,7 +107,7 @@ fun ProductScreenContent(selectedTabIndex: Int, products: Map<Category, List<Pro
 fun Products(product: Product, edit: () -> Unit, delete: () -> Unit) {
     androidx.compose.material3.ListItem(leadingContent = { AsyncImage(error = rememberVectorPainter(image = Icons.Filled.Image), model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier
         .clip(RoundedCornerShape(5.dp))
-        .size(50.dp), placeholder = rememberVectorPainter(Icons.Default.Image), contentDescription = null) }, headlineContent = { Text(text = "Qty: " + product.quantity.toString(), fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = product.productName) }, trailingContent = { Row {
+        .size(50.dp), placeholder = rememberVectorPainter(Icons.Default.Image), contentDescription = null) }, headlineContent = { Text(text = "Qty: 0", fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = product.productName) }, trailingContent = { Row {
         IconButton(onClick = edit) {
             Icon(Icons.Filled.Edit, contentDescription = null)
         }
