@@ -33,7 +33,7 @@ import kotlinx.coroutines.CoroutineScope
 @Composable
 fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, edit: (String, String, String, Double, String) -> Unit, add: () -> Unit) {
     val branch = branchViewModel.branches.observeAsState(listOf())
-    val products = productViewModel.products.observeAsState(listOf())
+    val products = productViewModel.products
     var showDeleteDialog by remember { mutableStateOf(false) }
     var product: Product? = null
 
@@ -57,8 +57,8 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
             TabLayout(tabs = branch.value) {
                 branchId = it
             }
-            ProductScreenContent(selectedTabIndex = branchId, products = products.value ?: listOf(), edit = {
-                edit.invoke(it.id, it.productName, it.image ?: "", it.price, it.category)
+            ProductScreenContent(selectedTabIndex = branchId, products = products, edit = {
+                edit.invoke(it.id, it.productName, it.image ?: "", it.price, it.category ?: "")
             }) {
                 product = it
                 showDeleteDialog = true
@@ -99,6 +99,10 @@ fun ProductScreenContent(selectedTabIndex: Int, products: List<Product>, edit: (
                 _, it ->
             Log.d("id", products.toString())
             Products(it, edit = { edit.invoke(it) }, delete = { delete.invoke(it) })
+        }
+        
+        item {
+            Spacer(modifier = Modifier.height(50.dp))
         }
     }
 }

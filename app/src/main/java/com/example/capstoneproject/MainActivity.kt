@@ -56,7 +56,7 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
         scaffoldState = scaffoldState,
         drawerScrimColor = Color.Black.copy(0.7f),
         drawerGesturesEnabled = !appViewModel.isLoading.value,
-        drawerContent = { Drawer(selectedItem = selectedItem) {
+        drawerContent = { Drawer {
             selectedItem = it
             navController.navigate(selectedItem.toString())
             scope.launch {
@@ -88,7 +88,7 @@ fun AppSplashScreen(onLoad: (Boolean) -> Unit) {
 
     if (PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permissions[1])) {
         LaunchedEffect(key1 = true, block = {
-            delay(3000)
+            delay(5000)
             fade = false
             delay(500)
             onLoad.invoke(true)

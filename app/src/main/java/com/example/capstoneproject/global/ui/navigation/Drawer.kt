@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -14,7 +13,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,13 +22,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
 
 @Composable
-fun Drawer(selectedItem: Int, onClick: (Int) -> Unit) {
+fun Drawer(onClick: (Int) -> Unit) {
+    var selectedItem: Int by remember { mutableStateOf(R.string.dashboard) }
     val navigationList: List<NavigationItems> = listOf(NavigationItems.Dashboard, NavigationItems.Inventory, NavigationItems.Supplier, NavigationItems.Users, NavigationItems.Report, NavigationItems.POS)
     val subNavigationList: List<NavigationItems> = listOf(NavigationItems.Inventory.Product, NavigationItems.Inventory.Branch, NavigationItems.Inventory.Category, NavigationItems.Supplier.Contact, NavigationItems.Supplier.PurchaseOrder, NavigationItems.Supplier.ReturnOrder)
     var showSubItemForInventory by remember { mutableStateOf(false) }
@@ -63,6 +61,7 @@ fun Drawer(selectedItem: Int, onClick: (Int) -> Unit) {
                         } else {
                             showSubItemForInventory = false
                             showSubItemForSupplier = false
+                            selectedItem = it.title
                             onClick.invoke(it.title)
                         }
                     })
@@ -75,12 +74,12 @@ fun Drawer(selectedItem: Int, onClick: (Int) -> Unit) {
                             if (it.title == subItem.parentItem && subItem.parentItem == R.string.inventory) {
                                 AnimatedVisibility(visible = showSubItemForInventory, enter = expandVertically(expandFrom = Alignment.CenterVertically), exit = shrinkVertically()) {
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    NavigationDrawerItem(icon = { Icon(imageVector = subItem.icon, contentDescription = null) }, label = { Text(text = stringResource(id = subItem.title)) }, onClick = { onClick.invoke(subItem.title) }, selected = subItem.title == selectedItem)
+                                    NavigationDrawerItem(icon = { Icon(imageVector = subItem.icon, contentDescription = null) }, label = { Text(text = stringResource(id = subItem.title)) }, onClick = { selectedItem = subItem.title; onClick.invoke(subItem.title) }, selected = subItem.title == selectedItem)
                                 }
                             } else if (it.title == subItem.parentItem && subItem.parentItem == R.string.supplier) {
                                 AnimatedVisibility(visible = showSubItemForSupplier, enter = expandVertically(expandFrom = Alignment.Top), exit = shrinkVertically()) {
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    NavigationDrawerItem(icon = { Icon(imageVector = subItem.icon, contentDescription = null) }, label = { Text(text = stringResource(id = subItem.title)) }, onClick = { onClick.invoke(subItem.title) }, selected = subItem.title == selectedItem)
+                                    NavigationDrawerItem(icon = { Icon(imageVector = subItem.icon, contentDescription = null) }, label = { Text(text = stringResource(id = subItem.title)) }, onClick = { selectedItem = subItem.title; onClick.invoke(subItem.title) }, selected = subItem.title == selectedItem)
                                 }
                             }
                         }

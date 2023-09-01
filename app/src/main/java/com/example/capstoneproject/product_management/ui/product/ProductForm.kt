@@ -53,10 +53,10 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
             var price by remember { mutableStateOf((product?.price ?: "").toString()) }
             var isPriceValid by remember { mutableStateOf(true) }
             var expanded by remember { mutableStateOf(false) }
-            var categoryId: String by remember { mutableStateOf(product?.category ?: "") }
-            var selectedCategory by remember { mutableStateOf(if (categoryId.isBlank()) "None" else "Current Category") }
+            var categoryId: String? by remember { mutableStateOf(product?.category) }
+            var selectedCategory by remember { mutableStateOf(if (categoryId == null) "None" else "Current Category") }
             var isQuantityValid by remember { mutableStateOf(true) }
-            var imageUri by remember { mutableStateOf<Uri?>(if (product == null) null else Uri.parse(product?.image)) }
+            var imageUri by remember { mutableStateOf(if (product == null) null else Uri.parse(product?.image)) }
             val imageUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument(), onResult = { imageUri = it })
 
             Box(modifier = Modifier
@@ -116,7 +116,7 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
                 }
 
                 if (isNameValid && isPriceValid && isQuantityValid) {
-                    productViewModel.insert(product = Product(id = product?.id ?: "", image = imageUri?.path ?: "", productName = name, price = price.toDouble(), category = categoryId))
+                    productViewModel.insert(product = Product(id = product?.id ?: "", image = if (imageUri != null) imageUri.toString() else null, productName = name, price = price.toDouble(), category = categoryId))
                     back.invoke()
                 }
             }
