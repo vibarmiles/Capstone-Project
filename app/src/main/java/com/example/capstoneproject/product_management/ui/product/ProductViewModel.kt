@@ -1,11 +1,6 @@
 package com.example.capstoneproject.product_management.ui.product
 
-import android.net.Uri
-import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.capstoneproject.product_management.data.firebase.product.Product
@@ -14,22 +9,22 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ProductViewModel : ViewModel() {
-    var products = mutableStateListOf<Product>()
+    var products = mutableStateMapOf<String, Product>()
     private val productRepository: ProductRepository = ProductRepository()
 
     init {
         products = productRepository.getAll()
     }
 
-    fun insert(product: Product) {
+    fun insert(id: String? = null, product: Product) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.insert(product = product)
+            productRepository.insert(key = id, product = product)
         }
     }
 
-    fun delete(product: Product) {
+    fun delete(key: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.delete(product = product)
+            productRepository.delete(key)
         }
     }
 }

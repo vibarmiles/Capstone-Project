@@ -8,11 +8,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -28,14 +30,16 @@ import com.example.capstoneproject.product_management.data.firebase.branch.Branc
 import com.example.capstoneproject.product_management.data.firebase.category.Category
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
+import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, edit: (String, String, String, Double, String) -> Unit, add: () -> Unit) {
+fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, edit: (String, String, String, Double, String) -> Unit, add: () -> Unit) {
     val branch = branchViewModel.branches.observeAsState(listOf())
     val products = productViewModel.products
+    val categories = categoryViewModel.categories.observeAsState(listOf())
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var product: Product? = null
+    var pair: Pair<String, String>? = null
 
     Scaffold(
         topBar = {
@@ -57,17 +61,17 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
             TabLayout(tabs = branch.value) {
                 branchId = it
             }
-            ProductScreenContent(selectedTabIndex = branchId, products = products, edit = {
-                edit.invoke(it.id, it.productName, it.image ?: "", it.price, it.category ?: "")
+            ProductScreenContent(selectedTabIndex = branchId, categories = categories.value, products = products, edit = {
+                edit.invoke(it.first, it.second.productName, it.second.image ?: "No Image Selected", it.second.price, it.second.category ?: "None")
             }) {
-                product = it
+                pair = it
                 showDeleteDialog = true
             }
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = product!!.productName, onCancel = { showDeleteDialog = false }) {
-                //viewModel.delete(product = product!!)
+            ConfirmDeletion(item = pair!!.second, onCancel = { showDeleteDialog = false }) {
+                productViewModel.delete(key = pair!!.first)
                 showDeleteDialog = false
             }
         }
@@ -90,15 +94,32 @@ fun TabLayout(tabs: List<Branch>, onClick: (Int) -> Unit) {
 }
 
 @Composable
-fun ProductScreenContent(selectedTabIndex: Int, products: List<Product>, edit: (Product) -> Unit, delete: (Product) -> Unit) {
+fun ProductScreenContent(selectedTabIndex: Int, categories: List<Category>, products: Map<String, Product>, edit: (Pair<String, Product>) -> Unit, delete: (Pair<String, String>) -> Unit) {
     LazyColumn(modifier = Modifier
         .fillMaxSize()
         .padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
 
-        itemsIndexed(products) {
+        itemsIndexed(products.filterValues { it.category !in categories.map { category -> category.id } }.toList()) {
                 _, it ->
             Log.d("id", products.toString())
-            Products(it, edit = { edit.invoke(it) }, delete = { delete.invoke(it) })
+            Products(it.second, edit = { edit.invoke(it) }, delete = { delete.invoke(Pair(it.first, it.second.productName)) })
+        }
+
+        for (category in categories) {
+            val list = products.filterValues { it.category == category.id }.toList()
+            if (list.isEmpty()) {
+                continue
+            }
+
+            item {
+                androidx.compose.material3.ListItem(headlineContent = { Text(text = category.categoryName) }, colors = ListItemDefaults.colors(containerColor = Color.White))
+            }
+            
+            itemsIndexed(list) {
+                    _, it ->
+                Log.d("id", products.toString())
+                Products(it.second, edit = { edit.invoke(it) }, delete = { delete.invoke(Pair(it.first, it.second.productName)) })
+            }
         }
         
         item {

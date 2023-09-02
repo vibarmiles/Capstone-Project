@@ -2,9 +2,8 @@ package com.example.capstoneproject.product_management.data.firebase.product
 
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -12,8 +11,6 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
 
 class ProductRepository {
     private val firebase = Firebase.database.reference
@@ -21,21 +18,21 @@ class ProductRepository {
     private val firestorage = Firebase.storage.reference
     private val productImageReference = firestorage.child("images")
 
-    fun getAll(): SnapshotStateList<Product> {
-        val products = mutableStateListOf<Product>()
-        val productList: MutableList<Product> = products
+    fun getAll(): SnapshotStateMap<String, Product> {
+        val products = mutableStateMapOf<String, Product>()
+        val productList: MutableMap<String, Product> = products
 
         productCollectionReference.addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                productList.add(snapshot.getValue<Product>()!!)
+                productList[snapshot.key!!] = snapshot.getValue<Product>()!!
             }
 
             override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                TODO("Not yet implemented")
+                productList[snapshot.key!!] = snapshot.getValue<Product>()!!
             }
 
             override fun onChildRemoved(snapshot: DataSnapshot) {
-                TODO("Not yet implemented")
+                productList.remove(snapshot.key)
             }
 
             override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
@@ -50,10 +47,10 @@ class ProductRepository {
         return products
     }
 
-    fun insert(product: Product) {
-        if (product.id.isNotBlank()) {
-            Log.d("ID is not blank", product.id)
-            productCollectionReference.child(product.id).setValue(product)
+    fun insert(key: String? = null, product: Product) {
+        if (key != null) {
+            Log.d("ID is not blank", key)
+            productCollectionReference.child(key).setValue(product)
         } else {
             Log.d("ID is blank", product.toString())
             val uri: Uri? = if (product.image != null) Uri.parse(product.image) else null
@@ -70,6 +67,6 @@ class ProductRepository {
         }
     }
 
-    fun delete(product: Product) = productCollectionReference.child(product.id).removeValue()
+    fun delete(key: String) = productCollectionReference.child(key).removeValue()
 
 }

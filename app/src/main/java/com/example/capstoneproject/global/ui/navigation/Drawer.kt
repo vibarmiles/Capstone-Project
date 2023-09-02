@@ -36,16 +36,16 @@ fun Drawer(onClick: (Int) -> Unit) {
 
     ModalDrawerSheet {
         Column(modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(135, 206, 235))) {
+            .fillMaxWidth()) {
             Spacer(modifier = Modifier.size(30.dp))
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Image(imageVector = Icons.Filled.Person, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier
                     .size(50.dp)
                     .clip(CircleShape)
                     .background(Color.Gray))
                 Text(text = "First Name M. Last", fontSize = 24.sp)
                 Text(text = "ADMIN", fontSize = 14.sp)
+                Divider()
             }
         }
         LazyColumn(modifier = Modifier.padding(8.dp)) {

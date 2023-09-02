@@ -33,7 +33,7 @@ import com.example.capstoneproject.product_management.ui.category.CategoryViewMo
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, product: Product? = null, back: () -> Unit) {
+fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, productId: String? = null, product: Product? = null, back: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "$function Product") }, navigationIcon = {
@@ -96,10 +96,10 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
                 DropdownMenu(modifier = Modifier
                     .exposedDropdownSize()
                     .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
-                    androidx.compose.material3.DropdownMenuItem(text = { Text(text = "None") }, onClick = { categoryId = ""; selectedCategory = "None" })
+                    androidx.compose.material3.DropdownMenuItem(text = { Text(text = "None") }, onClick = { categoryId = ""; selectedCategory = "None"; expanded = false })
 
                     category.value.forEach {
-                        androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.categoryName) }, onClick = { categoryId = it.id; selectedCategory = it.categoryName })
+                        androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.categoryName) }, onClick = { categoryId = it.id; selectedCategory = it.categoryName; expanded = false })
                     }
                 }
             }
@@ -111,12 +111,8 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
                 isNameValid = name.isNotBlank()
                 isPriceValid = if (price.isNotBlank()) price.toDouble() > 0 else false
 
-                if (imageUri != null) {
-                    context.contentResolver.takePersistableUriPermission(imageUri!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-
                 if (isNameValid && isPriceValid && isQuantityValid) {
-                    productViewModel.insert(product = Product(id = product?.id ?: "", image = if (imageUri != null) imageUri.toString() else null, productName = name, price = price.toDouble(), category = categoryId))
+                    productViewModel.insert(id = productId, product = Product(image = if (imageUri != null) imageUri.toString() else null, productName = name, price = price.toDouble(), category = categoryId))
                     back.invoke()
                 }
             }
