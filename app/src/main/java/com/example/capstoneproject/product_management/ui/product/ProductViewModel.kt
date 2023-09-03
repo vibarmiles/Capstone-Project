@@ -27,4 +27,10 @@ class ProductViewModel : ViewModel() {
             productRepository.delete(key)
         }
     }
+
+    fun setStock(key: String, value: Map<String, Int>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            productRepository.setQuantityForBranch(key, value)
+        }
+    }
 }

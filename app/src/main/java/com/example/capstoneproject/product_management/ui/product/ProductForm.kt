@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -75,7 +76,7 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
                     shape = RoundedCornerShape(5.dp)
                 )
                 .height(intrinsicSize = IntrinsicSize.Min)) {
-                Text(text = imageUri?.path ?: "No Image Selected", modifier = Modifier
+                Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = imageUri?.path ?: "No Image Selected", modifier = Modifier
                     .weight(1f)
                     .padding(
                         horizontal = OutlinedTextFieldDefaults

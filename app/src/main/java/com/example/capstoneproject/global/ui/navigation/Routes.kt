@@ -7,6 +7,9 @@ sealed class Routes(val route: String) {
     object Dashboard : Routes((R.string.dashboard).toString())
     object Product : Routes((R.string.product).toString()) {
         object Add : Routes(this.route + "/Add")
+        object Set : Routes(this.route + "/Set/{productId}/{stock}") {
+            fun createRoute(productId: String, stock: String) = Routes.Product.route + "/Set/$productId/$stock"
+        }
         object Edit : Routes(this.route + "/Edit/{productId}/{name}/{image}/{price}/{categoryId}") {
             fun createRoute(productId: String, name: String, image: String, price: Double, categoryId: String) = Routes.Product.route + "/Edit/$productId/$name/$image/$price/$categoryId"
         }

@@ -18,6 +18,7 @@ import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.category.CategoryScreen
 import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductFormSreen
+import com.example.capstoneproject.product_management.ui.product.ProductQuantityFormScreen
 import com.example.capstoneproject.product_management.ui.product.ProductScreen
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
@@ -48,7 +49,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         composable(Routes.Product.route) {
             ProductScreen(scope = scope, scaffoldState = scaffoldState, branchViewModel = branchViewModel, productViewModel = productViewModel, categoryViewModel = categoryViewModel, edit = {
                 id, productName, image, price, category -> navController.navigate(Routes.Product.Edit.createRoute(productId = id, name = productName, image = URLEncoder.encode(image, StandardCharsets.UTF_8.toString()), price = price, categoryId = category))
-            }, add = { navController.navigate(Routes.Product.Add.route) })
+            }, set = { id, stock -> navController.navigate(Routes.Product.Set.createRoute(id, stock)) }, add = { navController.navigate(Routes.Product.Add.route) })
         }
 
         composable(Routes.Product.Add.route) {
@@ -64,6 +65,19 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
             val price: Double = it.arguments?.getString("price")!!.toDouble()
             val category: String = it.arguments?.getString("categoryId")!!
             ProductFormSreen(function = "Edit", productViewModel = productViewModel, categoryViewModel = categoryViewModel, productId = productId, product = Product(image = image, productName = productName, price = price, category = category)) {
+                navController.popBackStack()
+            }
+        }
+
+        composable(Routes.Product.Set.route) {
+            val productId: String = it.arguments?.getString("productId")!!
+            val stock: String = it.arguments?.getString("stock")!!
+            val input: String = stock.substring(1, stock.length - 1)
+            var map: Map<String, Int>? = null
+            if (input.isNotBlank()) {
+                map = input.split(", ").associate { value -> val split = value.split("="); split[0] to split[1].toInt() }
+            }
+            ProductQuantityFormScreen(productViewModel = productViewModel, branchViewModel = branchViewModel, productId = productId, map = map) {
                 navController.popBackStack()
             }
         }

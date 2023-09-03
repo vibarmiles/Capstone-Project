@@ -20,19 +20,21 @@ class ProductRepository {
 
     fun getAll(): SnapshotStateMap<String, Product> {
         val products = mutableStateMapOf<String, Product>()
-        val productList: MutableMap<String, Product> = products
 
         productCollectionReference.addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                productList[snapshot.key!!] = snapshot.getValue<Product>()!!
+                products[snapshot.key!!] = snapshot.getValue<Product>()!!
+                Log.d("Added", "Something")
             }
 
             override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                productList[snapshot.key!!] = snapshot.getValue<Product>()!!
+                products[snapshot.key!!] = snapshot.getValue<Product>()!!
+                Log.d("Updated", snapshot.getValue<Product>()!!.toString())
             }
 
             override fun onChildRemoved(snapshot: DataSnapshot) {
-                productList.remove(snapshot.key)
+                products.remove(snapshot.key)
+                Log.d("Removed", "Something")
             }
 
             override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
@@ -46,6 +48,8 @@ class ProductRepository {
         })
         return products
     }
+
+    fun setQuantityForBranch(key: String, value: Map<String, Int>) = productCollectionReference.child(key).child("stock").setValue(value)
 
     fun insert(key: String? = null, product: Product) {
         if (key != null) {
