@@ -22,11 +22,12 @@ import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
 import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
 import com.example.capstoneproject.product_management.data.firebase.category.Category
+import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.ui.theme.Purple500
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: CategoryViewModel) {
+fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: CategoryViewModel, productViewModel: ProductViewModel) {
     val categories = viewModel.categories.observeAsState(listOf())
     var category: Category? = null
     var showDialog by remember {
@@ -81,6 +82,7 @@ fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewMode
         if (showDeleteDialog) {
             ConfirmDeletion(item = category?.categoryName ?: "", onCancel = { showDeleteDialog = false }) {
                 viewModel.delete(category!!)
+                productViewModel.removeCategory(categoryId = category!!.id)
                 showDeleteDialog = false
             }
         }

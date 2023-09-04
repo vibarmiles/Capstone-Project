@@ -26,11 +26,12 @@ import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
+import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.ui.theme.Purple500
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: BranchViewModel, add: () -> Unit, edit: (String, String, String) -> Unit) {
+fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: BranchViewModel, productViewModel: ProductViewModel, add: () -> Unit, edit: (String, String, String) -> Unit) {
     val branches by viewModel.branches.observeAsState(listOf())
     var branch: Branch? = null
     var showDeleteDialog by remember {
@@ -72,6 +73,7 @@ fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel:
         if (showDeleteDialog) {
             ConfirmDeletion(item = branch!!.name, onCancel = { showDeleteDialog = false }) {
                 viewModel.delete(branch!!)
+                productViewModel.removeBranchStock(branchId = branch!!.id)
                 showDeleteDialog = false
             }
         }

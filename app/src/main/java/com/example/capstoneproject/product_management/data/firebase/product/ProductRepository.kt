@@ -7,6 +7,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
@@ -24,17 +25,17 @@ class ProductRepository {
         productCollectionReference.addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 products[snapshot.key!!] = snapshot.getValue<Product>()!!
-                Log.d("Added", "Something")
+                Log.d("Added", snapshot.value.toString())
             }
 
             override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
                 products[snapshot.key!!] = snapshot.getValue<Product>()!!
-                Log.d("Updated", snapshot.getValue<Product>()!!.toString())
+                Log.d("Updated", snapshot.value.toString())
             }
 
             override fun onChildRemoved(snapshot: DataSnapshot) {
                 products.remove(snapshot.key)
-                Log.d("Removed", "Something")
+                Log.d("Removed", snapshot.value.toString())
             }
 
             override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
@@ -73,4 +74,30 @@ class ProductRepository {
 
     fun delete(key: String) = productCollectionReference.child(key).removeValue()
 
+    fun removeCategory(categoryId: String) = productCollectionReference.orderByChild("category").equalTo(categoryId).addListenerForSingleValueEvent(object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            for (child in snapshot.children) {
+                child.ref.child("category").removeValue()
+            }
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+            TODO("Not yet implemented")
+        }
+
+    })
+
+    fun removeBranchStock(branchId: String) = productCollectionReference.orderByChild("stock/$branchId").startAt(0.0).addListenerForSingleValueEvent(object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            Log.d("Calling", "Remove Branch Stock")
+            for (child in snapshot.children) {
+                child.ref.child("stock/$branchId").removeValue()
+            }
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+            TODO("Not yet implemented")
+        }
+
+    })
 }

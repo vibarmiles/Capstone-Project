@@ -35,7 +35,7 @@ import com.example.capstoneproject.product_management.ui.category.CategoryViewMo
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, edit: (String, String, String, Double, String) -> Unit, set: (String, String) -> Unit, add: () -> Unit) {
+fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, edit: (String, String, String?, Double, String?) -> Unit, set: (String, String) -> Unit, add: () -> Unit) {
     val branch = branchViewModel.branches.observeAsState(listOf())
     val products = productViewModel.products
     val categories = categoryViewModel.categories.observeAsState(listOf())
@@ -63,7 +63,7 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
                 branchId = it
             }
             ProductScreenContent(selectedTab = branchId, categories = categories.value, products = products, edit = {
-                edit.invoke(it.first, it.second.productName, it.second.image ?: "No Image Selected", it.second.price, it.second.category ?: "None")
+                edit.invoke(it.first, it.second.productName, it.second.image ?: null, it.second.price, it.second.category ?: null)
             }, set = { id, stock-> set.invoke(id, stock) }) {
                 pair = it
                 showDeleteDialog = true

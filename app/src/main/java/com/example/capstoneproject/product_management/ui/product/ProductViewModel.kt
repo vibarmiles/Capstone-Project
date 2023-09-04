@@ -24,13 +24,25 @@ class ProductViewModel : ViewModel() {
 
     fun delete(key: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.delete(key)
+            productRepository.delete(key = key)
         }
     }
 
     fun setStock(key: String, value: Map<String, Int>) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.setQuantityForBranch(key, value)
+            productRepository.setQuantityForBranch(key = key, value = value)
+        }
+    }
+
+    fun removeCategory(categoryId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            productRepository.removeCategory(categoryId = categoryId)
+        }
+    }
+
+    fun removeBranchStock(branchId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            productRepository.removeBranchStock(branchId = branchId)
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.capstoneproject.global.ui.navigation
 
+import android.util.Log
 import androidx.compose.material.ScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -36,7 +37,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
     NavHost(navController = navController, startDestination = Routes.SplashScreen.route) {
         composable(Routes.SplashScreen.route) {
             AppSplashScreen {
-                navController.navigate(Routes.Product.route) {
+                navController.navigate(Routes.Dashboard.route) {
                     popUpTo(0)
                 }
                 viewModel.isLoading.value = false
@@ -48,7 +49,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
 
         composable(Routes.Product.route) {
             ProductScreen(scope = scope, scaffoldState = scaffoldState, branchViewModel = branchViewModel, productViewModel = productViewModel, categoryViewModel = categoryViewModel, edit = {
-                id, productName, image, price, category -> navController.navigate(Routes.Product.Edit.createRoute(productId = id, name = productName, image = URLEncoder.encode(image, StandardCharsets.UTF_8.toString()), price = price, categoryId = category))
+                id, productName, image, price, category -> navController.navigate(Routes.Product.Edit.createRoute(productId = id, name = productName, image = URLEncoder.encode(image ?: "null", StandardCharsets.UTF_8.toString()), price = price, categoryId = category ?: "null"))
             }, set = { id, stock -> navController.navigate(Routes.Product.Set.createRoute(id, stock)) }, add = { navController.navigate(Routes.Product.Add.route) })
         }
 
@@ -60,10 +61,10 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
 
         composable(Routes.Product.Edit.route) {
             val productId: String = it.arguments?.getString("productId")!!
-            val image: String = it.arguments?.getString("image")!!
+            val image: String? = if (it.arguments?.getString("image")!! == "null") null else it.arguments?.getString("image")!!
             val productName: String = it.arguments?.getString("name")!!
             val price: Double = it.arguments?.getString("price")!!.toDouble()
-            val category: String = it.arguments?.getString("categoryId")!!
+            val category: String? = if (it.arguments?.getString("categoryId")!! == "null") null else it.arguments?.getString("categoryId")!!
             ProductFormSreen(function = "Edit", productViewModel = productViewModel, categoryViewModel = categoryViewModel, productId = productId, product = Product(image = image, productName = productName, price = price, category = category)) {
                 navController.popBackStack()
             }
@@ -83,7 +84,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.Branch.route) {
-            BranchScreen(scope = scope, scaffoldState = scaffoldState, branchViewModel, add = { navController.navigate(Routes.Branch.Add.route) }) {
+            BranchScreen(scope = scope, scaffoldState = scaffoldState, viewModel = branchViewModel, productViewModel = productViewModel, add = { navController.navigate(Routes.Branch.Add.route) }) {
                 id, name, address -> navController.navigate(Routes.Branch.Edit.createRoute(id, name, address))
             }
         }
@@ -104,7 +105,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.Category.route) {
-            CategoryScreen(scope = scope, scaffoldState = scaffoldState, viewModel = categoryViewModel)
+            CategoryScreen(scope = scope, scaffoldState = scaffoldState, viewModel = categoryViewModel, productViewModel = productViewModel)
         }
 
         composable(Routes.Contact.route) {

@@ -3,6 +3,8 @@ package com.example.capstoneproject
 import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -20,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.content.PermissionChecker
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.capstoneproject.global.ui.navigation.Drawer
@@ -75,7 +78,7 @@ fun AppSplashScreen(onLoad: (Boolean) -> Unit) {
     var fade: Boolean by remember { mutableStateOf(true) }
     val context = LocalContext.current
     var hasPermission by remember { mutableStateOf(true) }
-    val permissions = arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+    val permissions = arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.INTERNET, android.Manifest.permission.ACCESS_NETWORK_STATE, android.Manifest.permission.ACCESS_WIFI_STATE)
     val permissionState = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions(), onResult = {
         it -> it.forEach {
             if (it.value) {
@@ -84,18 +87,22 @@ fun AppSplashScreen(onLoad: (Boolean) -> Unit) {
         }
     })
 
-    LaunchedEffect(key1 = true, block = { permissionState.launch(permissions) })
-
-    if (PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permissions[1])) {
-        LaunchedEffect(key1 = true, block = {
+    LaunchedEffect(key1 = hasPermission, block = {
+        permissionState.launch(permissions)
+        if (
+            PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permissions[1]) &&
+            PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permissions[2]) &&
+            PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permissions[3])
+        ) {
+            Log.d("Checking", "True")
             delay(5000)
             fade = false
             delay(500)
             onLoad.invoke(true)
-        })
-    } else {
-
-    }
+        } else {
+            Log.d("Permission", "Denied")
+        }
+    })
 
     AnimatedVisibility(visible = fade,exit = fadeOut()) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {

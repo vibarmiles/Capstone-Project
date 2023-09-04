@@ -46,6 +46,9 @@ fun ProductQuantityFormScreen(productViewModel: ProductViewModel, branchViewMode
                 _, it ->
                 var text by rememberSaveable { mutableStateOf(if (map != null) if (map!!.containsKey(it.id)) map!![it.id].toString() else "" else "")}
                 var isValid by remember { mutableStateOf(true) }
+                if (text.isNotBlank()) {
+                    viewModel.stockPerBranch[it.id] = text
+                }
                 androidx.compose.material3.OutlinedTextField(supportingText = { if (!isValid) Text(text = "Enter whole numbers only!", color = Color.Red) }, trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, isError = !isValid, modifier = Modifier.fillMaxWidth(), value = text, label = { Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis) }, placeholder = { Text(text = "Insert Current Quantity") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), onValueChange = { value -> text = value; viewModel.stockPerBranch[it.id] = text; isValid = text.isDigitsOnly() })
             }
             item {
