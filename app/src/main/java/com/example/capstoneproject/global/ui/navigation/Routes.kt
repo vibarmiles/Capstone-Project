@@ -10,8 +10,8 @@ sealed class Routes(val route: String) {
         object Set : Routes(this.route + "/Set/{productId}/{stock}") {
             fun createRoute(productId: String, stock: String) = Routes.Product.route + "/Set/$productId/$stock"
         }
-        object Edit : Routes(this.route + "/Edit/{productId}/{name}/{image}/{price}/{categoryId}") {
-            fun createRoute(productId: String, name: String, image: String, price: Double, categoryId: String) = Routes.Product.route + "/Edit/$productId/$name/$image/$price/$categoryId"
+        object Edit : Routes(this.route + "/Edit/{productId}/{name}/{image}/{price}/{categoryId}/{stock}") {
+            fun createRoute(productId: String, name: String, image: String, price: Double, categoryId: String, stock: String) = Routes.Product.route + "/Edit/$productId/$name/$image/$price/$categoryId/$stock"
         }
     }
     object Branch : Routes((R.string.branch).toString()) {
@@ -21,7 +21,12 @@ sealed class Routes(val route: String) {
         }
     }
     object Category : Routes((R.string.category).toString())
-    object Contact : Routes((R.string.contact).toString())
+    object Contact : Routes((R.string.contact).toString()) {
+        object Add : Routes(this.route + "/Add")
+        object Edit : Routes(this.route + "/Edit/{contactId}/{contactName}/{contactNumber}") {
+            fun createRoute(contactId: String, contactName: String, contactNumber: String) = Routes.Contact.route + "/Edit/$contactId/$contactName/$contactNumber"
+        }
+    }
     object PurchaseOrder : Routes((R.string.purchase_order).toString())
     object ReturnOrder : Routes((R.string.return_order).toString())
     object User : Routes((R.string.user).toString()) {

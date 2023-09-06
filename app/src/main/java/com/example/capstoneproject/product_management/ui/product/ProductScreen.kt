@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.capstoneproject.R
@@ -35,7 +36,7 @@ import com.example.capstoneproject.product_management.ui.category.CategoryViewMo
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, edit: (String, String, String?, Double, String?) -> Unit, set: (String, String) -> Unit, add: () -> Unit) {
+fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, edit: (String, String, String?, Double, String?, String?) -> Unit, set: (String, String) -> Unit, add: () -> Unit) {
     val branch = branchViewModel.branches.observeAsState(listOf())
     val products = productViewModel.products
     val categories = categoryViewModel.categories.observeAsState(listOf())
@@ -63,8 +64,10 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
                 branchId = it
             }
             ProductScreenContent(selectedTab = branchId, categories = categories.value, products = products, edit = {
-                edit.invoke(it.first, it.second.productName, it.second.image ?: null, it.second.price, it.second.category ?: null)
-            }, set = { id, stock-> set.invoke(id, stock) }) {
+                edit.invoke(it.first, it.second.productName, it.second.image ?: null, it.second.price, it.second.category ?: null,
+                    it.second.stock.toString()
+                )
+            }, set = { id, stock -> set.invoke(id, stock) }) {
                 pair = it
                 showDeleteDialog = true
             }
@@ -134,7 +137,7 @@ fun Products(product: Product, quantity: Int, edit: () -> Unit, set: () -> Unit,
     var expanded: Boolean by remember { mutableStateOf(false) }
     androidx.compose.material3.ListItem(leadingContent = { AsyncImage(error = rememberVectorPainter(image = Icons.Filled.Image), model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier
         .clip(RoundedCornerShape(5.dp))
-        .size(50.dp), placeholder = rememberVectorPainter(Icons.Default.Image), contentDescription = null) }, headlineContent = { Text(text = "Qty: $quantity", fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = product.productName) }, trailingContent = {
+        .size(50.dp), placeholder = rememberVectorPainter(Icons.Default.Image), contentDescription = null) }, headlineContent = { Text(text = "Qty: $quantity", fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = product.productName, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
         IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Product") }, onClick = { expanded = false; edit.invoke() })

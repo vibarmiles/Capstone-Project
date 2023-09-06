@@ -32,7 +32,7 @@ import com.example.capstoneproject.product_management.ui.category.CategoryViewMo
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, productId: String? = null, product: Product? = null, back: () -> Unit) {
+fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, productId: String? = null, product: Product? = null, map: Map<String, Int>? = null, back: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "$function Product") }, navigationIcon = {
@@ -86,7 +86,7 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
                 }
             }
 
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = name, onValueChange = { name = it }, placeholder = { Text(text = "Enter Product Name") }, label = { Text(text = "Product Name") }, isError = !isNameValid, trailingIcon = { if (!isNameValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) })
+            OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = name, onValueChange = { name = it }, placeholder = { Text(text = "Enter Product's Name") }, label = { Text(text = "Product Name") }, isError = !isNameValid, trailingIcon = { if (!isNameValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) })
             OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = price, onValueChange = { price = it }, placeholder = { Text(text = "Enter Selling Price") }, label = { Text(text = "Selling Price") }, isError = !isPriceValid, trailingIcon = { if (!isPriceValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
 
             ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
@@ -108,7 +108,7 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
                 isPriceValid = if (price.isNotBlank()) price.toDouble() > 0 else false
                 Log.d("PATH",imageUri.toString())
                 if (isNameValid && isPriceValid && isQuantityValid) {
-                    productViewModel.insert(id = productId, product = Product(image = if (imageUri != null) imageUri.toString() else null, productName = name, price = price.toDouble(), category = categoryId))
+                    productViewModel.insert(id = productId, product = Product(image = if (imageUri != null) imageUri.toString() else null, productName = name, price = price.toDouble(), category = categoryId, stock = map?.toMutableMap() ?: mutableMapOf()))
                     back.invoke()
                 }
             }

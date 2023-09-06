@@ -1,10 +1,8 @@
 package com.example.capstoneproject
 
-import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -22,7 +20,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.core.content.PermissionChecker
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.capstoneproject.global.ui.navigation.Drawer
@@ -55,6 +52,8 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
     var selectedItem by remember { mutableStateOf(R.string.dashboard) }
+    val connection = appViewModel.connection
+
     Scaffold(
         scaffoldState = scaffoldState,
         drawerScrimColor = Color.Black.copy(0.7f),
@@ -70,6 +69,12 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
     ) {
         it
         NavigationHost(navController = navController, scope = scope, scaffoldState = scaffoldState, viewModel = appViewModel)
+        if (!connection.value) {
+            Snackbar(modifier = Modifier
+                .padding(8.dp)) {
+                Text(text = "No Internet Connection")
+            }
+        }
     }
 }
 

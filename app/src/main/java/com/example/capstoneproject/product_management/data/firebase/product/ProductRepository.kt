@@ -53,16 +53,36 @@ class ProductRepository {
     fun setQuantityForBranch(key: String, value: Map<String, Int>) = productCollectionReference.child(key).child("stock").setValue(value)
 
     fun insert(key: String? = null, product: Product) {
+        val uri: Uri? = if (product.image != null) Uri.parse(product.image) else null
+
         if (key != null) {
             Log.d("ID is not blank", key)
-            productCollectionReference.child(key).setValue(product)
+            if (uri != null) {
+                Log.d("Old Image", uri.lastPathSegment.toString())
+                firestorage.child(uri.lastPathSegment!!).downloadUrl.addOnSuccessListener {
+                    product.image = it.toString()
+                    Log.d("Image", product.image.toString())
+                    productCollectionReference.child(key).setValue(product)
+                }.addOnFailureListener {
+                    Log.d("Image", "File does not exist")
+                    productImageReference.child(uri.lastPathSegment!!).putFile(uri).addOnSuccessListener {
+                        productImageReference.child(uri.lastPathSegment!!).downloadUrl.addOnSuccessListener {
+                            product.image = it.toString()
+                            Log.d("Image", product.image.toString())
+                            productCollectionReference.child(key).setValue(product)
+                        }
+                    }
+                }
+            } else {
+                productCollectionReference.child(key).setValue(product)
+            }
         } else {
             Log.d("ID is blank", product.toString())
-            val uri: Uri? = if (product.image != null) Uri.parse(product.image) else null
             if (uri != null) {
                 productImageReference.child(uri.lastPathSegment!!).putFile(uri).addOnSuccessListener {
                     productImageReference.child(uri.lastPathSegment!!).downloadUrl.addOnSuccessListener {
                         product.image = it.toString()
+                        Log.d("Image", product.image.toString())
                         productCollectionReference.push().setValue(product)
                     }
                 }

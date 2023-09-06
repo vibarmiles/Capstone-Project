@@ -9,7 +9,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -28,10 +27,10 @@ fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", branc
         }
     ) {
         it -> it
-        var name by rememberSaveable { mutableStateOf(branch?.name ?: "") }
-        var address by rememberSaveable { mutableStateOf(branch?.address ?: "") }
-        var isNameValid by rememberSaveable { mutableStateOf(true) }
-        var isAddressValid by rememberSaveable { mutableStateOf(true) }
+        var name by remember { mutableStateOf(branch?.name ?: "") }
+        var address by remember { mutableStateOf(branch?.address ?: "") }
+        var isNameValid by remember { mutableStateOf(true) }
+        var isAddressValid by remember { mutableStateOf(true) }
         Column(modifier = Modifier
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),

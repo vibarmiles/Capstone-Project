@@ -1,6 +1,7 @@
 package com.example.capstoneproject.product_management.ui.product
 
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.capstoneproject.product_management.data.firebase.product.Product
@@ -9,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ProductViewModel : ViewModel() {
-    var products = mutableStateMapOf<String, Product>()
+    val products: SnapshotStateMap<String, Product>
     private val productRepository: ProductRepository = ProductRepository()
 
     init {
