@@ -23,8 +23,11 @@ sealed class Routes(val route: String) {
     object Category : Routes((R.string.category).toString())
     object Contact : Routes((R.string.contact).toString()) {
         object Add : Routes(this.route + "/Add")
-        object Edit : Routes(this.route + "/Edit/{contactId}/{contactName}/{contactNumber}") {
-            fun createRoute(contactId: String, contactName: String, contactNumber: String) = Routes.Contact.route + "/Edit/$contactId/$contactName/$contactNumber"
+        object Set : Routes(this.route + "/Set/{contactId}/{contactName}/{product}") {
+            fun createRoute(contactId: String, contactName: String, product: String) = Routes.Contact.route + "/Set/$contactId/$contactName/$product"
+        }
+        object Edit : Routes(this.route + "/Edit/{contactId}/{contactName}/{contactNumber}/{product}") {
+            fun createRoute(contactId: String, contactName: String, contactNumber: String, product: String) = Routes.Contact.route + "/Edit/$contactId/$contactName/$contactNumber/$product"
         }
     }
     object PurchaseOrder : Routes((R.string.purchase_order).toString())

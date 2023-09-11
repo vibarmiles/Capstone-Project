@@ -38,9 +38,10 @@ fun ProductQuantityFormScreen(productViewModel: ProductViewModel, branchViewMode
             })
         }
     ) {
-        it -> it
+            paddingValues ->
         LazyColumn(modifier = Modifier
             .fillMaxSize()
+            .padding(paddingValues)
             .padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             itemsIndexed(branches.value) {
                 _, it ->

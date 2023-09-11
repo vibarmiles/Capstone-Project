@@ -1,9 +1,8 @@
 package com.example.capstoneproject.global.ui.misc
 
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.Button
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
@@ -11,7 +10,7 @@ import com.example.capstoneproject.R
 
 @Composable
 fun ConfirmDeletion(item: String, onCancel: () -> Unit, onSubmit: () -> Unit) {
-    AlertDialog(
+    androidx.compose.material3.AlertDialog(
         onDismissRequest = onCancel,
         title = {
             Text(text = "Confirm delete", fontSize = 24.sp)
@@ -28,6 +27,9 @@ fun ConfirmDeletion(item: String, onCancel: () -> Unit, onSubmit: () -> Unit) {
             TextButton(onClick = onCancel) {
                 Text(text = stringResource(id = R.string.cancel_button))
             }
+        },
+        icon = {
+            Icon(imageVector = Icons.Filled.Delete, contentDescription = null)
         }
     )
 }

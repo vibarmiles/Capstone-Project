@@ -1,8 +1,10 @@
 package com.example.capstoneproject.supplier_management.ui.contact
 
+import android.util.Log
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.capstoneproject.product_management.data.firebase.product.ProductRepository
 import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 import com.example.capstoneproject.supplier_management.data.firebase.contact.ContactRepository
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +21,18 @@ class ContactViewModel : ViewModel() {
     fun insert(key: String? = null, contact: Contact) {
         viewModelScope.launch(Dispatchers.IO) {
             contactRepository.insert(key = key, contact = contact)
+        }
+    }
+
+    fun addProductForSupplier(key: String, product: Map<String, Double>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            contactRepository.addProductsForSupplier(key = key, product = product)
+        }
+    }
+
+    fun removeProductForSupplier(contactId: String, productId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            contactRepository.removeProductForSupplier(contactId = contactId, productId = productId)
         }
     }
 

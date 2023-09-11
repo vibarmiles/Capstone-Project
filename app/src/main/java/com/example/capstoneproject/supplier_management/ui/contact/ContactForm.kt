@@ -10,6 +10,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,7 +20,7 @@ import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 
 @Composable
-fun ContactFormScreen(function: String, contactViewModel: ContactViewModel, contactId: String? = null, contact: Contact? = null, back: () -> Unit) {
+fun ContactFormScreen(function: String, contactViewModel: ContactViewModel, contactId: String? = null, contact: Contact? = null, map: Map<String, Double>? = null, back: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "$function Contact") }, navigationIcon = {
@@ -29,20 +30,20 @@ fun ContactFormScreen(function: String, contactViewModel: ContactViewModel, cont
             })
         }
     ) {
-        it -> it
+        paddingValues ->
         var name by remember { mutableStateOf(contact?.name ?: "") }
         var contact by remember { mutableStateOf(contact?.contact ?: "") }
         var isContactValid by remember { mutableStateOf(true) }
         var isNameValid by remember { mutableStateOf(true) }
 
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
             OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = name, onValueChange = { value -> name = value }, placeholder = { Text(text = "Enter Contact's Name") }, label = { Text(text = "Contact's Name") }, isError = !isNameValid, trailingIcon = { if (!isNameValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) })
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = contact, onValueChange = { value -> contact = value }, placeholder = { Text(text = "Enter Contact's Number") }, label = { Text(text = "Contact's Number") }, isError = !isContactValid, trailingIcon = { if (!isContactValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone))
+            OutlinedTextField(leadingIcon = { Icon(imageVector = Icons.Filled.Phone, contentDescription = null) }, modifier = Modifier.fillMaxWidth(), value = contact, onValueChange = { value -> contact = value }, placeholder = { Text(text = "Enter Contact's Number") }, label = { Text(text = "Contact's Number") }, isError = !isContactValid, trailingIcon = { if (!isContactValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone))
             FormButtons(cancel = back) {
                 isNameValid = name.isNotBlank()
                 isContactValid = contact.isNotBlank()
                 if (isContactValid && isNameValid) {
-                    contactViewModel.insert(key = contactId, contact = Contact(name = name, contact = contact))
+                    contactViewModel.insert(key = contactId, contact = Contact(name = name, contact = contact, product = map ?: mapOf()))
                     back.invoke()
                 }
             }

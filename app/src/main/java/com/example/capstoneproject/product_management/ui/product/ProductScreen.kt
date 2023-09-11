@@ -18,13 +18,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -33,10 +32,11 @@ import com.example.capstoneproject.product_management.data.firebase.category.Cat
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
+import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, edit: (String, String, String?, Double, String?, String?) -> Unit, set: (String, String) -> Unit, add: () -> Unit) {
+fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, edit: (String, String, String?, Double, String?, String) -> Unit, set: (String, String) -> Unit, add: () -> Unit) {
     val branch = branchViewModel.branches.observeAsState(listOf())
     val products = productViewModel.products
     val categories = categoryViewModel.categories.observeAsState(listOf())
@@ -57,9 +57,9 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
             }
         }
     ) {
-            it -> it
+            paddingValues ->
         var branchId by rememberSaveable { mutableStateOf("Default") }
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             TabLayout(tabs = branch.value) {
                 branchId = it
             }
@@ -135,9 +135,9 @@ fun ProductScreenContent(selectedTab: String, categories: List<Category>, produc
 @Composable
 fun Products(product: Product, quantity: Int, edit: () -> Unit, set: () -> Unit, delete: () -> Unit) {
     var expanded: Boolean by remember { mutableStateOf(false) }
-    androidx.compose.material3.ListItem(leadingContent = { AsyncImage(error = rememberVectorPainter(image = Icons.Filled.Image), model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier
+    androidx.compose.material3.ListItem(leadingContent = { SubcomposeAsyncImage(error = { Icon(imageVector = Icons.Filled.Image, contentDescription = null) },  model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier
         .clip(RoundedCornerShape(5.dp))
-        .size(50.dp), placeholder = rememberVectorPainter(Icons.Default.Image), contentDescription = null) }, headlineContent = { Text(text = "Qty: $quantity", fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = product.productName, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
+        .size(50.dp), loading = { CircularProgressIndicator() }, contentDescription = null) }, headlineContent = { Text(text = "Qty: $quantity", fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = product.productName, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
         IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Product") }, onClick = { expanded = false; edit.invoke() })

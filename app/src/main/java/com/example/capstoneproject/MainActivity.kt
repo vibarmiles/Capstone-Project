@@ -67,10 +67,11 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
             }
         }}
     ) {
-        it
+        paddingValues ->
         NavigationHost(navController = navController, scope = scope, scaffoldState = scaffoldState, viewModel = appViewModel)
         if (!connection.value) {
             Snackbar(modifier = Modifier
+                .padding(paddingValues)
                 .padding(8.dp)) {
                 Text(text = "No Internet Connection")
             }

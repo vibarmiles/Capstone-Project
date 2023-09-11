@@ -2,6 +2,7 @@ package com.example.capstoneproject.supplier_management.ui.contact
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,7 +29,7 @@ import com.example.capstoneproject.supplier_management.data.firebase.contact.Con
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun ContactScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactViewModel: ContactViewModel, edit: (String, String, String) -> Unit, add: () -> Unit) {
+fun ContactScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactViewModel: ContactViewModel, edit: (String, String, String, String) -> Unit, set: (String, String, String) -> Unit, add: () -> Unit) {
     val contacts = contactViewModel.contacts
     var showDeleteDialog by remember { mutableStateOf(false) }
     var pair: Pair<String, String>? = null
@@ -42,8 +43,8 @@ fun ContactScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactVi
             }
         }
     ) {
-        it -> it
-        ContactScreenContent(contacts = contacts, edit = { edit.invoke(it.first, it.second.name, it.second.contact) }, set = { /*TODO*/ }) {
+            paddingValues ->
+        ContactScreenContent(paddingValues = paddingValues,contacts = contacts, edit = { edit.invoke(it.first, it.second.name, it.second.contact, it.second.product.toString()) }, set = { set.invoke(it.first, it.second.name, it.second.product.toString()) }) {
             pair = it
             showDeleteDialog = true
         }
@@ -58,8 +59,8 @@ fun ContactScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactVi
 }
 
 @Composable
-fun ContactScreenContent(contacts: Map<String, Contact>, edit: (Pair<String, Contact>) -> Unit, set: () -> Unit, delete: (Pair<String, String>) -> Unit) {
-    LazyColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+fun ContactScreenContent(paddingValues: PaddingValues, contacts: Map<String, Contact>, edit: (Pair<String, Contact>) -> Unit, set: (Pair<String, Contact>) -> Unit, delete: (Pair<String, String>) -> Unit) {
+    LazyColumn(modifier = Modifier.padding(paddingValues).padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         itemsIndexed(contacts.toList()) {
             _, it ->
             var expanded: Boolean by remember { mutableStateOf(false) }
@@ -67,7 +68,7 @@ fun ContactScreenContent(contacts: Map<String, Contact>, edit: (Pair<String, Con
                 IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Contact") }, onClick = { expanded = false; edit.invoke(it) })
-                    androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Sell, contentDescription = null) }, text = { Text(text = "Offered Items") }, onClick = { expanded = false; set.invoke() })
+                    androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Sell, contentDescription = null) }, text = { Text(text = "Offered Items") }, onClick = { expanded = false; set.invoke(Pair(it.first, it.second)) })
                     androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Contact") }, onClick = { expanded = false; delete.invoke(Pair(it.first, it.second.name)) })
                 }
             })

@@ -26,6 +26,7 @@ import com.example.capstoneproject.supplier_management.data.firebase.contact.Con
 import com.example.capstoneproject.supplier_management.ui.contact.ContactFormScreen
 import com.example.capstoneproject.supplier_management.ui.contact.ContactScreen
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
+import com.example.capstoneproject.supplier_management.ui.contact.OfferedProductScreen
 import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
 import com.example.capstoneproject.user_management.ui.users.composable.UserScreen
 import kotlinx.coroutines.CoroutineScope
@@ -54,7 +55,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
 
         composable(Routes.Product.route) {
             ProductScreen(scope = scope, scaffoldState = scaffoldState, branchViewModel = branchViewModel, productViewModel = productViewModel, categoryViewModel = categoryViewModel, edit = {
-                id, productName, image, price, category, stock -> navController.navigate(Routes.Product.Edit.createRoute(productId = id, name = productName, image = URLEncoder.encode(image ?: "null", StandardCharsets.UTF_8.toString()), price = price, categoryId = category ?: "null", stock = stock ?: "null"))
+                id, productName, image, price, category, stock -> navController.navigate(Routes.Product.Edit.createRoute(productId = id, name = productName, image = URLEncoder.encode(image ?: "null", StandardCharsets.UTF_8.toString()), price = price, categoryId = category ?: "null", stock = stock))
             }, set = { id, stock -> navController.navigate(Routes.Product.Set.createRoute(id, stock)) }, add = { navController.navigate(Routes.Product.Add.route) })
         }
 
@@ -126,7 +127,9 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
             }
             
             ContactScreen(scope = scope, scaffoldState = scaffoldState, contactViewModel = contactViewModel!!, edit = {
-                id, name, contact -> navController.navigate(Routes.Contact.Edit.createRoute(contactId = id, contactName = name, contactNumber = contact))
+                id, name, contact, product -> navController.navigate(Routes.Contact.Edit.createRoute(contactId = id, contactName = name, contactNumber = contact, product = product))
+            }, set = {
+                id, name, product -> navController.navigate(Routes.Contact.Set.createRoute(contactId = id, contactName = name, product = product))
             }) {
                 navController.navigate(Routes.Contact.Add.route)
             }
@@ -138,11 +141,32 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
             }
         }
 
+        composable(Routes.Contact.Set.route) {
+            val id: String = it.arguments?.getString("contactId")!!
+            val name: String = it.arguments?.getString("contactName")!!
+            val product: String = it.arguments?.getString("product")!!
+            val input: String = product.substring(1, product.length - 1)
+            var map: Map<String, Double>? = null
+            if (input.isNotBlank()) {
+                map = input.split(", ").associate { value -> val split = value.split("="); split[0] to split[1].toDouble() }
+            }
+
+            OfferedProductScreen(contactViewModel = contactViewModel!!, productViewModel = productViewModel, contactId = id, contactName = name, product = map ?: mapOf()) {
+                navController.popBackStack()
+            }
+        }
+
         composable(Routes.Contact.Edit.route) {
             val id: String = it.arguments?.getString("contactId")!!
             val name: String = it.arguments?.getString("contactName")!!
             val contact: String = it.arguments?.getString("contactNumber")!!
-            ContactFormScreen(function = "Edit", contactViewModel = contactViewModel!!, contactId = id, contact = Contact(name = name, contact = contact)) {
+            val product: String = it.arguments?.getString("product")!!
+            val input: String = product.substring(1, product.length - 1)
+            var map: Map<String, Double>? = null
+            if (input.isNotBlank()) {
+                map = input.split(", ").associate { value -> val split = value.split("="); split[0] to split[1].toDouble() }
+            }
+            ContactFormScreen(function = "Edit", contactViewModel = contactViewModel!!, contactId = id, contact = Contact(name = name, contact = contact), map = map) {
                 navController.popBackStack()
             }
         }

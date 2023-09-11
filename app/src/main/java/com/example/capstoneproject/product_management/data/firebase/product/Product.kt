@@ -8,5 +8,5 @@ data class Product(
     val productName: String = "",
     val price: Double = 0.0,
     val category: String? = null,
-    val stock: MutableMap<String, Int> = mutableMapOf()
+    val stock: Map<String, Int> = mapOf()
 )

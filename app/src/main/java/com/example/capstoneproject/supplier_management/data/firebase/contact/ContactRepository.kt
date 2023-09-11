@@ -56,5 +56,9 @@ class ContactRepository {
         }
     }
 
+    fun addProductsForSupplier(key: String, product: Map<String, Double>) = contactCollectionReference.child("$key/product").setValue(product)
+
+    fun removeProductForSupplier(contactId: String, productId: String) = contactCollectionReference.child("$contactId/product/$productId").removeValue()
+
     fun delete(key: String) = contactCollectionReference.child(key).removeValue()
 }

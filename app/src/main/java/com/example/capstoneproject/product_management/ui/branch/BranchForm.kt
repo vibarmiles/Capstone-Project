@@ -26,12 +26,13 @@ fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", branc
             })
         }
     ) {
-        it -> it
+            paddingValues ->
         var name by remember { mutableStateOf(branch?.name ?: "") }
         var address by remember { mutableStateOf(branch?.address ?: "") }
         var isNameValid by remember { mutableStateOf(true) }
         var isAddressValid by remember { mutableStateOf(true) }
         Column(modifier = Modifier
+            .padding(paddingValues)
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(8.dp)) {

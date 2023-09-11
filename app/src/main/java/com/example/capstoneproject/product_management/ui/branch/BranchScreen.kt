@@ -48,8 +48,8 @@ fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel:
             }
         }
     ) {
-        it
-        LazyColumn(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        paddingValues ->
+        LazyColumn(modifier = Modifier.padding(paddingValues).padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             item {
                 val size = branches.size
                 Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered branches"; 1 -> "1 branch is entered"; else -> "$size branches are entered"})

@@ -42,8 +42,9 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
             })
         }
     ) {
-        it -> it
+            paddingValues ->
         Column(modifier = Modifier
+            .padding(paddingValues)
             .padding(16.dp)
             .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             val category = categoryViewModel.categories.observeAsState(listOf())
@@ -105,10 +106,10 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
 
             FormButtons(cancel = back) {
                 isNameValid = name.isNotBlank()
-                isPriceValid = if (price.isNotBlank()) price.toDouble() > 0 else false
+                price.toDoubleOrNull()?.let { isPriceValid = true } ?: run { isPriceValid = false }
                 Log.d("PATH",imageUri.toString())
                 if (isNameValid && isPriceValid && isQuantityValid) {
-                    productViewModel.insert(id = productId, product = Product(image = if (imageUri != null) imageUri.toString() else null, productName = name, price = price.toDouble(), category = categoryId, stock = map?.toMutableMap() ?: mutableMapOf()))
+                    productViewModel.insert(id = productId, product = Product(image = if (imageUri != null) imageUri.toString() else null, productName = name, price = price.toDouble(), category = categoryId, stock = map ?: mapOf()))
                     back.invoke()
                 }
             }
