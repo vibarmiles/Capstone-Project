@@ -5,12 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
 import com.example.capstoneproject.product_management.data.firebase.branch.BranchRepository
+import com.example.capstoneproject.product_management.data.firebase.branch.IBranchRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class BranchViewModel : ViewModel() {
     val branches: MutableLiveData<List<Branch>>
-    private val branchRepository: BranchRepository = BranchRepository()
+    private val branchRepository: IBranchRepository = BranchRepository()
 
     init {
         branches = branchRepository.getAll()

@@ -1,10 +1,7 @@
 package com.example.capstoneproject.supplier_management.ui.contact
 
 import android.util.Log
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
@@ -60,7 +57,12 @@ fun ContactScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactVi
 
 @Composable
 fun ContactScreenContent(paddingValues: PaddingValues, contacts: Map<String, Contact>, edit: (Pair<String, Contact>) -> Unit, set: (Pair<String, Contact>) -> Unit, delete: (Pair<String, String>) -> Unit) {
-    LazyColumn(modifier = Modifier.padding(paddingValues).padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        item {
+            val size = contacts.count()
+            Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered suppliers"; 1 -> "1 supplier is entered"; else -> "$size suppliers are entered"})
+        }
+
         itemsIndexed(contacts.toList()) {
             _, it ->
             var expanded: Boolean by remember { mutableStateOf(false) }
@@ -72,6 +74,10 @@ fun ContactScreenContent(paddingValues: PaddingValues, contacts: Map<String, Con
                     androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Contact") }, onClick = { expanded = false; delete.invoke(Pair(it.first, it.second.name)) })
                 }
             })
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(50.dp))
         }
     }
 }

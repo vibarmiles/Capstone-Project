@@ -55,6 +55,13 @@ fun OfferedProductScreen(contactViewModel: ContactViewModel, productViewModel: P
             .fillMaxSize()
             .padding(paddingValues)
             .padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+
+            if (products.isEmpty()) {
+                item {
+                    Text(modifier = Modifier.padding(16.dp), text = "This supplier currently has no offered products entered")
+                }
+            }
+
             itemsIndexed(products.filterKeys { it in offerViewModel.offers.keys }.toList()) {
                 _, it ->
                 androidx.compose.material3.ListItem(

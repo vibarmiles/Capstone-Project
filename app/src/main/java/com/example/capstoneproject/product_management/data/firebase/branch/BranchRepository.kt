@@ -6,11 +6,11 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
 
-class BranchRepository {
+class BranchRepository : IBranchRepository {
     private val firestore = Firebase.firestore
     private val branchCollectionReference = firestore.collection("branches")
 
-    fun getAll(): MutableLiveData<List<Branch>> {
+    override fun getAll(): MutableLiveData<List<Branch>> {
         var branches = MutableLiveData<List<Branch>>()
         branchCollectionReference.addSnapshotListener { value, error ->
             error?.let {
@@ -23,7 +23,15 @@ class BranchRepository {
         return branches
     }
 
-    fun insert(branch: Branch) = if (branch.id.isNotBlank()) { branchCollectionReference.document(branch.id).set(branch, SetOptions.merge()) } else { branchCollectionReference.add(branch) }
+    override fun insert(branch: Branch) {
+        if (branch.id.isNotBlank()) {
+            branchCollectionReference.document(branch.id).set(branch, SetOptions.merge())
+        } else {
+            branchCollectionReference.add(branch)
+        }
+    }
 
-    fun delete(branch: Branch) = branchCollectionReference.document(branch.id).delete()
+    override fun delete(branch: Branch) {
+        branchCollectionReference.document(branch.id).delete()
+    }
 }

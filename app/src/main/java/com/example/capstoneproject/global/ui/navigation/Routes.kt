@@ -10,8 +10,8 @@ sealed class Routes(val route: String) {
         object Set : Routes(this.route + "/Set/{productId}/{stock}") {
             fun createRoute(productId: String, stock: String) = Routes.Product.route + "/Set/$productId/$stock"
         }
-        object Edit : Routes(this.route + "/Edit/{productId}/{name}/{image}/{price}/{categoryId}/{stock}") {
-            fun createRoute(productId: String, name: String, image: String, price: Double, categoryId: String, stock: String) = Routes.Product.route + "/Edit/$productId/$name/$image/$price/$categoryId/$stock"
+        object Edit : Routes(this.route + "/Edit/{productId}/{name}/{image}/{price}/{categoryId}/{criticalLevel}/{stock}") {
+            fun createRoute(productId: String, name: String, image: String, price: Double, categoryId: String, criticalLevel: Int, stock: String) = Routes.Product.route + "/Edit/$productId/$name/$image/$price/$categoryId/$criticalLevel/$stock"
         }
     }
     object Branch : Routes((R.string.branch).toString()) {

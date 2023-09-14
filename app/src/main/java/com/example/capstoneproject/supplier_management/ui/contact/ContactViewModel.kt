@@ -1,18 +1,17 @@
 package com.example.capstoneproject.supplier_management.ui.contact
 
-import android.util.Log
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.capstoneproject.product_management.data.firebase.product.ProductRepository
 import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 import com.example.capstoneproject.supplier_management.data.firebase.contact.ContactRepository
+import com.example.capstoneproject.supplier_management.data.firebase.contact.IContactRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ContactViewModel : ViewModel() {
     val contacts: SnapshotStateMap<String, Contact>
-    private val contactRepository = ContactRepository()
+    private val contactRepository: IContactRepository = ContactRepository()
 
     init {
         contacts = contactRepository.getAll()

@@ -8,5 +8,6 @@ data class Product(
     val productName: String = "",
     val price: Double = 0.0,
     val category: String? = null,
+    val criticalLevel: Int = 0,
     val stock: Map<String, Int> = mapOf()
 )

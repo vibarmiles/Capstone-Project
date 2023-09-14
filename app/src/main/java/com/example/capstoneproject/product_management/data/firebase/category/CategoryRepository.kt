@@ -6,11 +6,11 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
 
-class CategoryRepository {
+class CategoryRepository : ICategoryRepository {
     private val firestore = Firebase.firestore
     private val categoryCollectionReference = firestore.collection("categories")
 
-    fun getAll(): MutableLiveData<List<Category>> {
+    override fun getAll(): MutableLiveData<List<Category>> {
         var categories = MutableLiveData<List<Category>>()
         categoryCollectionReference.addSnapshotListener { value, error ->
             error?.let {
@@ -23,7 +23,15 @@ class CategoryRepository {
         return categories
     }
 
-    fun insert(category: Category) = if (category.id.isNotBlank()) { categoryCollectionReference.document(category.id).set(category, SetOptions.merge()) } else { categoryCollectionReference.add(category) }
+    override fun insert(category: Category) {
+        if (category.id.isNotBlank()) {
+            categoryCollectionReference.document(category.id).set(category, SetOptions.merge())
+        } else {
+            categoryCollectionReference.add(category)
+        }
+    }
 
-    fun delete(category: Category) = categoryCollectionReference.document(category.id).delete()
+    override fun delete(category: Category) {
+        categoryCollectionReference.document(category.id).delete()
+    }
 }

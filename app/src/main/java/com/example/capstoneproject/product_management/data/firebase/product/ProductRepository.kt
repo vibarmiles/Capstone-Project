@@ -13,13 +13,13 @@ import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 
-class ProductRepository {
+class ProductRepository : IProductRepository {
     private val firebase = Firebase.database.reference
     private val productCollectionReference = firebase.child("products")
     private val firestorage = Firebase.storage.reference
     private val productImageReference = firestorage.child("images")
 
-    fun getAll(): SnapshotStateMap<String, Product> {
+    override fun getAll(): SnapshotStateMap<String, Product> {
         val products = mutableStateMapOf<String, Product>()
 
         productCollectionReference.addChildEventListener(object : ChildEventListener {
@@ -50,9 +50,11 @@ class ProductRepository {
         return products
     }
 
-    fun setQuantityForBranch(key: String, value: Map<String, Int>) = productCollectionReference.child(key).child("stock").setValue(value)
+    override fun setQuantityForBranch(key: String, value: Map<String, Int>) {
+        productCollectionReference.child(key).child("stock").setValue(value)
+    }
 
-    fun insert(key: String? = null, product: Product) {
+    override fun insert(key: String?, product: Product) {
         val uri: Uri? = if (product.image != null) Uri.parse(product.image) else null
 
         if (key != null) {
@@ -92,9 +94,11 @@ class ProductRepository {
         }
     }
 
-    fun delete(key: String) = productCollectionReference.child(key).removeValue()
+    override fun delete(key: String) {
+        productCollectionReference.child(key).removeValue()
+    }
 
-    fun removeCategory(categoryId: String) = productCollectionReference.orderByChild("category").equalTo(categoryId).addListenerForSingleValueEvent(object : ValueEventListener {
+    override fun removeCategory(categoryId: String) = productCollectionReference.orderByChild("category").equalTo(categoryId).addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             for (child in snapshot.children) {
                 child.ref.child("category").removeValue()
@@ -107,7 +111,7 @@ class ProductRepository {
 
     })
 
-    fun removeBranchStock(branchId: String) = productCollectionReference.orderByChild("stock/$branchId").startAt(0.0).addListenerForSingleValueEvent(object : ValueEventListener {
+    override fun removeBranchStock(branchId: String) = productCollectionReference.orderByChild("stock/$branchId").startAt(0.0).addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             Log.d("Calling", "Remove Branch Stock")
             for (child in snapshot.children) {

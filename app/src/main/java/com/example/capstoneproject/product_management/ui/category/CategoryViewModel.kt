@@ -5,12 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.capstoneproject.product_management.data.firebase.category.Category
 import com.example.capstoneproject.product_management.data.firebase.category.CategoryRepository
+import com.example.capstoneproject.product_management.data.firebase.category.ICategoryRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class CategoryViewModel : ViewModel() {
     val categories: MutableLiveData<List<Category>>
-    private val categoryRepository: CategoryRepository = CategoryRepository()
+    private val categoryRepository: ICategoryRepository = CategoryRepository()
 
     init {
         categories = categoryRepository.getAll()

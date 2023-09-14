@@ -57,6 +57,9 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
             var selectedCategory by remember { mutableStateOf(if (categoryId == null) "None" else "Current Category") }
             var isQuantityValid by remember { mutableStateOf(true) }
             var imageUri by remember { mutableStateOf(if (product?.image == null) null else Uri.parse(product?.image)) }
+            var criticalLevel by remember { mutableStateOf(product?.criticalLevel ?: 0) }
+            var criticalLevelText by remember { mutableStateOf(criticalLevel.toString()) }
+            var isCriticalLevelValid by remember { mutableStateOf(true) }
             val imageUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument(), onResult = { imageUri = it })
 
             Box(modifier = Modifier
@@ -89,6 +92,7 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
 
             OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = name, onValueChange = { name = it }, placeholder = { Text(text = "Enter Product's Name") }, label = { Text(text = "Product Name") }, isError = !isNameValid, trailingIcon = { if (!isNameValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) })
             OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = price, onValueChange = { price = it }, placeholder = { Text(text = "Enter Selling Price") }, label = { Text(text = "Selling Price") }, isError = !isPriceValid, trailingIcon = { if (!isPriceValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+            OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = criticalLevelText, onValueChange = { criticalLevelText = it }, placeholder = { Text(text = "Enter Product's Critical Level") }, label = { Text(text = "Critical Level") }, isError = !isCriticalLevelValid, trailingIcon = { if (!isCriticalLevelValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
 
             ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                 OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, modifier = Modifier.fillMaxWidth(), value = selectedCategory, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.category)) })
@@ -96,7 +100,7 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
                 DropdownMenu(modifier = Modifier
                     .exposedDropdownSize()
                     .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
-                    androidx.compose.material3.DropdownMenuItem(text = { Text(text = "None") }, onClick = { categoryId = ""; selectedCategory = "None"; expanded = false })
+                    androidx.compose.material3.DropdownMenuItem(text = { Text(text = "None") }, onClick = { categoryId = null; selectedCategory = "None"; expanded = false })
 
                     category.value.forEach {
                         androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.categoryName) }, onClick = { categoryId = it.id; selectedCategory = it.categoryName; expanded = false })
@@ -106,10 +110,11 @@ fun ProductFormSreen(function: String, productViewModel: ProductViewModel, categ
 
             FormButtons(cancel = back) {
                 isNameValid = name.isNotBlank()
-                price.toDoubleOrNull()?.let { isPriceValid = true } ?: run { isPriceValid = false }
+                price.toDoubleOrNull()?.let { isPriceValid = it > 0 } ?: run { isPriceValid = false }
+                criticalLevelText.toIntOrNull()?.let { isCriticalLevelValid = it >= 0; criticalLevel = it } ?: run { isCriticalLevelValid = false }
                 Log.d("PATH",imageUri.toString())
-                if (isNameValid && isPriceValid && isQuantityValid) {
-                    productViewModel.insert(id = productId, product = Product(image = if (imageUri != null) imageUri.toString() else null, productName = name, price = price.toDouble(), category = categoryId, stock = map ?: mapOf()))
+                if (isNameValid && isPriceValid && isQuantityValid && isCriticalLevelValid) {
+                    productViewModel.insert(id = productId, product = Product(image = if (imageUri != null) imageUri.toString() else null, productName = name, price = price.toDouble(), category = categoryId, criticalLevel = criticalLevel, stock = map ?: mapOf()))
                     back.invoke()
                 }
             }

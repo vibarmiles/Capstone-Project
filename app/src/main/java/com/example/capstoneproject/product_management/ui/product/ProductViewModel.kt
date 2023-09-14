@@ -1,9 +1,9 @@
 package com.example.capstoneproject.product_management.ui.product
 
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.capstoneproject.product_management.data.firebase.product.IProductRepository
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.data.firebase.product.ProductRepository
 import kotlinx.coroutines.Dispatchers
@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class ProductViewModel : ViewModel() {
     val products: SnapshotStateMap<String, Product>
-    private val productRepository: ProductRepository = ProductRepository()
+    private val productRepository: IProductRepository = ProductRepository()
 
     init {
         products = productRepository.getAll()

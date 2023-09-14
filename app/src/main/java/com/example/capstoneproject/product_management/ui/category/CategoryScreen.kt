@@ -48,7 +48,7 @@ fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewMode
         }
     ) {
             paddingValues ->
-        LazyColumn(modifier = Modifier.padding(paddingValues).padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             item {
                 val size = categories.value.size
                 Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered categories"; 1 -> "1 category is entered"; else -> "$size categories are entered"})

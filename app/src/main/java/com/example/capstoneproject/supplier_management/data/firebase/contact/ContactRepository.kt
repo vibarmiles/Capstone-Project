@@ -10,11 +10,11 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
 
-class ContactRepository {
+class ContactRepository : IContactRepository {
     private val firebase = Firebase.database.reference
     private val contactCollectionReference = firebase.child("contacts")
 
-    fun getAll(): SnapshotStateMap<String, Contact> {
+    override fun getAll(): SnapshotStateMap<String, Contact> {
         val contacts = mutableStateMapOf<String, Contact>()
 
         contactCollectionReference.addChildEventListener(object : ChildEventListener {
@@ -46,7 +46,7 @@ class ContactRepository {
         return contacts
     }
 
-    fun insert(key: String? = null, contact: Contact) {
+    override fun insert(key: String?, contact: Contact) {
         if (key != null) {
             Log.d("ID is not blank", key)
             contactCollectionReference.child(key).setValue(contact)
@@ -56,9 +56,15 @@ class ContactRepository {
         }
     }
 
-    fun addProductsForSupplier(key: String, product: Map<String, Double>) = contactCollectionReference.child("$key/product").setValue(product)
+    override fun addProductsForSupplier(key: String, product: Map<String, Double>) {
+        contactCollectionReference.child("$key/product").setValue(product)
+    }
 
-    fun removeProductForSupplier(contactId: String, productId: String) = contactCollectionReference.child("$contactId/product/$productId").removeValue()
+    override fun removeProductForSupplier(contactId: String, productId: String) {
+        contactCollectionReference.child("$contactId/product/$productId").removeValue()
+    }
 
-    fun delete(key: String) = contactCollectionReference.child(key).removeValue()
+    override fun delete(key: String) {
+        contactCollectionReference.child(key).removeValue()
+    }
 }

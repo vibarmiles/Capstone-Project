@@ -1,9 +1,11 @@
 package com.example.capstoneproject.product_management.ui.product
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -36,7 +38,7 @@ import com.example.capstoneproject.supplier_management.ui.contact.ContactViewMod
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, edit: (String, String, String?, Double, String?, String) -> Unit, set: (String, String) -> Unit, add: () -> Unit) {
+fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, edit: (String, String, String?, Double, String?, Int, String) -> Unit, set: (String, String) -> Unit, add: () -> Unit) {
     val branch = branchViewModel.branches.observeAsState(listOf())
     val products = productViewModel.products
     val categories = categoryViewModel.categories.observeAsState(listOf())
@@ -59,12 +61,14 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
     ) {
             paddingValues ->
         var branchId by rememberSaveable { mutableStateOf("Default") }
-        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            TabLayout(tabs = branch.value) {
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)) {
+            TabLayout(tabs = branch.value, products = products.values.toList()) {
                 branchId = it
             }
             ProductScreenContent(selectedTab = branchId, categories = categories.value, products = products, edit = {
-                edit.invoke(it.first, it.second.productName, it.second.image ?: null, it.second.price, it.second.category ?: null,
+                edit.invoke(it.first, it.second.productName, it.second.image ?: null, it.second.price, it.second.category ?: null, it.second.criticalLevel,
                     it.second.stock.toString()
                 )
             }, set = { id, stock -> set.invoke(id, stock) }) {
@@ -83,51 +87,97 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
 }
 
 @Composable
-fun TabLayout(tabs: List<Branch>, onClick: (String) -> Unit) {
+fun TabLayout(tabs: List<Branch>, products: List<Product>, onClick: (String) -> Unit) {
     var selected by remember { mutableStateOf(0) }
     ScrollableTabRow(selectedTabIndex = selected, edgePadding = 0.dp, modifier = Modifier
         .height(50.dp)
         .fillMaxWidth()) {
-        Tab(selected = selected == 0, onClick = { onClick.invoke("Default"); selected = 0 }, text = { Text(text = "All") })
+        val defaultMap = products.filter { product -> product.stock.values.sum() <= product.criticalLevel }
+        Tab(selected = selected == 0, onClick = { onClick.invoke("Default"); selected = 0 }, text = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(text = "All")
+                if (defaultMap.isNotEmpty()) {
+                    Text(
+                        text = defaultMap.count().toString(),
+                        color = Color.White,
+                        modifier = Modifier.clip(CircleShape).height(IntrinsicSize.Min)
+                            .aspectRatio(1f).background(Color.Red)
+                    )
+                }
+            }
+        })
 
         tabs.forEachIndexed {
                 index, tab ->
-            Tab(selected = selected == index + 1, onClick = { onClick.invoke(tab.id); selected = index + 1 }, text = { Text(text = tab.name) })
+            val map = products.filter { product -> product.stock[tab.id] ?: 0 <= product.criticalLevel }
+            Tab(selected = selected == index + 1, onClick = { onClick.invoke(tab.id); selected = index + 1 }, text = {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(modifier = Modifier.widthIn(max = 150.dp), text = tab.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (map.isNotEmpty()) {
+                        Text(text = map.count().toString(), color = Color.White, modifier = Modifier.clip(CircleShape).height(IntrinsicSize.Min).aspectRatio(1f).background(Color.Red))
+                    }
+                }
+            })
         }
     }
 }
 
 @Composable
 fun ProductScreenContent(selectedTab: String, categories: List<Category>, products: Map<String, Product>, edit: (Pair<String, Product>) -> Unit, set: (String, String) -> Unit, delete: (Pair<String, String>) -> Unit) {
-    LazyColumn(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        if (products.isEmpty()) {
+            item {
+                Text(modifier = Modifier.padding(16.dp), text = "There are no entered products")
+            }
+        } else {
+            val critical = products.filterValues { it.criticalLevel >= if (selectedTab == "Default") it.stock.values.sum() else it.stock[selectedTab] ?: 0 }.toList()
+            val default = products.filterValues { it.category !in categories.map { category -> category.id } && it.criticalLevel < if (selectedTab == "Default") it.stock.values.sum() else it.stock[selectedTab] ?: 0 }.toList()
+            if (critical.isNotEmpty()) {
+                item {
+                    androidx.compose.material3.ListItem(headlineContent = {
+                        Text(text = "Under Critical Level", fontWeight = FontWeight.Bold)
+                    }, colors = ListItemDefaults.colors(containerColor = Color.White))
+                }
 
-        itemsIndexed(products.filterValues { it.category !in categories.map { category -> category.id } }.toList()) {
-                _, it ->
-            Log.d("id", products.toString())
-            Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it.first, it.second.stock.toString()) }, delete = { delete.invoke(Pair(it.first, it.second.productName)) })
-        }
+                itemsIndexed(critical) {
+                        _, it ->
+                    Log.d("id", products.toString())
+                    Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it.first, it.second.stock.toString()) }, delete = { delete.invoke(Pair(it.first, it.second.productName)) })
+                }
+            }
 
-        for (category in categories) {
-            val list = products.filterValues { it.category == category.id }.toList()
-            if (list.isEmpty()) {
-                continue
+            if (default.isNotEmpty()) {
+                item {
+                    androidx.compose.material3.ListItem(headlineContent = { Text(text = "No Category") }, colors = ListItemDefaults.colors(containerColor = Color.White))
+                }
+
+                itemsIndexed(default) {
+                        _, it ->
+                    Log.d("id", products.toString())
+                    Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it.first, it.second.stock.toString()) }, delete = { delete.invoke(Pair(it.first, it.second.productName)) })
+                }
+            }
+
+            for (category in categories) {
+                val list = products.filterValues { it.category == category.id && it.criticalLevel < (if (selectedTab == "Default") it.stock.values.sum() else it.stock[selectedTab] ?: 0) }.toList()
+                if (list.isEmpty()) {
+                    continue
+                }
+
+                item {
+                    androidx.compose.material3.ListItem(headlineContent = { Text(text = category.categoryName) }, colors = ListItemDefaults.colors(containerColor = Color.White))
+                }
+
+                itemsIndexed(list) {
+                        _, it ->
+                    Log.d("id", products.toString())
+                    Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it.first, it.second.stock.toString()) }, delete = { delete.invoke(Pair(it.first, it.second.productName)) })
+                }
             }
 
             item {
-                androidx.compose.material3.ListItem(headlineContent = { Text(text = category.categoryName) }, colors = ListItemDefaults.colors(containerColor = Color.White))
+                Spacer(modifier = Modifier.height(50.dp))
             }
-            
-            itemsIndexed(list) {
-                    _, it ->
-                Log.d("id", products.toString())
-                Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it.first, it.second.stock.toString()) }, delete = { delete.invoke(Pair(it.first, it.second.productName)) })
-            }
-        }
-        
-        item {
-            Spacer(modifier = Modifier.height(50.dp))
         }
     }
 }
