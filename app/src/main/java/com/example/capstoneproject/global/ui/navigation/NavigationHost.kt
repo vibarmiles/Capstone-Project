@@ -27,6 +27,7 @@ import com.example.capstoneproject.supplier_management.ui.contact.ContactFormScr
 import com.example.capstoneproject.supplier_management.ui.contact.ContactScreen
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.supplier_management.ui.contact.OfferedProductScreen
+import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderForm
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderScreen
 import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
 import com.example.capstoneproject.user_management.ui.users.composable.UserScreen
@@ -174,8 +175,17 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.PurchaseOrder.route) {
-            PurchaseOrderScreen(scope = scope, scaffoldState = scaffoldState) {
+            if (!viewModel.viewModelLoaded.value) {
+                viewModel.viewModelLoaded.value = true
+                contactViewModel = viewModel()
+            }
 
+            PurchaseOrderScreen(scope = scope, scaffoldState = scaffoldState, add = { navController.navigate(Routes.PurchaseOrder.Add.route) })
+        }
+
+        composable(Routes.PurchaseOrder.Add.route) {
+            PurchaseOrderForm(contactViewModel = contactViewModel!!, productViewModel = productViewModel) {
+                navController.popBackStack()
             }
         }
 

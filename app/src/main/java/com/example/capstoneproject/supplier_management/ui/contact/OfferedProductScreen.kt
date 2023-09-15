@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 
@@ -28,10 +29,11 @@ import com.example.capstoneproject.product_management.ui.product.ProductViewMode
 fun OfferedProductScreen(contactViewModel: ContactViewModel, productViewModel: ProductViewModel, contactId: String, contactName: String, product: Map<String, Double>, back: () -> Unit) {
     val offerViewModel: OfferedProductViewModel = viewModel()
     val products = productViewModel.products.toMap()
-    val initialMap = contactViewModel.contacts.toMap()[contactId]
     var showSaveDialog by remember { mutableStateOf(false) }
     var showProductDialog by remember { mutableStateOf(false) }
-    initialMap?.product?.forEach { (key, value) -> offerViewModel.offers[key] = value }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var pair: Pair<String, String>? = null
+    product.forEach { (key, value) -> offerViewModel.offers[key] = value }
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "Offered Products by $contactName") }, navigationIcon = {
@@ -70,7 +72,7 @@ fun OfferedProductScreen(contactViewModel: ContactViewModel, productViewModel: P
                         .size(50.dp), placeholder = rememberVectorPainter(Icons.Default.Image), contentDescription = null) },
                     headlineContent = { offerViewModel.offers[it.first] },
                     supportingContent = { Text(text = it.second.productName) },
-                    trailingContent = { IconButton(onClick = { offerViewModel.offers.remove(it.first) }) {
+                    trailingContent = { IconButton(onClick = { pair = Pair(it.first, it.second.productName); showDeleteDialog = true }) {
                         Icon(imageVector = Icons.Filled.Close, contentDescription = null)
                     }
                 })
@@ -86,6 +88,13 @@ fun OfferedProductScreen(contactViewModel: ContactViewModel, productViewModel: P
 
         if (showProductDialog) {
             AddProductDialog(onDismissRequest = { showProductDialog = false }, products = products.filterKeys { it !in offerViewModel.offers.keys }, submit = { id, price -> offerViewModel.offers[id] = price; showProductDialog = false })
+        }
+
+        if (showDeleteDialog) {
+            ConfirmDeletion(item = pair!!.second, onCancel = { showDeleteDialog = false }) {
+                offerViewModel.offers.remove(pair!!.first)
+                showDeleteDialog = false
+            }
         }
     }
 }
@@ -103,7 +112,7 @@ fun AddProductDialog(onDismissRequest: () -> Unit, submit: (String, Double) -> U
         confirmButton = {
             Button(onClick = {
                 text.toDoubleOrNull()?.let { price = it; isPriceValid = true } ?: run { isPriceValid = false }
-                if (isPriceValid) {
+                if (isPriceValid && id.isNotBlank()) {
                     submit.invoke(id, price)
                 }
             }) {
@@ -162,5 +171,6 @@ fun SaveDialog(onDismissRequest: () -> Unit, cancel: () -> Unit, onSubmit: () ->
         },
         icon = {
             Icon(contentDescription = null, imageVector = Icons.Filled.Save)
-        })
+        }
+    )
 }

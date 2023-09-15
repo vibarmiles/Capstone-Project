@@ -60,7 +60,9 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
         drawerGesturesEnabled = !appViewModel.isLoading.value,
         drawerContent = { Drawer {
             selectedItem = it
-            navController.navigate(selectedItem.toString())
+            navController.navigate(selectedItem.toString()) {
+                popUpTo(0)
+            }
             scope.launch {
                 delay(500)
                 scaffoldState.drawerState.close()
