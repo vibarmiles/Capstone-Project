@@ -26,11 +26,14 @@ import com.example.capstoneproject.global.ui.navigation.Drawer
 import com.example.capstoneproject.global.ui.navigation.NavigationHost
 import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
 import com.example.capstoneproject.ui.theme.CapstoneProjectTheme
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        Firebase.database.setPersistenceEnabled(true)
         super.onCreate(savedInstanceState)
         setContent {
             CapstoneProjectTheme {

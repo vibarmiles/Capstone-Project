@@ -29,6 +29,7 @@ import com.example.capstoneproject.supplier_management.ui.contact.ContactViewMod
 import com.example.capstoneproject.supplier_management.ui.contact.OfferedProductScreen
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderForm
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderScreen
+import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderViewModel
 import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
 import com.example.capstoneproject.user_management.ui.users.composable.UserScreen
 import kotlinx.coroutines.CoroutineScope
@@ -40,6 +41,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
     val branchViewModel: BranchViewModel = viewModel()
     val categoryViewModel: CategoryViewModel = viewModel()
     val productViewModel: ProductViewModel = viewModel()
+    val purchaseOrderViewModel: PurchaseOrderViewModel = viewModel()
     var contactViewModel: ContactViewModel? = null
 
     NavHost(navController = navController, startDestination = Routes.SplashScreen.route) {
@@ -124,7 +126,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.Contact.route) {
-            if (!viewModel.viewModelLoaded.value) {
+            if (!viewModel.viewModelLoaded.value || contactViewModel == null) {
                 viewModel.viewModelLoaded.value = true
                 contactViewModel = viewModel()
             }
@@ -175,16 +177,16 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.PurchaseOrder.route) {
-            if (!viewModel.viewModelLoaded.value) {
+            if (!viewModel.viewModelLoaded.value || contactViewModel == null) {
                 viewModel.viewModelLoaded.value = true
                 contactViewModel = viewModel()
             }
 
-            PurchaseOrderScreen(scope = scope, scaffoldState = scaffoldState, add = { navController.navigate(Routes.PurchaseOrder.Add.route) })
+            PurchaseOrderScreen(scope = scope, scaffoldState = scaffoldState, contactViewModel = contactViewModel!!, purchaseOrderViewModel = purchaseOrderViewModel, add = { navController.navigate(Routes.PurchaseOrder.Add.route) })
         }
 
         composable(Routes.PurchaseOrder.Add.route) {
-            PurchaseOrderForm(contactViewModel = contactViewModel!!, productViewModel = productViewModel) {
+            PurchaseOrderForm(contactViewModel = contactViewModel!!, purchaseOrderViewModel = purchaseOrderViewModel, productViewModel = productViewModel) {
                 navController.popBackStack()
             }
         }

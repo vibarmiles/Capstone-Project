@@ -43,7 +43,7 @@ class ProductRepository : IProductRepository {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                TODO("Not yet implemented")
+                Log.d("Database Error", error.message)
             }
 
         })

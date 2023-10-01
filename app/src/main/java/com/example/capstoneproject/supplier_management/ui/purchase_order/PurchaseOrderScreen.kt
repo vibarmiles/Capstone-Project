@@ -3,6 +3,7 @@ package com.example.capstoneproject.supplier_management.ui.purchase_order
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -11,6 +12,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,15 +23,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
+import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Product
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
+import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Status
+import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import kotlinx.coroutines.CoroutineScope
 import java.time.LocalDate
 
+/*
+* TODO(
+*   1.  Automatically edit the supplier products upon submitting a new purchase order
+*   2.  Clicking the purchase order displays its contents
+*   3.  Editing the purchase order's status from WAITING to CANCELLED or DONE
+*   4.  Purchased Products should be removed from the product red mark.
+* )
+*/
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, add: () -> Unit) {
+fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactViewModel: ContactViewModel, purchaseOrderViewModel: PurchaseOrderViewModel, add: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
+    val contacts = contactViewModel.contacts
+    val purchaseOrders by purchaseOrderViewModel.purchaseOrders.observeAsState(listOf())
     var noOfDaysShown by remember { mutableStateOf(0) }
     Scaffold(
         topBar = {
@@ -58,11 +74,10 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, add
                 }
             }
             LazyColumn {
-                items(6) {
-                    PurchaseOrderItem(PurchaseOrder(supplier = "Supplier $it", date = LocalDate.now().toString(), status = it % 2 == 1, products = listOf(Product(name = "Product $it", quantity = 2, price = 3.23)))) {
+                itemsIndexed(purchaseOrders) {
+                    _, it -> PurchaseOrderItem(contact = contacts, purchaseOrder = it, goto = {
 
-                    }
-                }
+                }) }
                 
                 item {
                     Spacer(modifier = Modifier.height(50.dp))
@@ -73,16 +88,24 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, add
 }
 
 @Composable
-fun PurchaseOrderItem(purchaseOrder: PurchaseOrder, goto: (String) -> Unit) {
+fun PurchaseOrderItem(contact: Map<String, Contact>, purchaseOrder: PurchaseOrder, goto: (String) -> Unit) {
     androidx.compose.material3.ListItem(
         modifier = Modifier.clickable { goto.invoke(purchaseOrder.id) },
-        overlineContent = { Text(text = purchaseOrder.supplier, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) },
+        overlineContent = { Text(text = contact[purchaseOrder.supplier]?.name ?: "Unknown    Supplier", maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) },
         headlineContent = { Text(text = purchaseOrder.date) },
         supportingContent = { Text(text = "Number of Items: ${purchaseOrder.products.count()}") },
         trailingContent = { 
             Column(modifier = Modifier.height(IntrinsicSize.Max), horizontalAlignment = Alignment.End) {
-                Text(text = "${purchaseOrder.products.sumOf { (it.price * it.quantity) }} PHP", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text(text = if (purchaseOrder.status) "Delivered" else "To Receive", fontSize = 12.sp, color = if (purchaseOrder.status) Color.Green else Color.Red, fontWeight = FontWeight.Bold)
+                Text(text = "${purchaseOrder.products.values.sumOf { (it.price * it.quantity) }} PHP", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(text = when (purchaseOrder.status) {
+                    Status.WAITING -> "To Receive"
+                    Status.CANCELLED -> "Cancelled"
+                    Status.DONE -> "Delivered"
+                }, fontSize = 12.sp, color = when (purchaseOrder.status) {
+                    Status.WAITING -> Color.Red
+                    Status.CANCELLED -> Color.Gray
+                    Status.DONE -> Color.Green
+                }, fontWeight = FontWeight.Bold)
             }
         }
     )

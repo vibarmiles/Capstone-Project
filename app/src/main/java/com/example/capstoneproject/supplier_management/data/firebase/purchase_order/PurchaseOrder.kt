@@ -6,6 +6,6 @@ data class PurchaseOrder(
     @DocumentId val id: String = "",
     val supplier: String = "",
     val date: String = "",
-    val status: Boolean = false,
-    val products: List<Product> = listOf()
+    val status: Status = Status.WAITING,
+    val products: Map<String, Product> = mapOf()
 )

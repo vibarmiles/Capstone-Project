@@ -23,11 +23,14 @@ import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Product
+import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
+import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Status
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun PurchaseOrderForm(contactViewModel: ContactViewModel, productViewModel: ProductViewModel, back: () -> Unit) {
+fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel: PurchaseOrderViewModel, productViewModel: ProductViewModel, back: () -> Unit) {
     val purchasedProductsViewModel: PurchasedProductsViewModel = viewModel()
     var expanded by remember { mutableStateOf(false) }
     val contacts = contactViewModel.contacts
@@ -45,7 +48,10 @@ fun PurchaseOrderForm(contactViewModel: ContactViewModel, productViewModel: Prod
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)
                 }
             }, actions = {
-                IconButton(onClick = { /*TODO( Save Purchase Order )*/; back.invoke() }) {
+                IconButton(onClick = {
+                    purchaseOrderViewModel.insert(PurchaseOrder(supplier = supplierId, date = LocalDate.now().toString(), status = Status.WAITING, products = purchasedProductsViewModel.purchases.associateBy { product -> "Item ${purchasedProductsViewModel.purchases.indexOf(product)}" }))
+                    back.invoke()
+                }) {
                     Icon(imageVector = Icons.Filled.Save, contentDescription = null)
                 }
             })
