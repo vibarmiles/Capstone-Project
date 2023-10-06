@@ -14,6 +14,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material3.ListItem
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -26,10 +27,10 @@ import com.example.capstoneproject.supplier_management.data.firebase.contact.Con
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun ContactScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactViewModel: ContactViewModel, edit: (String, String, String, String) -> Unit, set: (String, String, String) -> Unit, add: () -> Unit) {
-    val contacts = contactViewModel.contacts
+fun ContactScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactViewModel: ContactViewModel, edit: (Contact) -> Unit, add: () -> Unit) {
+    val contacts = contactViewModel.contacts.observeAsState(listOf())
+    var contact: Contact? = null
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var pair: Pair<String, String>? = null
     Scaffold(
         topBar = {
             BaseTopAppBar(title = stringResource(id = R.string.contact), scope = scope, scaffoldState = scaffoldState)
@@ -41,14 +42,14 @@ fun ContactScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactVi
         }
     ) {
             paddingValues ->
-        ContactScreenContent(paddingValues = paddingValues,contacts = contacts, edit = { edit.invoke(it.first, it.second.name, it.second.contact, it.second.product.toString()) }, set = { set.invoke(it.first, it.second.name, it.second.product.toString()) }) {
-            pair = it
+        ContactScreenContent(paddingValues = paddingValues, contacts = contacts.value, edit = { edit.invoke(it) }) {
+            contact = it
             showDeleteDialog = true
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = pair!!.second, onCancel = { showDeleteDialog = false }) {
-                contactViewModel.delete(key = pair!!.first)
+            ConfirmDeletion(item = contact!!.name, onCancel = { showDeleteDialog = false }) {
+                contactViewModel.delete(contact = contact!!)
                 showDeleteDialog = false
             }
         }
@@ -56,7 +57,7 @@ fun ContactScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactVi
 }
 
 @Composable
-fun ContactScreenContent(paddingValues: PaddingValues, contacts: Map<String, Contact>, edit: (Pair<String, Contact>) -> Unit, set: (Pair<String, Contact>) -> Unit, delete: (Pair<String, String>) -> Unit) {
+fun ContactScreenContent(paddingValues: PaddingValues, contacts: List<Contact>, edit: (Contact) -> Unit, delete: (Contact) -> Unit) {
     LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         item {
             val size = contacts.count()
@@ -66,12 +67,11 @@ fun ContactScreenContent(paddingValues: PaddingValues, contacts: Map<String, Con
         itemsIndexed(contacts.toList()) {
             _, it ->
             var expanded: Boolean by remember { mutableStateOf(false) }
-            ListItem(leadingContent = { Icon(modifier = Modifier.size(50.dp), imageVector = Icons.Filled.ContactPhone, contentDescription = null) }, headlineContent = { Text(text = it.second.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = it.second.contact, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
+            ListItem(leadingContent = { Icon(modifier = Modifier.size(50.dp), imageVector = Icons.Filled.ContactPhone, contentDescription = null) }, headlineContent = { Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = it.contact, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
                 IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Contact") }, onClick = { expanded = false; edit.invoke(it) })
-                    androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Sell, contentDescription = null) }, text = { Text(text = "Offered Items") }, onClick = { expanded = false; set.invoke(Pair(it.first, it.second)) })
-                    androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Contact") }, onClick = { expanded = false; delete.invoke(Pair(it.first, it.second.name)) })
+                    androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Contact") }, onClick = { expanded = false; delete.invoke(it) })
                 }
             })
         }

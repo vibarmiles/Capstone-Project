@@ -33,7 +33,9 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        Firebase.database.setPersistenceEnabled(true)
+        if (savedInstanceState == null) {
+            Firebase.database.setPersistenceEnabled(true)
+        }
         super.onCreate(savedInstanceState)
         setContent {
             CapstoneProjectTheme {

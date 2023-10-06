@@ -23,7 +23,7 @@ import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 
 @Composable
-fun ContactFormScreen(function: String, contactViewModel: ContactViewModel, contactId: String? = null, contact: Contact? = null, map: Map<String, Double>? = null, back: () -> Unit) {
+fun ContactFormScreen(function: String, contactViewModel: ContactViewModel, contact: Contact? = null, back: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "$function Contact") }, navigationIcon = {
@@ -46,7 +46,7 @@ fun ContactFormScreen(function: String, contactViewModel: ContactViewModel, cont
                 isNameValid = name.isNotBlank()
                 isContactValid = contact.isNotBlank()
                 if (isContactValid && isNameValid) {
-                    contactViewModel.insert(key = contactId, contact = Contact(name = name, contact = contact, product = map ?: mapOf()))
+                    contactViewModel.insert(contact = Contact(name = name, contact = contact))
                     back.invoke()
                 }
             }

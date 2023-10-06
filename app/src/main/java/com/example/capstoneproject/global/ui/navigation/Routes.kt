@@ -6,12 +6,15 @@ sealed class Routes(val route: String) {
     object SplashScreen : Routes("Splash")
     object Dashboard : Routes((R.string.dashboard).toString())
     object Product : Routes((R.string.product).toString()) {
+        object View : Routes(this.route + "/View/{productId}/{name}/{image}/{purchasePrice}/{sellingPrice}/{supplier}/{categoryId}/{criticalLevel}/{stock}") {
+            fun createRoute(productId: String, name: String, image: String, purchasePrice: Double, sellingPrice: Double, supplier: String, categoryId: String, criticalLevel: Int, stock: String) = Routes.Product.route + "/View/$productId/$name/$image/$purchasePrice/$sellingPrice/$supplier/$categoryId/$criticalLevel/$stock"
+        }
         object Add : Routes(this.route + "/Add")
         object Set : Routes(this.route + "/Set/{productId}/{stock}") {
             fun createRoute(productId: String, stock: String) = Routes.Product.route + "/Set/$productId/$stock"
         }
-        object Edit : Routes(this.route + "/Edit/{productId}/{name}/{image}/{price}/{categoryId}/{criticalLevel}/{stock}") {
-            fun createRoute(productId: String, name: String, image: String, price: Double, categoryId: String, criticalLevel: Int, stock: String) = Routes.Product.route + "/Edit/$productId/$name/$image/$price/$categoryId/$criticalLevel/$stock"
+        object Edit : Routes(this.route + "/Edit/{productId}/{name}/{image}/{purchasePrice}/{sellingPrice}/{supplier}/{categoryId}/{criticalLevel}/{stock}") {
+            fun createRoute(productId: String, name: String, image: String, purchasePrice: Double, sellingPrice: Double, supplier: String, categoryId: String, criticalLevel: Int, stock: String) = Routes.Product.route + "/Edit/$productId/$name/$image/$purchasePrice/$sellingPrice/$supplier/$categoryId/$criticalLevel/$stock"
         }
     }
     object Branch : Routes((R.string.branch).toString()) {
@@ -23,11 +26,8 @@ sealed class Routes(val route: String) {
     object Category : Routes((R.string.category).toString())
     object Contact : Routes((R.string.contact).toString()) {
         object Add : Routes(this.route + "/Add")
-        object Set : Routes(this.route + "/Set/{contactId}/{contactName}/{product}") {
-            fun createRoute(contactId: String, contactName: String, product: String) = Routes.Contact.route + "/Set/$contactId/$contactName/$product"
-        }
-        object Edit : Routes(this.route + "/Edit/{contactId}/{contactName}/{contactNumber}/{product}") {
-            fun createRoute(contactId: String, contactName: String, contactNumber: String, product: String) = Routes.Contact.route + "/Edit/$contactId/$contactName/$contactNumber/$product"
+        object Edit : Routes(this.route + "/Edit/{contactId}/{contactName}/{contactNumber}") {
+            fun createRoute(contactId: String, contactName: String, contactNumber: String) = Routes.Contact.route + "/Edit/$contactId/$contactName/$contactNumber"
         }
     }
     object PurchaseOrder : Routes((R.string.purchase_order).toString()) {

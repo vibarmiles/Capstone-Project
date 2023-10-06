@@ -1,7 +1,7 @@
 package com.example.capstoneproject.product_management.ui.product
 
 import android.util.Log
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -38,12 +38,12 @@ import com.example.capstoneproject.supplier_management.ui.contact.ContactViewMod
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, edit: (String, String, String?, Double, String?, Int, String) -> Unit, set: (String, String) -> Unit, add: () -> Unit) {
+fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, add: () -> Unit, set: (String, String) -> Unit, edit: (String, Product) -> Unit, view: (String, Product) -> Unit) {
     val branch = branchViewModel.branches.observeAsState(listOf())
     val products = productViewModel.products
     val categories = categoryViewModel.categories.observeAsState(listOf())
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var pair: Pair<String, String>? = null
+    var pair: Pair<String, Product>? = null
 
     Scaffold(
         topBar = {
@@ -54,7 +54,7 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = add) {
+            FloatingActionButton(onClick = { add.invoke() }) {
                 Icon(Icons.Filled.Add, null)
             }
         }
@@ -68,17 +68,19 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
                 branchId = it
             }
             ProductScreenContent(selectedTab = branchId, categories = categories.value, products = products, edit = {
-                edit.invoke(it.first, it.second.productName, it.second.image ?: null, it.second.price, it.second.category ?: null, it.second.criticalLevel,
-                    it.second.stock.toString()
-                )
-            }, set = { id, stock -> set.invoke(id, stock) }) {
+                edit.invoke(it.first, it.second)
+            }, set = {
+                set.invoke(it.first, it.second.stock.toString())
+            }, view = {
+                view.invoke(it.first, it.second)
+            }, delete = {
                 pair = it
                 showDeleteDialog = true
-            }
+            })
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = pair!!.second, onCancel = { showDeleteDialog = false }) {
+            ConfirmDeletion(item = pair!!.second.productName, onCancel = { showDeleteDialog = false }) {
                 productViewModel.delete(key = pair!!.first)
                 showDeleteDialog = false
             }
@@ -100,8 +102,11 @@ fun TabLayout(tabs: List<Branch>, products: List<Product>, onClick: (String) -> 
                     Text(
                         text = defaultMap.count().toString(),
                         color = Color.White,
-                        modifier = Modifier.clip(CircleShape).height(IntrinsicSize.Min)
-                            .aspectRatio(1f).background(Color.Red)
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .height(IntrinsicSize.Min)
+                            .aspectRatio(1f)
+                            .background(Color.Red)
                     )
                 }
             }
@@ -109,12 +114,16 @@ fun TabLayout(tabs: List<Branch>, products: List<Product>, onClick: (String) -> 
 
         tabs.forEachIndexed {
                 index, tab ->
-            val map = products.filter { product -> product.stock[tab.id] ?: 0 <= product.criticalLevel }
+            val map = products.filter { product -> (product.stock[tab.id] ?: 0) <= product.criticalLevel }
             Tab(selected = selected == index + 1, onClick = { onClick.invoke(tab.id); selected = index + 1 }, text = {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(modifier = Modifier.widthIn(max = 150.dp), text = tab.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (map.isNotEmpty()) {
-                        Text(text = map.count().toString(), color = Color.White, modifier = Modifier.clip(CircleShape).height(IntrinsicSize.Min).aspectRatio(1f).background(Color.Red))
+                        Text(text = map.count().toString(), color = Color.White, modifier = Modifier
+                            .clip(CircleShape)
+                            .height(IntrinsicSize.Min)
+                            .aspectRatio(1f)
+                            .background(Color.Red))
                     }
                 }
             })
@@ -123,7 +132,7 @@ fun TabLayout(tabs: List<Branch>, products: List<Product>, onClick: (String) -> 
 }
 
 @Composable
-fun ProductScreenContent(selectedTab: String, categories: List<Category>, products: Map<String, Product>, edit: (Pair<String, Product>) -> Unit, set: (String, String) -> Unit, delete: (Pair<String, String>) -> Unit) {
+fun ProductScreenContent(selectedTab: String, categories: List<Category>, products: Map<String, Product>, edit: (Pair<String, Product>) -> Unit, set: (Pair<String, Product>) -> Unit, delete: (Pair<String, Product>) -> Unit, view: (Pair<String, Product>) -> Unit) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         if (products.isEmpty()) {
             item {
@@ -142,7 +151,7 @@ fun ProductScreenContent(selectedTab: String, categories: List<Category>, produc
                 itemsIndexed(critical) {
                         _, it ->
                     Log.d("id", products.toString())
-                    Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it.first, it.second.stock.toString()) }, delete = { delete.invoke(Pair(it.first, it.second.productName)) })
+                    Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
                 }
             }
 
@@ -154,7 +163,7 @@ fun ProductScreenContent(selectedTab: String, categories: List<Category>, produc
                 itemsIndexed(default) {
                         _, it ->
                     Log.d("id", products.toString())
-                    Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it.first, it.second.stock.toString()) }, delete = { delete.invoke(Pair(it.first, it.second.productName)) })
+                    Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
                 }
             }
 
@@ -171,7 +180,7 @@ fun ProductScreenContent(selectedTab: String, categories: List<Category>, produc
                 itemsIndexed(list) {
                         _, it ->
                     Log.d("id", products.toString())
-                    Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it.first, it.second.stock.toString()) }, delete = { delete.invoke(Pair(it.first, it.second.productName)) })
+                    Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
                 }
             }
 
@@ -183,7 +192,7 @@ fun ProductScreenContent(selectedTab: String, categories: List<Category>, produc
 }
 
 @Composable
-fun Products(product: Product, quantity: Int, edit: () -> Unit, set: () -> Unit, delete: () -> Unit) {
+fun Products(product: Product, quantity: Int, edit: () -> Unit, set: () -> Unit, delete: () -> Unit, view: () -> Unit) {
     var expanded: Boolean by remember { mutableStateOf(false) }
     androidx.compose.material3.ListItem(leadingContent = { SubcomposeAsyncImage(error = { Icon(imageVector = Icons.Filled.Image, contentDescription = null) },  model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier
         .clip(RoundedCornerShape(5.dp))
@@ -194,5 +203,5 @@ fun Products(product: Product, quantity: Int, edit: () -> Unit, set: () -> Unit,
             androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.StackedBarChart, contentDescription = null) }, text = { Text(text = "Adjust Quantity") }, onClick = { expanded = false; set.invoke() })
             androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Product") }, onClick = { expanded = false; delete.invoke() })
         }
-    })
+    }, modifier = Modifier.clickable { view.invoke() })
 }

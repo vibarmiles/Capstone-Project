@@ -1,6 +1,5 @@
 package com.example.capstoneproject.global.ui.navigation
 
-import android.util.Log
 import androidx.compose.material.ScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -18,23 +17,17 @@ import com.example.capstoneproject.product_management.ui.branch.BranchScreen
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.category.CategoryScreen
 import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
-import com.example.capstoneproject.product_management.ui.product.ProductFormSreen
-import com.example.capstoneproject.product_management.ui.product.ProductQuantityFormScreen
-import com.example.capstoneproject.product_management.ui.product.ProductScreen
-import com.example.capstoneproject.product_management.ui.product.ProductViewModel
+import com.example.capstoneproject.product_management.ui.product.*
 import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 import com.example.capstoneproject.supplier_management.ui.contact.ContactFormScreen
 import com.example.capstoneproject.supplier_management.ui.contact.ContactScreen
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
-import com.example.capstoneproject.supplier_management.ui.contact.OfferedProductScreen
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderForm
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderScreen
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderViewModel
 import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
 import com.example.capstoneproject.user_management.ui.users.composable.UserScreen
 import kotlinx.coroutines.CoroutineScope
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 @Composable
 fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: AppViewModel) {
@@ -42,7 +35,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
     val categoryViewModel: CategoryViewModel = viewModel()
     val productViewModel: ProductViewModel = viewModel()
     val purchaseOrderViewModel: PurchaseOrderViewModel = viewModel()
-    var contactViewModel: ContactViewModel? = null
+    val contactViewModel: ContactViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = Routes.SplashScreen.route) {
         composable(Routes.SplashScreen.route) {
@@ -58,22 +51,20 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.Product.route) {
-            ProductScreen(scope = scope, scaffoldState = scaffoldState, branchViewModel = branchViewModel, productViewModel = productViewModel, categoryViewModel = categoryViewModel, edit = {
-                id, productName, image, price, category, criticalLevel, stock -> navController.navigate(Routes.Product.Edit.createRoute(productId = id, name = productName, image = URLEncoder.encode(image ?: "null", StandardCharsets.UTF_8.toString()), price = price, categoryId = category ?: "null", criticalLevel = criticalLevel, stock = stock))
-            }, set = { id, stock -> navController.navigate(Routes.Product.Set.createRoute(id, stock)) }, add = { navController.navigate(Routes.Product.Add.route) })
+            ProductScreen(scope = scope, scaffoldState = scaffoldState, branchViewModel = branchViewModel, productViewModel = productViewModel, categoryViewModel = categoryViewModel, set = { id, stock -> navController.navigate(Routes.Product.Set.createRoute(id, stock)) }, add = { navController.navigate(Routes.Product.Add.route) }, edit = {
+                id, product -> navController.navigate(Routes.Product.Edit.createRoute(id, product.productName, product.image ?: "null", product.purchasePrice, product.sellingPrice, product.supplier, product.category ?: "null", product.criticalLevel, product.stock.toString()))
+            }, view = {
+                id, product -> navController.navigate(Routes.Product.View.createRoute(id, product.productName, product.image ?: "null", product.purchasePrice, product.sellingPrice, product.supplier, product.category ?: "null", product.criticalLevel, product.stock.toString()))
+            })
         }
 
-        composable(Routes.Product.Add.route) {
-            ProductFormSreen(function = "Add", productViewModel = productViewModel, categoryViewModel = categoryViewModel) {
-                navController.popBackStack()
-            }
-        }
-
-        composable(Routes.Product.Edit.route) {
+        composable(Routes.Product.View.route) {
             val productId: String = it.arguments?.getString("productId")!!
             val image: String? = if (it.arguments?.getString("image")!! == "null") null else it.arguments?.getString("image")!!
             val productName: String = it.arguments?.getString("name")!!
-            val price: Double = it.arguments?.getString("price")!!.toDouble()
+            val supplier: String = it.arguments?.getString("supplier")!!
+            val sellingPrice: Double = it.arguments?.getString("sellingPrice")!!.toDouble()
+            val purchasePrice: Double = it.arguments?.getString("purchasePrice")!!.toDouble()
             val category: String? = if (it.arguments?.getString("categoryId")!! == "null") null else it.arguments?.getString("categoryId")!!
             val criticalLevel: Int = it.arguments?.getString("criticalLevel")!!.toInt()
             val stock: String = it.arguments?.getString("stock")!!
@@ -82,9 +73,41 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
             if (input.isNotBlank()) {
                 map = input.split(", ").associate { value -> val split = value.split("="); split[0] to split[1].toInt() }
             }
-            ProductFormSreen(function = "Edit", productViewModel = productViewModel, categoryViewModel = categoryViewModel, productId = productId, product = Product(image = image, productName = productName, price = price, category = category, criticalLevel = criticalLevel), map = map) {
+            val product = Product(image = image, productName = productName, category = category, criticalLevel = criticalLevel, purchasePrice = purchasePrice, sellingPrice = sellingPrice, supplier = supplier, stock = map ?: mapOf())
+
+            ViewProduct(dismissRequest = { navController.popBackStack() }, product = product, edit = {
+                navController.navigate(Routes.Product.Edit.createRoute(productId, product.productName, product.image ?: "null", product.purchasePrice, product.sellingPrice, product.supplier, product.category ?: "null", product.criticalLevel, product.stock.toString()))
+            }, set = {
+                navController.navigate(Routes.Product.Set.createRoute(productId, stock))
+            }, delete = {
+                navController.navigate(Routes.Product.Edit.createRoute(productId, product.productName, product.image ?: "null", product.purchasePrice, product.sellingPrice, product.supplier, product.category ?: "null", product.criticalLevel, product.stock.toString()))
+            })
+        }
+
+        composable(Routes.Product.Add.route) {
+            ProductForm(function = "Add", productViewModel = productViewModel, contactViewModel = contactViewModel, categoryViewModel = categoryViewModel, dismissRequest = {
                 navController.popBackStack()
+            })
+        }
+
+        composable(Routes.Product.Edit.route) {
+            val productId: String = it.arguments?.getString("productId")!!
+            val image: String? = if (it.arguments?.getString("image")!! == "null") null else it.arguments?.getString("image")!!
+            val productName: String = it.arguments?.getString("name")!!
+            val supplier: String = it.arguments?.getString("supplier")!!
+            val sellingPrice: Double = it.arguments?.getString("sellingPrice")!!.toDouble()
+            val purchasePrice: Double = it.arguments?.getString("purchasePrice")!!.toDouble()
+            val category: String? = if (it.arguments?.getString("categoryId")!! == "null") null else it.arguments?.getString("categoryId")!!
+            val criticalLevel: Int = it.arguments?.getString("criticalLevel")!!.toInt()
+            val stock: String = it.arguments?.getString("stock")!!
+            val input: String = stock.substring(1, stock.length - 1)
+            var map: Map<String, Int>? = null
+            if (input.isNotBlank()) {
+                map = input.split(", ").associate { value -> val split = value.split("="); split[0] to split[1].toInt() }
             }
+            ProductForm(function = "Edit", productViewModel = productViewModel, categoryViewModel = categoryViewModel, contactViewModel = contactViewModel, productId = productId, product = Product(image = image, productName = productName, category = category, criticalLevel = criticalLevel, purchasePrice = purchasePrice, sellingPrice = sellingPrice, supplier = supplier, stock = map ?: mapOf()), dismissRequest = {
+                navController.popBackStack()
+            })
         }
 
         composable(Routes.Product.Set.route) {
@@ -95,14 +118,14 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
             if (input.isNotBlank()) {
                 map = input.split(", ").associate { value -> val split = value.split("="); split[0] to split[1].toInt() }
             }
-            ProductQuantityFormScreen(productViewModel = productViewModel, branchViewModel = branchViewModel, productId = productId, map = map) {
+            ProductQuantityFormScreen(productViewModel = productViewModel, branchViewModel = branchViewModel, productId = productId, map = map, dismissRequest = {
                 navController.popBackStack()
-            }
+            })
         }
 
         composable(Routes.Branch.route) {
             BranchScreen(scope = scope, scaffoldState = scaffoldState, viewModel = branchViewModel, productViewModel = productViewModel, add = { navController.navigate(Routes.Branch.Add.route) }) {
-                id, name, address -> navController.navigate(Routes.Branch.Edit.createRoute(id, name, address))
+                branch -> navController.navigate(Routes.Branch.Edit.createRoute(branchId = branch.id, branchName = branch.name, branchAddress = branch.address))
             }
         }
 
@@ -126,37 +149,15 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.Contact.route) {
-            if (!viewModel.viewModelLoaded.value || contactViewModel == null) {
-                viewModel.viewModelLoaded.value = true
-                contactViewModel = viewModel()
-            }
-            
-            ContactScreen(scope = scope, scaffoldState = scaffoldState, contactViewModel = contactViewModel!!, edit = {
-                id, name, contact, product -> navController.navigate(Routes.Contact.Edit.createRoute(contactId = id, contactName = name, contactNumber = contact, product = product))
-            }, set = {
-                id, name, product -> navController.navigate(Routes.Contact.Set.createRoute(contactId = id, contactName = name, product = product))
+            ContactScreen(scope = scope, scaffoldState = scaffoldState, contactViewModel = contactViewModel, edit = {
+                contact -> navController.navigate(Routes.Contact.Edit.createRoute(contactId = contact.id, contactName = contact.name, contactNumber = contact.contact))
             }) {
                 navController.navigate(Routes.Contact.Add.route)
             }
         }
 
         composable(Routes.Contact.Add.route) {
-            ContactFormScreen(function = "Add", contactViewModel = contactViewModel!!) {
-                navController.popBackStack()
-            }
-        }
-
-        composable(Routes.Contact.Set.route) {
-            val id: String = it.arguments?.getString("contactId")!!
-            val name: String = it.arguments?.getString("contactName")!!
-            val product: String = it.arguments?.getString("product")!!
-            val input: String = product.substring(1, product.length - 1)
-            var map: Map<String, Double>? = null
-            if (input.isNotBlank()) {
-                map = input.split(", ").associate { value -> val split = value.split("="); split[0] to split[1].toDouble() }
-            }
-
-            OfferedProductScreen(contactViewModel = contactViewModel!!, productViewModel = productViewModel, contactId = id, contactName = name, product = map ?: mapOf()) {
+            ContactFormScreen(function = "Add", contactViewModel = contactViewModel) {
                 navController.popBackStack()
             }
         }
@@ -165,28 +166,17 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
             val id: String = it.arguments?.getString("contactId")!!
             val name: String = it.arguments?.getString("contactName")!!
             val contact: String = it.arguments?.getString("contactNumber")!!
-            val product: String = it.arguments?.getString("product")!!
-            val input: String = product.substring(1, product.length - 1)
-            var map: Map<String, Double>? = null
-            if (input.isNotBlank()) {
-                map = input.split(", ").associate { value -> val split = value.split("="); split[0] to split[1].toDouble() }
-            }
-            ContactFormScreen(function = "Edit", contactViewModel = contactViewModel!!, contactId = id, contact = Contact(name = name, contact = contact), map = map) {
+            ContactFormScreen(function = "Edit", contactViewModel = contactViewModel, contact = Contact(id = id, name = name, contact = contact)) {
                 navController.popBackStack()
             }
         }
 
         composable(Routes.PurchaseOrder.route) {
-            if (!viewModel.viewModelLoaded.value || contactViewModel == null) {
-                viewModel.viewModelLoaded.value = true
-                contactViewModel = viewModel()
-            }
-
-            PurchaseOrderScreen(scope = scope, scaffoldState = scaffoldState, contactViewModel = contactViewModel!!, purchaseOrderViewModel = purchaseOrderViewModel, add = { navController.navigate(Routes.PurchaseOrder.Add.route) })
+            PurchaseOrderScreen(scope = scope, scaffoldState = scaffoldState, contactViewModel = contactViewModel, purchaseOrderViewModel = purchaseOrderViewModel, add = { navController.navigate(Routes.PurchaseOrder.Add.route) })
         }
 
         composable(Routes.PurchaseOrder.Add.route) {
-            PurchaseOrderForm(contactViewModel = contactViewModel!!, purchaseOrderViewModel = purchaseOrderViewModel, productViewModel = productViewModel) {
+            PurchaseOrderForm(contactViewModel = contactViewModel, purchaseOrderViewModel = purchaseOrderViewModel, productViewModel = productViewModel) {
                 navController.popBackStack()
             }
         }

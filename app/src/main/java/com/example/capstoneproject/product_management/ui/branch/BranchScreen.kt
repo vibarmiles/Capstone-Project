@@ -31,7 +31,7 @@ import com.example.capstoneproject.ui.theme.Purple500
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: BranchViewModel, productViewModel: ProductViewModel, add: () -> Unit, edit: (String, String, String) -> Unit) {
+fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: BranchViewModel, productViewModel: ProductViewModel, add: () -> Unit, edit: (Branch) -> Unit) {
     val branches by viewModel.branches.observeAsState(listOf())
     var branch: Branch? = null
     var showDeleteDialog by remember {
@@ -57,8 +57,8 @@ fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel:
 
             itemsIndexed(branches) {
                 _, item ->
-                BranchListItem(branch = item.name, address = item.address, edit = {
-                    edit.invoke(item.id, item.name, item.address)
+                BranchListItem(branch = item, edit = {
+                    edit.invoke(item)
                 }) {
                     branch = item
                     showDeleteDialog = true
@@ -81,8 +81,8 @@ fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel:
 }
 
 @Composable
-fun BranchListItem(branch: String = "Branch", address: String = "#234 Address St., asdfasdfwerwer", edit: () -> Unit, delete: () -> Unit) {
-    androidx.compose.material3.ListItem(headlineContent = { Text(text = branch, fontWeight = FontWeight.Bold, overflow = TextOverflow.Ellipsis, maxLines = 1) }, supportingContent = { Text(text = address, overflow = TextOverflow.Ellipsis, maxLines = 1) }, trailingContent = {
+fun BranchListItem(branch: Branch, edit: () -> Unit, delete: () -> Unit) {
+    androidx.compose.material3.ListItem(headlineContent = { Text(text = branch.name, fontWeight = FontWeight.Bold, overflow = TextOverflow.Ellipsis, maxLines = 1) }, supportingContent = { Text(text = branch.address, overflow = TextOverflow.Ellipsis, maxLines = 1) }, trailingContent = {
         Row {
             IconButton(onClick = edit) {
                 Icon(Icons.Filled.Edit, contentDescription = null)
@@ -93,5 +93,5 @@ fun BranchListItem(branch: String = "Branch", address: String = "#234 Address St
         }
     }, leadingContent = { Box(modifier = Modifier
         .size(50.dp)
-        .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Text(text = branch.substring(startIndex = 0, endIndex = 1), fontSize = 16.sp, color = Color.White, textAlign = TextAlign.Center) } } )
+        .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Text(text = branch.name.substring(startIndex = 0, endIndex = 1), fontSize = 16.sp, color = Color.White, textAlign = TextAlign.Center) } } )
 }

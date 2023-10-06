@@ -11,6 +11,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,10 +34,10 @@ import java.time.LocalDate
 fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel: PurchaseOrderViewModel, productViewModel: ProductViewModel, back: () -> Unit) {
     val purchasedProductsViewModel: PurchasedProductsViewModel = viewModel()
     var expanded by remember { mutableStateOf(false) }
-    val contacts = contactViewModel.contacts
+    val contacts = contactViewModel.contacts.observeAsState()
     val products = productViewModel.products
-    var textFieldValue by remember { mutableStateOf(contacts.values.first().name) }
-    var supplierId: String by remember { mutableStateOf(contacts.keys.first()) }
+    var textFieldValue: String by remember { mutableStateOf(contacts.value?.first()?.name ?: "") }
+    var supplierId: String by remember { mutableStateOf(contacts.value?.first()?.id ?: "") }
     var showProductDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var productToRemove: Product? = null
@@ -73,9 +74,8 @@ fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel
                 DropdownMenu(modifier = Modifier
                     .exposedDropdownSize()
                     .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
-                    contacts.forEach {
-                            s ->
-                        DropdownMenuItem(text = { androidx.compose.material.Text(text = s.value.name) }, onClick = { textFieldValue = s.value.name; supplierId = s.key; expanded = false })
+                    contacts.value?.forEach { s ->
+                        DropdownMenuItem(text = { androidx.compose.material.Text(text = s.name) }, onClick = { textFieldValue = s.name; supplierId = s.id; expanded = false })
                     }
                 }
             }
@@ -125,9 +125,11 @@ fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel
         }
 
         if (showProductDialog) {
+            /*
             AddProductDialog(offers = contacts[supplierId]?.product ?: mapOf(), onDismissRequest = { showProductDialog = false }, submit = {
                 name, price, quantity -> purchasedProductsViewModel.purchases.add(Product(name = name, price = price, quantity = quantity)); showProductDialog = false
             }, products = products.filter { it.value.productName !in purchasedProductsViewModel.purchases.map { products -> products.name } })
+            */
         }
 
         if (showDeleteDialog) {

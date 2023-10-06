@@ -44,7 +44,7 @@ import java.time.LocalDate
 @Composable
 fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactViewModel: ContactViewModel, purchaseOrderViewModel: PurchaseOrderViewModel, add: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val contacts = contactViewModel.contacts
+    val contacts = contactViewModel.contacts.observeAsState(listOf())
     val purchaseOrders by purchaseOrderViewModel.purchaseOrders.observeAsState(listOf())
     var noOfDaysShown by remember { mutableStateOf(0) }
     Scaffold(
@@ -75,8 +75,8 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, con
             }
             LazyColumn {
                 itemsIndexed(purchaseOrders) {
-                    _, it -> PurchaseOrderItem(contact = contacts, purchaseOrder = it, goto = {
-
+                    _, it ->
+                        PurchaseOrderItem(supplierName = contacts.value.firstOrNull { contact -> contact.id == it.supplier }?.name ?: "Unknown Supplier", purchaseOrder = it, goto = {
                 }) }
                 
                 item {
@@ -88,10 +88,10 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, con
 }
 
 @Composable
-fun PurchaseOrderItem(contact: Map<String, Contact>, purchaseOrder: PurchaseOrder, goto: (String) -> Unit) {
+fun PurchaseOrderItem(supplierName: String, purchaseOrder: PurchaseOrder, goto: (String) -> Unit) {
     androidx.compose.material3.ListItem(
         modifier = Modifier.clickable { goto.invoke(purchaseOrder.id) },
-        overlineContent = { Text(text = contact[purchaseOrder.supplier]?.name ?: "Unknown    Supplier", maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) },
+        overlineContent = { Text(text = supplierName, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) },
         headlineContent = { Text(text = purchaseOrder.date) },
         supportingContent = { Text(text = "Number of Items: ${purchaseOrder.products.count()}") },
         trailingContent = { 
