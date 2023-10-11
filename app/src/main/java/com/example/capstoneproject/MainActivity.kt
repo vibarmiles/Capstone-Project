@@ -10,18 +10,26 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.capstoneproject.global.ui.navigation.Drawer
 import com.example.capstoneproject.global.ui.navigation.NavigationHost
 import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
@@ -42,7 +50,6 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color.White
                 ) {
                     GlobalContent()
                 }
@@ -87,8 +94,7 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
 }
 
 @Composable
-fun AppSplashScreen(onLoad: (Boolean) -> Unit) {
-    var fade: Boolean by remember { mutableStateOf(true) }
+fun LoginScreen(onLoad: (Boolean) -> Unit) {
     val context = LocalContext.current
     var hasPermission by remember { mutableStateOf(true) }
     val permissions = arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.INTERNET, android.Manifest.permission.ACCESS_NETWORK_STATE, android.Manifest.permission.ACCESS_WIFI_STATE)
@@ -108,29 +114,17 @@ fun AppSplashScreen(onLoad: (Boolean) -> Unit) {
             PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permissions[3])
         ) {
             Log.d("Checking", "True")
-            delay(5000)
-            fade = false
-            delay(500)
             onLoad.invoke(true)
         } else {
             Log.d("Permission", "Denied")
         }
     })
 
-    AnimatedVisibility(visible = fade,exit = fadeOut()) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            Image(painter = painterResource(id = R.drawable.ic_launcher_background), contentDescription = null)
-            Image(painter = painterResource(id = R.drawable.ic_launcher_foreground), contentDescription = null)
-        }
-        Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier.fillMaxSize()) {
-            Box(
-                contentAlignment = Alignment.TopCenter,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-            ) {
-                CircularProgressIndicator()
-            }
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Button(onClick = {
+
+        }) {
+            Text(text = stringResource(R.string.login))
         }
     }
 }

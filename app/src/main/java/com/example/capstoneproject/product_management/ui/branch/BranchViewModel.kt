@@ -10,11 +10,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class BranchViewModel : ViewModel() {
-    val branches: MutableLiveData<List<Branch>>
+    private lateinit var branches: MutableLiveData<List<Branch>>
     private val branchRepository: IBranchRepository = BranchRepository()
 
-    init {
-        branches = branchRepository.getAll()
+    fun getAll(): MutableLiveData<List<Branch>> {
+        if (!this::branches.isInitialized) {
+            branches = branchRepository.getAll()
+        }
+
+        return branches
     }
 
     fun insert(branch: Branch) {

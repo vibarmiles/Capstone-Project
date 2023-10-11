@@ -32,7 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 
 @Composable
 fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: BranchViewModel, productViewModel: ProductViewModel, add: () -> Unit, edit: (Branch) -> Unit) {
-    val branches by viewModel.branches.observeAsState(listOf())
+    val branches by viewModel.getAll().observeAsState(listOf())
     var branch: Branch? = null
     var showDeleteDialog by remember {
         mutableStateOf(false)

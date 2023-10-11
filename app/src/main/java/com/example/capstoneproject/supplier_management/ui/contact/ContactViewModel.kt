@@ -10,11 +10,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ContactViewModel : ViewModel() {
-    val contacts: MutableLiveData<List<Contact>>
+    private lateinit var contacts: MutableLiveData<List<Contact>>
     private val contactRepository: IContactRepository = ContactRepository()
 
-    init {
-        contacts = contactRepository.getAll()
+    fun getAll(): MutableLiveData<List<Contact>> {
+        if (!this::contacts.isInitialized) {
+            contacts = contactRepository.getAll()
+        }
+
+        return contacts
     }
 
     fun insert(contact: Contact) {

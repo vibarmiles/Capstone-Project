@@ -7,7 +7,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.capstoneproject.AppSplashScreen
+import com.example.capstoneproject.LoginScreen
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
@@ -39,7 +39,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
 
     NavHost(navController = navController, startDestination = Routes.SplashScreen.route) {
         composable(Routes.SplashScreen.route) {
-            AppSplashScreen {
+            LoginScreen {
                 navController.navigate(Routes.Dashboard.route) {
                     popUpTo(0)
                 }
@@ -75,12 +75,12 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
             }
             val product = Product(image = image, productName = productName, category = category, criticalLevel = criticalLevel, purchasePrice = purchasePrice, sellingPrice = sellingPrice, supplier = supplier, stock = map ?: mapOf())
 
-            ViewProduct(dismissRequest = { navController.popBackStack() }, product = product, edit = {
+            ViewProduct(dismissRequest = { navController.popBackStack() }, productViewModel = productViewModel, productId = productId, product = product, edit = {
                 navController.navigate(Routes.Product.Edit.createRoute(productId, product.productName, product.image ?: "null", product.purchasePrice, product.sellingPrice, product.supplier, product.category ?: "null", product.criticalLevel, product.stock.toString()))
             }, set = {
                 navController.navigate(Routes.Product.Set.createRoute(productId, stock))
             }, delete = {
-                navController.navigate(Routes.Product.Edit.createRoute(productId, product.productName, product.image ?: "null", product.purchasePrice, product.sellingPrice, product.supplier, product.category ?: "null", product.criticalLevel, product.stock.toString()))
+                navController.popBackStack()
             })
         }
 

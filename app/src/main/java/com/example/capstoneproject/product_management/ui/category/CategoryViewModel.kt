@@ -10,11 +10,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class CategoryViewModel : ViewModel() {
-    val categories: MutableLiveData<List<Category>>
+    private lateinit var categories: MutableLiveData<List<Category>>
     private val categoryRepository: ICategoryRepository = CategoryRepository()
 
-    init {
-        categories = categoryRepository.getAll()
+    fun getAll(): MutableLiveData<List<Category>> {
+        if (!this::categories.isInitialized) {
+            categories = categoryRepository.getAll()
+        }
+
+        return categories
     }
 
     fun insert(category: Category) {

@@ -28,7 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 
 @Composable
 fun ContactScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactViewModel: ContactViewModel, edit: (Contact) -> Unit, add: () -> Unit) {
-    val contacts = contactViewModel.contacts.observeAsState(listOf())
+    val contacts = contactViewModel.getAll().observeAsState(listOf())
     var contact: Contact? = null
     var showDeleteDialog by remember { mutableStateOf(false) }
     Scaffold(

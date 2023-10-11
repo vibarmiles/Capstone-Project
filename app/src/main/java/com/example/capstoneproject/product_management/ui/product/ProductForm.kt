@@ -28,8 +28,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.SecureFlagPolicy
 import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.FormButtons
+import com.example.capstoneproject.global.ui.misc.ImageNotAvailable
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
@@ -51,8 +53,8 @@ fun ProductForm(dismissRequest: () -> Unit, function: String, productId: String?
             .padding(paddingValues)
             .padding(16.dp)
             .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            val category = categoryViewModel.categories.observeAsState(listOf())
-            val supplier = contactViewModel.contacts.observeAsState(listOf())
+            val category = categoryViewModel.getAll().observeAsState(listOf())
+            val supplier = contactViewModel.getAll().observeAsState(listOf())
             var name by remember { mutableStateOf(product?.productName ?: "") }
             var isNameValid by remember { mutableStateOf(true) }
             var purchasePrice by remember { mutableStateOf(String.format("%.99f", product?.purchasePrice ?: 0.0).trimEnd('0').trimEnd('.')) }
@@ -74,7 +76,7 @@ fun ProductForm(dismissRequest: () -> Unit, function: String, productId: String?
             Box(modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp), contentAlignment = Alignment.Center) {
-                AsyncImage(error = rememberVectorPainter(image = Icons.Filled.Image), model = imageUri, contentDescription = null, fallback = rememberVectorPainter(Icons.Filled.Image), modifier = Modifier
+                SubcomposeAsyncImage(error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) }, loading = { CircularProgressIndicator() }, model = imageUri, contentDescription = null, modifier = Modifier
                     .fillMaxHeight()
                     .width(200.dp), contentScale = ContentScale.Crop)
             }

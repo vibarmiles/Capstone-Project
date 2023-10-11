@@ -10,11 +10,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ProductViewModel : ViewModel() {
-    val products: SnapshotStateMap<String, Product>
+    private lateinit var products: SnapshotStateMap<String, Product>
     private val productRepository: IProductRepository = ProductRepository()
 
-    init {
-        products = productRepository.getAll()
+    fun getAll(): SnapshotStateMap<String, Product> {
+        if (!this::products.isInitialized) {
+            products = productRepository.getAll()
+        }
+
+        return products
     }
 
     fun insert(id: String? = null, product: Product) {

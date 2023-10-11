@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Capstone Project</string>
+    <string name="app_name">Sam Speed IMS</string>
     <string name="submit_button">SUBMIT</string>
     <string name="cancel_button">CANCEL</string>
     <string name="dashboard">Dashboard</string>
@@ -17,4 +17,5 @@
     <string name="logout">Logout</string>
     <string name="add">Add</string>
     <string name="edit">Edit</string>
+    <string name="login">Login</string>
 </resources>

@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -28,7 +29,7 @@ import kotlinx.coroutines.CoroutineScope
 
 @Composable
 fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: CategoryViewModel, productViewModel: ProductViewModel) {
-    val categories = viewModel.categories.observeAsState(listOf())
+    val categories = viewModel.getAll().observeAsState(listOf())
     var category: Category? = null
     var showDialog by remember {
         mutableStateOf(false)
@@ -138,7 +139,7 @@ fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, on
             }
         },
         dismissButton = {
-            TextButton(onClick = onCancel ) {
+            TextButton(colors = ButtonDefaults.buttonColors(contentColor = Color.Black, backgroundColor = Color.Transparent), onClick = onCancel) {
                 Text(text = stringResource(id = R.string.cancel_button))
             }
         }

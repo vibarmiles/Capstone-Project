@@ -34,8 +34,8 @@ import java.time.LocalDate
 fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel: PurchaseOrderViewModel, productViewModel: ProductViewModel, back: () -> Unit) {
     val purchasedProductsViewModel: PurchasedProductsViewModel = viewModel()
     var expanded by remember { mutableStateOf(false) }
-    val contacts = contactViewModel.contacts.observeAsState()
-    val products = productViewModel.products
+    val contacts = contactViewModel.getAll().observeAsState()
+    val products = productViewModel.getAll()
     var textFieldValue: String by remember { mutableStateOf(contacts.value?.first()?.name ?: "") }
     var supplierId: String by remember { mutableStateOf(contacts.value?.first()?.id ?: "") }
     var showProductDialog by remember { mutableStateOf(false) }

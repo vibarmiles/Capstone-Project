@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.misc.ImageNotAvailable
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
 import com.example.capstoneproject.product_management.data.firebase.category.Category
@@ -35,13 +36,14 @@ import com.example.capstoneproject.product_management.data.firebase.product.Prod
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
+import com.example.capstoneproject.ui.theme.primaryColor
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
 fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, add: () -> Unit, set: (String, String) -> Unit, edit: (String, Product) -> Unit, view: (String, Product) -> Unit) {
-    val branch = branchViewModel.branches.observeAsState(listOf())
-    val products = productViewModel.products
-    val categories = categoryViewModel.categories.observeAsState(listOf())
+    val branch = branchViewModel.getAll().observeAsState(listOf())
+    val products = productViewModel.getAll()
+    val categories = categoryViewModel.getAll().observeAsState(listOf())
     var showDeleteDialog by remember { mutableStateOf(false) }
     var pair: Pair<String, Product>? = null
 
@@ -194,7 +196,7 @@ fun ProductScreenContent(selectedTab: String, categories: List<Category>, produc
 @Composable
 fun Products(product: Product, quantity: Int, edit: () -> Unit, set: () -> Unit, delete: () -> Unit, view: () -> Unit) {
     var expanded: Boolean by remember { mutableStateOf(false) }
-    androidx.compose.material3.ListItem(leadingContent = { SubcomposeAsyncImage(error = { Icon(imageVector = Icons.Filled.Image, contentDescription = null) },  model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier
+    androidx.compose.material3.ListItem(leadingContent = { SubcomposeAsyncImage(error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) },  model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier
         .clip(RoundedCornerShape(5.dp))
         .size(50.dp), loading = { CircularProgressIndicator() }, contentDescription = null) }, headlineContent = { Text(text = "Qty: $quantity", fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = product.productName, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
         IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })

@@ -44,7 +44,7 @@ import java.time.LocalDate
 @Composable
 fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactViewModel: ContactViewModel, purchaseOrderViewModel: PurchaseOrderViewModel, add: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val contacts = contactViewModel.contacts.observeAsState(listOf())
+    val contacts = contactViewModel.getAll().observeAsState(listOf())
     val purchaseOrders by purchaseOrderViewModel.purchaseOrders.observeAsState(listOf())
     var noOfDaysShown by remember { mutableStateOf(0) }
     Scaffold(
