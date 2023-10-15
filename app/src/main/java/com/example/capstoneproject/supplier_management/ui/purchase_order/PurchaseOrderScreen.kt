@@ -40,13 +40,11 @@ import java.time.LocalDate
 * )
 */
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactViewModel: ContactViewModel, purchaseOrderViewModel: PurchaseOrderViewModel, add: () -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    val contacts = contactViewModel.getAll().observeAsState(listOf())
+fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, purchaseOrderViewModel: PurchaseOrderViewModel, add: () -> Unit) {
     val purchaseOrders by purchaseOrderViewModel.purchaseOrders.observeAsState(listOf())
     var noOfDaysShown by remember { mutableStateOf(0) }
+    val days = listOf(1, 3, 7, 30)
     Scaffold(
         topBar = {
             BaseTopAppBar(title = stringResource(id = R.string.purchase_order), scope = scope, scaffoldState = scaffoldState)
@@ -60,23 +58,12 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, con
         paddingValues ->
         Column(modifier = Modifier
             .padding(paddingValues)) {
-            ExposedDropdownMenuBox(modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp), expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                var textFieldValue by remember { mutableStateOf("Today") }
-                val dropdownMenuItems = listOf("Today", "Last 3 days", "Last 7 days", "Last 30 days")
-                OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, modifier = Modifier.fillMaxWidth(), value = textFieldValue, readOnly = true, onValueChange = {  })
-                DropdownMenu(modifier = Modifier
-                    .exposedDropdownSize()
-                    .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
-                    dropdownMenuItems.forEachIndexed {
-                            index, s ->
-                        androidx.compose.material3.DropdownMenuItem(text = { androidx.compose.material.Text(text = s) }, onClick = { noOfDaysShown = index; textFieldValue = s; expanded = false })
-                    }
-                }
-            }
+            FilterByDate(onClick = { noOfDaysShown = it })
+
             LazyColumn {
-                itemsIndexed(purchaseOrders) {
+                itemsIndexed(purchaseOrders.filter { purchaseOrder -> LocalDate.parse(purchaseOrder.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())} ) {
                     _, it ->
-                        PurchaseOrderItem(supplierName = contacts.value.firstOrNull { contact -> contact.id == it.supplier }?.name ?: "Unknown Supplier", purchaseOrder = it, goto = {
+                        PurchaseOrderItem(purchaseOrder = it, goto = {
                 }) }
                 
                 item {
@@ -88,10 +75,9 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, con
 }
 
 @Composable
-fun PurchaseOrderItem(supplierName: String, purchaseOrder: PurchaseOrder, goto: (String) -> Unit) {
+fun PurchaseOrderItem(purchaseOrder: PurchaseOrder, goto: (String) -> Unit) {
     androidx.compose.material3.ListItem(
         modifier = Modifier.clickable { goto.invoke(purchaseOrder.id) },
-        overlineContent = { Text(text = supplierName, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) },
         headlineContent = { Text(text = purchaseOrder.date) },
         supportingContent = { Text(text = "Number of Items: ${purchaseOrder.products.count()}") },
         trailingContent = { 
@@ -110,4 +96,23 @@ fun PurchaseOrderItem(supplierName: String, purchaseOrder: PurchaseOrder, goto: 
         }
     )
     Divider()
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun FilterByDate(onClick: (Int) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp), expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+        var textFieldValue by remember { mutableStateOf("Today") }
+        val dropdownMenuItems = listOf("Today", "Last 3 days", "Last 7 days", "Last 30 days")
+        OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, modifier = Modifier.fillMaxWidth(), value = textFieldValue, readOnly = true, onValueChange = {  })
+        DropdownMenu(modifier = Modifier
+            .exposedDropdownSize()
+            .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
+            dropdownMenuItems.forEachIndexed {
+                    index, s ->
+                androidx.compose.material3.DropdownMenuItem(text = { androidx.compose.material.Text(text = s) }, onClick = { onClick.invoke(index); textFieldValue = s; expanded = false })
+            }
+        }
+    }
 }

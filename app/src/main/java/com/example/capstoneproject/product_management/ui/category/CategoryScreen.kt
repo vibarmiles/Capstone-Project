@@ -109,9 +109,8 @@ fun CategoryListItem(category: String = "Category", edit: () -> Unit, delete: ()
 @Composable
 fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, onCancel: () -> Unit) {
     var categoryName by remember { mutableStateOf(category?.categoryName ?: "") }
-    var isValid by remember { mutableStateOf(true) }
 
-    AlertDialog(
+    androidx.compose.material3.AlertDialog(
         onDismissRequest = onCancel,
         title = {
             Text(text = stringResource(id = R.string.category), fontSize = 24.sp)
@@ -119,21 +118,12 @@ fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, on
         text = {
             Column {
                 Text(text = "", fontSize = 1.sp)
-                OutlinedTextField(value = categoryName, onValueChange = { categoryName = it }, placeholder = { Text(text = "Enter Category") }, isError = !isValid, trailingIcon = { if (!isValid) Icon(
-                    imageVector = Icons.Filled.Error,
-                    contentDescription = null,
-                    tint = Color.Red
-                )})
+                OutlinedTextField(value = categoryName, onValueChange = { categoryName = it }, placeholder = { Text(text = "Enter Category") })
             }
         },
         confirmButton = {
-            Button(onClick = {
-                if (categoryName.isNotBlank()) {
-                    isValid = true
-                    onConfirm.invoke(Category(id = category?.id ?: "", categoryName = categoryName))
-                } else {
-                    isValid = false
-                }
+            Button(enabled = categoryName.isNotBlank(), onClick = {
+                onConfirm.invoke(Category(id = category?.id ?: "", categoryName = categoryName))
             }) {
                 Text(text = stringResource(id = R.string.submit_button))
             }

@@ -5,6 +5,8 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -38,6 +40,7 @@ import com.example.capstoneproject.product_management.ui.category.CategoryViewMo
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.ui.theme.primaryColor
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, add: () -> Unit, set: (String, String) -> Unit, edit: (String, Product) -> Unit, view: (String, Product) -> Unit) {
@@ -46,6 +49,7 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
     val categories = categoryViewModel.getAll().observeAsState(listOf())
     var showDeleteDialog by remember { mutableStateOf(false) }
     var pair: Pair<String, Product>? = null
+    var page by remember { mutableStateOf(0) }
 
     Scaffold(
         topBar = {
@@ -62,20 +66,12 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
         }
     ) {
             paddingValues ->
-        var branchId by rememberSaveable { mutableStateOf("Default") }
         Column(modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)) {
-            TabLayout(tabs = branch.value, products = products.values.toList()) {
-                branchId = it
-            }
-            ProductScreenContent(selectedTab = branchId, categories = categories.value, products = products, edit = {
-                edit.invoke(it.first, it.second)
-            }, set = {
-                set.invoke(it.first, it.second.stock.toString())
-            }, view = {
-                view.invoke(it.first, it.second)
-            }, delete = {
+            TabLayout(tabs = branch.value, selectedTab = page, products = products.values.toList()) { page = it }
+
+            ProductScreenContent(branchId = if (page == 0) "Default" else branch.value[page - 1].id, categories = categories.value, products = products, edit = { edit.invoke(it.first, it.second) }, set = { set.invoke(it.first, it.second.stock.toString()) }, view = { view.invoke(it.first, it.second) }, delete = {
                 pair = it
                 showDeleteDialog = true
             })
@@ -91,13 +87,12 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
 }
 
 @Composable
-fun TabLayout(tabs: List<Branch>, products: List<Product>, onClick: (String) -> Unit) {
-    var selected by remember { mutableStateOf(0) }
-    ScrollableTabRow(selectedTabIndex = selected, edgePadding = 0.dp, modifier = Modifier
+fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, onClick: (Int) -> Unit) {
+    ScrollableTabRow(selectedTabIndex = selectedTab, edgePadding = 0.dp, modifier = Modifier
         .height(50.dp)
         .fillMaxWidth()) {
         val defaultMap = products.filter { product -> product.stock.values.sum() <= product.criticalLevel }
-        Tab(selected = selected == 0, onClick = { onClick.invoke("Default"); selected = 0 }, text = {
+        Tab(selected = selectedTab == 0, onClick = { onClick.invoke(0) }, text = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(text = "All")
                 if (defaultMap.isNotEmpty()) {
@@ -117,7 +112,7 @@ fun TabLayout(tabs: List<Branch>, products: List<Product>, onClick: (String) -> 
         tabs.forEachIndexed {
                 index, tab ->
             val map = products.filter { product -> (product.stock[tab.id] ?: 0) <= product.criticalLevel }
-            Tab(selected = selected == index + 1, onClick = { onClick.invoke(tab.id); selected = index + 1 }, text = {
+            Tab(selected = selectedTab == index + 1, onClick = { onClick.invoke(index + 1) }, text = {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(modifier = Modifier.widthIn(max = 150.dp), text = tab.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (map.isNotEmpty()) {
@@ -134,15 +129,15 @@ fun TabLayout(tabs: List<Branch>, products: List<Product>, onClick: (String) -> 
 }
 
 @Composable
-fun ProductScreenContent(selectedTab: String, categories: List<Category>, products: Map<String, Product>, edit: (Pair<String, Product>) -> Unit, set: (Pair<String, Product>) -> Unit, delete: (Pair<String, Product>) -> Unit, view: (Pair<String, Product>) -> Unit) {
+fun ProductScreenContent(branchId: String, categories: List<Category>, products: Map<String, Product>, edit: (Pair<String, Product>) -> Unit, set: (Pair<String, Product>) -> Unit, delete: (Pair<String, Product>) -> Unit, view: (Pair<String, Product>) -> Unit) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         if (products.isEmpty()) {
             item {
                 Text(modifier = Modifier.padding(16.dp), text = "There are no entered products")
             }
         } else {
-            val critical = products.filterValues { it.criticalLevel >= if (selectedTab == "Default") it.stock.values.sum() else it.stock[selectedTab] ?: 0 }.toList()
-            val default = products.filterValues { it.category !in categories.map { category -> category.id } && it.criticalLevel < if (selectedTab == "Default") it.stock.values.sum() else it.stock[selectedTab] ?: 0 }.toList()
+            val critical = products.filterValues { it.criticalLevel >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0 }.toList()
+            val default = products.filterValues { it.category !in categories.map { category -> category.id } && it.criticalLevel < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0 }.toList()
             if (critical.isNotEmpty()) {
                 item {
                     androidx.compose.material3.ListItem(headlineContent = {
@@ -153,7 +148,7 @@ fun ProductScreenContent(selectedTab: String, categories: List<Category>, produc
                 itemsIndexed(critical) {
                         _, it ->
                     Log.d("id", products.toString())
-                    Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
+                    Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
                 }
             }
 
@@ -165,12 +160,12 @@ fun ProductScreenContent(selectedTab: String, categories: List<Category>, produc
                 itemsIndexed(default) {
                         _, it ->
                     Log.d("id", products.toString())
-                    Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
+                    Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
                 }
             }
 
             for (category in categories) {
-                val list = products.filterValues { it.category == category.id && it.criticalLevel < (if (selectedTab == "Default") it.stock.values.sum() else it.stock[selectedTab] ?: 0) }.toList()
+                val list = products.filterValues { it.category == category.id && it.criticalLevel < (if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0) }.toList()
                 if (list.isEmpty()) {
                     continue
                 }
@@ -182,7 +177,7 @@ fun ProductScreenContent(selectedTab: String, categories: List<Category>, produc
                 itemsIndexed(list) {
                         _, it ->
                     Log.d("id", products.toString())
-                    Products(product = it.second, quantity = if (selectedTab == "Default") it.second.stock.values.sum() else it.second.stock[selectedTab] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
+                    Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
                 }
             }
 

@@ -28,6 +28,8 @@ import com.example.capstoneproject.supplier_management.ui.purchase_order.Purchas
 import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
 import com.example.capstoneproject.user_management.ui.users.composable.UserScreen
 import kotlinx.coroutines.CoroutineScope
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: AppViewModel) {
@@ -52,9 +54,9 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
 
         composable(Routes.Product.route) {
             ProductScreen(scope = scope, scaffoldState = scaffoldState, branchViewModel = branchViewModel, productViewModel = productViewModel, categoryViewModel = categoryViewModel, set = { id, stock -> navController.navigate(Routes.Product.Set.createRoute(id, stock)) }, add = { navController.navigate(Routes.Product.Add.route) }, edit = {
-                id, product -> navController.navigate(Routes.Product.Edit.createRoute(id, product.productName, product.image ?: "null", product.purchasePrice, product.sellingPrice, product.supplier, product.category ?: "null", product.criticalLevel, product.stock.toString()))
+                id, product -> navController.navigate(Routes.Product.Edit.createRoute(id, product.productName, URLEncoder.encode(product.image ?: "null", StandardCharsets.UTF_8.toString()), product.purchasePrice, product.sellingPrice, product.supplier, product.category ?: "null", product.criticalLevel, product.stock.toString()))
             }, view = {
-                id, product -> navController.navigate(Routes.Product.View.createRoute(id, product.productName, product.image ?: "null", product.purchasePrice, product.sellingPrice, product.supplier, product.category ?: "null", product.criticalLevel, product.stock.toString()))
+                id, product -> navController.navigate(Routes.Product.View.createRoute(id, product.productName, URLEncoder.encode(product.image ?: "null", StandardCharsets.UTF_8.toString()), product.purchasePrice, product.sellingPrice, product.supplier, product.category ?: "null", product.criticalLevel, product.stock.toString()))
             })
         }
 
@@ -75,7 +77,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
             }
             val product = Product(image = image, productName = productName, category = category, criticalLevel = criticalLevel, purchasePrice = purchasePrice, sellingPrice = sellingPrice, supplier = supplier, stock = map ?: mapOf())
 
-            ViewProduct(dismissRequest = { navController.popBackStack() }, productViewModel = productViewModel, productId = productId, product = product, edit = {
+            ViewProduct(dismissRequest = { navController.popBackStack() }, productViewModel = productViewModel, contactViewModel = contactViewModel, categoryViewModel = categoryViewModel, branchViewModel = branchViewModel, productId = productId, product = product, edit = {
                 navController.navigate(Routes.Product.Edit.createRoute(productId, product.productName, product.image ?: "null", product.purchasePrice, product.sellingPrice, product.supplier, product.category ?: "null", product.criticalLevel, product.stock.toString()))
             }, set = {
                 navController.navigate(Routes.Product.Set.createRoute(productId, stock))
@@ -172,7 +174,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.PurchaseOrder.route) {
-            PurchaseOrderScreen(scope = scope, scaffoldState = scaffoldState, contactViewModel = contactViewModel, purchaseOrderViewModel = purchaseOrderViewModel, add = { navController.navigate(Routes.PurchaseOrder.Add.route) })
+            PurchaseOrderScreen(scope = scope, scaffoldState = scaffoldState, purchaseOrderViewModel = purchaseOrderViewModel, add = { navController.navigate(Routes.PurchaseOrder.Add.route) })
         }
 
         composable(Routes.PurchaseOrder.Add.route) {

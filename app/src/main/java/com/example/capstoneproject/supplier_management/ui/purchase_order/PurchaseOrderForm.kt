@@ -29,14 +29,11 @@ import com.example.capstoneproject.supplier_management.data.firebase.purchase_or
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import java.time.LocalDate
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel: PurchaseOrderViewModel, productViewModel: ProductViewModel, back: () -> Unit) {
     val purchasedProductsViewModel: PurchasedProductsViewModel = viewModel()
-    var expanded by remember { mutableStateOf(false) }
     val contacts = contactViewModel.getAll().observeAsState()
     val products = productViewModel.getAll()
-    var textFieldValue: String by remember { mutableStateOf(contacts.value?.first()?.name ?: "") }
     var supplierId: String by remember { mutableStateOf(contacts.value?.first()?.id ?: "") }
     var showProductDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -66,20 +63,8 @@ fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel
         paddingValues -> 
         Column(
             modifier = Modifier
-                .padding(paddingValues)
-                .padding(16.dp),
+                .padding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, modifier = Modifier.fillMaxWidth(), value = textFieldValue, readOnly = true, onValueChange = {  })
-                DropdownMenu(modifier = Modifier
-                    .exposedDropdownSize()
-                    .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
-                    contacts.value?.forEach { s ->
-                        DropdownMenuItem(text = { androidx.compose.material.Text(text = s.name) }, onClick = { textFieldValue = s.name; supplierId = s.id; expanded = false })
-                    }
-                }
-            }
-
             Column(modifier = Modifier.fillMaxWidth()) {
                 androidx.compose.material3.ListItem(
                     headlineContent = {
@@ -92,7 +77,8 @@ fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel
                         IconButton(onClick = {  }, enabled = false) {
                             Icon(imageVector = Icons.Filled.Remove, contentDescription = null)
                         }
-                    }
+                    },
+                    tonalElevation = 5.dp
                 )
 
                 Divider()
@@ -100,7 +86,7 @@ fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel
                 LazyColumn {
                     itemsIndexed(purchasedProductsViewModel.purchases) {
                             _, product ->
-                        ProductItem(product = product) {
+                        ProductItem(products = products, product = product) {
                             productToRemove = it
                             showDeleteDialog = true
                         }
@@ -125,15 +111,13 @@ fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel
         }
 
         if (showProductDialog) {
-            /*
-            AddProductDialog(offers = contacts[supplierId]?.product ?: mapOf(), onDismissRequest = { showProductDialog = false }, submit = {
-                name, price, quantity -> purchasedProductsViewModel.purchases.add(Product(name = name, price = price, quantity = quantity)); showProductDialog = false
-            }, products = products.filter { it.value.productName !in purchasedProductsViewModel.purchases.map { products -> products.name } })
-            */
+            AddProductDialog(onDismissRequest = { showProductDialog = false }, submit = {
+                id, price, quantity -> purchasedProductsViewModel.purchases.add(Product(id = id, price = price, quantity = quantity)); showProductDialog = false
+            }, products = products.filter { it.key !in purchasedProductsViewModel.purchases.map { products -> products.id } })
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = productToRemove!!.name, onCancel = { showDeleteDialog = false }) {
+            ConfirmDeletion(item = productToRemove!!.id, onCancel = { showDeleteDialog = false }) {
                 purchasedProductsViewModel.purchases.remove(productToRemove)
                 showDeleteDialog = false
             }
@@ -142,10 +126,10 @@ fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel
 }
 
 @Composable
-fun ProductItem(product: Product, remove: (Product) -> Unit) {
+fun ProductItem(products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>, product: Product, remove: (Product) -> Unit) {
     androidx.compose.material3.ListItem(
         headlineContent = {
-            Text(text = product.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = (products[product.id])!!.productName, maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
         supportingContent = {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -166,31 +150,29 @@ fun ProductItem(product: Product, remove: (Product) -> Unit) {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun AddProductDialog(offers: Map<String, Double>, onDismissRequest: () -> Unit, submit: (String, Double, Int) -> Unit, products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>) {
+fun AddProductDialog(onDismissRequest: () -> Unit, submit: (String, Double, Int) -> Unit, products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>) {
     var expanded by remember { mutableStateOf(false) }
-    var isPriceValid by remember { mutableStateOf(true) }
-    var priceText by remember { mutableStateOf("") }
-    var price = 0.0
     var isQuantityValid by remember { mutableStateOf(true) }
     var quantityText by remember { mutableStateOf("") }
     var quantity = 0
     var selectedProduct by remember { mutableStateOf("") }
+    var price = 0.0
+    var productId = ""
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
-            Button(onClick = {
-                priceText.toDoubleOrNull()?.let { price = it; isPriceValid = true } ?: run { isPriceValid = false }
+            Button(enabled = selectedProduct.isNotBlank(), onClick = {
                 quantityText.toIntOrNull()?.let { quantity = it; isQuantityValid = true } ?: run { isQuantityValid = false }
-                if (isPriceValid && isQuantityValid && selectedProduct.isNotBlank()) {
-                    submit.invoke(selectedProduct, price, quantity)
+                if (isQuantityValid) {
+                    submit.invoke(productId, price, quantity)
                 }
             }) {
                 androidx.compose.material.Text(text = "Add")
             }
         },
         dismissButton = {
-            Button(onClick = onDismissRequest) {
-                androidx.compose.material.Text(text = "Cancel")
+            TextButton(onClick = onDismissRequest, colors = ButtonDefaults.buttonColors(contentColor = Color.Black, backgroundColor = Color.Transparent)) {
+                Text(text = "Cancel")
             }
         },
         title = {
@@ -209,26 +191,16 @@ fun AddProductDialog(offers: Map<String, Double>, onDismissRequest: () -> Unit, 
 
                         products.forEach {
                             DropdownMenuItem(text = {
-                                androidx.compose.material.Text(
-                                    text = it.value.productName
-                                )
+                                Text(text = it.value.productName)
                             }, onClick = {
+                                productId = it.key
                                 selectedProduct = it.value.productName
-                                if (offers.containsKey(it.key)) {
-                                    priceText = offers[it.key].toString()
-                                }
+                                price = it.value.purchasePrice
                                 expanded = false
                             })
                         }
                     }
                 }
-
-                androidx.compose.material3.OutlinedTextField(trailingIcon = { if (!isPriceValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, supportingText = { if (!isPriceValid) androidx.compose.material.Text(
-                    text = "Enter valid prices only!",
-                    color = Color.Red
-                ) }, isError = !isPriceValid, value = priceText, onValueChange = { priceText = it }, modifier = Modifier.fillMaxWidth(), label = {
-                    androidx.compose.material.Text(text = "Price")
-                }, placeholder = { androidx.compose.material.Text(text = "Enter Supplier's Offered Price for the item") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
 
                 androidx.compose.material3.OutlinedTextField(trailingIcon = { if (!isQuantityValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, supportingText = { if (!isQuantityValid) androidx.compose.material.Text(
                     text = "Enter valid quantity only!",
