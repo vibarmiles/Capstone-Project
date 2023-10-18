@@ -1,7 +1,6 @@
 package com.example.capstoneproject.global.data.firebase
 
 import android.util.Log
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError

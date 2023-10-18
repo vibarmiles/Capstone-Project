@@ -5,8 +5,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -15,10 +13,9 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.StackedBarChart
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -37,16 +34,23 @@ import com.example.capstoneproject.product_management.data.firebase.category.Cat
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
-import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
-import com.example.capstoneproject.ui.theme.primaryColor
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 @Composable
-fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchViewModel: BranchViewModel, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, add: () -> Unit, set: (String, String) -> Unit, edit: (String, Product) -> Unit, view: (String, Product) -> Unit) {
+fun ProductScreen(
+    scope: CoroutineScope,
+    scaffoldState: ScaffoldState,
+    branchViewModel: BranchViewModel,
+    productViewModel: ProductViewModel,
+    categoryViewModel: CategoryViewModel,
+    add: () -> Unit,
+    set: (String, String) -> Unit,
+    edit: (String, Product) -> Unit,
+    view: (String, Product) -> Unit
+) {
     val branch = branchViewModel.getAll().observeAsState(listOf())
-    val products = productViewModel.getAll()
     val categories = categoryViewModel.getAll().observeAsState(listOf())
+    val products = productViewModel.getAll()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var pair: Pair<String, Product>? = null
     var page by remember { mutableStateOf(0) }
@@ -66,15 +70,21 @@ fun ProductScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, branchVie
         }
     ) {
             paddingValues ->
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)) {
-            TabLayout(tabs = branch.value, selectedTab = page, products = products.values.toList()) { page = it }
+        if (productViewModel.isLoading.value || branchViewModel.isLoading.value || categoryViewModel.isLoading.value) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+                CircularProgressIndicator()
+            }
+        } else {
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)) {
+                TabLayout(tabs = branch.value, selectedTab = page, products = products.values.toList()) { page = it }
 
-            ProductScreenContent(branchId = if (page == 0) "Default" else branch.value[page - 1].id, categories = categories.value, products = products, edit = { edit.invoke(it.first, it.second) }, set = { set.invoke(it.first, it.second.stock.toString()) }, view = { view.invoke(it.first, it.second) }, delete = {
-                pair = it
-                showDeleteDialog = true
-            })
+                ProductScreenContent(branchId = if (page == 0) "Default" else branch.value[page - 1].id, categories = categories.value, products = products, edit = { edit.invoke(it.first, it.second) }, set = { set.invoke(it.first, it.second.stock.toString()) }, view = { view.invoke(it.first, it.second) }, delete = {
+                    pair = it
+                    showDeleteDialog = true
+                })
+            }
         }
 
         if (showDeleteDialog) {
@@ -98,12 +108,12 @@ fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, onC
                 if (defaultMap.isNotEmpty()) {
                     Text(
                         text = defaultMap.count().toString(),
-                        color = Color.White,
+                        color = Color.Black,
                         modifier = Modifier
                             .clip(CircleShape)
                             .height(IntrinsicSize.Min)
                             .aspectRatio(1f)
-                            .background(Color.Red)
+                            .background(MaterialTheme.colors.error)
                     )
                 }
             }
@@ -116,11 +126,13 @@ fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, onC
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(modifier = Modifier.widthIn(max = 150.dp), text = tab.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (map.isNotEmpty()) {
-                        Text(text = map.count().toString(), color = Color.White, modifier = Modifier
+                        Text(text = map.count().toString(),
+                            color = Color.Black,
+                            modifier = Modifier
                             .clip(CircleShape)
                             .height(IntrinsicSize.Min)
                             .aspectRatio(1f)
-                            .background(Color.Red))
+                            .background(MaterialTheme.colors.error))
                     }
                 }
             })
@@ -130,7 +142,7 @@ fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, onC
 
 @Composable
 fun ProductScreenContent(branchId: String, categories: List<Category>, products: Map<String, Product>, edit: (Pair<String, Product>) -> Unit, set: (Pair<String, Product>) -> Unit, delete: (Pair<String, Product>) -> Unit, view: (Pair<String, Product>) -> Unit) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         if (products.isEmpty()) {
             item {
                 Text(modifier = Modifier.padding(16.dp), text = "There are no entered products")
@@ -142,7 +154,7 @@ fun ProductScreenContent(branchId: String, categories: List<Category>, products:
                 item {
                     androidx.compose.material3.ListItem(headlineContent = {
                         Text(text = "Under Critical Level", fontWeight = FontWeight.Bold)
-                    }, colors = ListItemDefaults.colors(containerColor = Color.White))
+                    }, tonalElevation = 5.dp)
                 }
 
                 itemsIndexed(critical) {
@@ -154,7 +166,7 @@ fun ProductScreenContent(branchId: String, categories: List<Category>, products:
 
             if (default.isNotEmpty()) {
                 item {
-                    androidx.compose.material3.ListItem(headlineContent = { Text(text = "No Category") }, colors = ListItemDefaults.colors(containerColor = Color.White))
+                    androidx.compose.material3.ListItem(headlineContent = { Text(text = "No Category") }, tonalElevation = 5.dp)
                 }
 
                 itemsIndexed(default) {
@@ -171,7 +183,7 @@ fun ProductScreenContent(branchId: String, categories: List<Category>, products:
                 }
 
                 item {
-                    androidx.compose.material3.ListItem(headlineContent = { Text(text = category.categoryName) }, colors = ListItemDefaults.colors(containerColor = Color.White))
+                    androidx.compose.material3.ListItem(headlineContent = { Text(text = category.categoryName) }, tonalElevation = 5.dp)
                 }
 
                 itemsIndexed(list) {

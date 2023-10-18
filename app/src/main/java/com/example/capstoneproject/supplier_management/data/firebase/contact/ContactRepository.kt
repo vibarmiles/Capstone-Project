@@ -10,7 +10,7 @@ class ContactRepository : IContactRepository {
     private val firestore = Firebase.firestore
     private val contactCollectionReference = firestore.collection("contacts")
 
-    override fun getAll(): MutableLiveData<List<Contact>> {
+    override fun getAll(callback: () -> Unit): MutableLiveData<List<Contact>> {
         var contacts = MutableLiveData<List<Contact>>()
         contactCollectionReference.addSnapshotListener { value, error ->
             error?.let {
@@ -18,6 +18,7 @@ class ContactRepository : IContactRepository {
             }
             value?.let {
                 contacts.value = value.toObjects()
+                callback.invoke()
             }
         }
         return contacts

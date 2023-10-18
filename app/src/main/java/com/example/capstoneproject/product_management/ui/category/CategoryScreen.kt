@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -21,7 +20,6 @@ import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
-import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
 import com.example.capstoneproject.product_management.data.firebase.category.Category
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.ui.theme.Purple500
@@ -49,25 +47,31 @@ fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewMode
         }
     ) {
             paddingValues ->
-        LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            item {
-                val size = categories.value.size
-                Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered categories"; 1 -> "1 category is entered"; else -> "$size categories are entered"})
+        if (productViewModel.isLoading.value) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+                CircularProgressIndicator()
             }
-            
-            itemsIndexed(categories.value) {
-                _, item ->
-                CategoryListItem(item.categoryName, edit = {
-                    showDialog = true
-                    category = item
-                }) {
-                    showDeleteDialog = true
-                    category = item
+        } else {
+            LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                item {
+                    val size = categories.value.size
+                    Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered categories"; 1 -> "1 category is entered"; else -> "$size categories are entered"})
                 }
-            }
 
-            item {
-                Spacer(modifier = Modifier.height(50.dp))
+                itemsIndexed(categories.value) {
+                        _, item ->
+                    CategoryListItem(item.categoryName, edit = {
+                        showDialog = true
+                        category = item
+                    }) {
+                        showDeleteDialog = true
+                        category = item
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(50.dp))
+                }
             }
         }
 

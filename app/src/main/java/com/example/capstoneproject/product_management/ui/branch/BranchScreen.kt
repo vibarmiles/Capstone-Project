@@ -48,25 +48,34 @@ fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel:
             }
         }
     ) {
-        paddingValues ->
-        LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            item {
-                val size = branches.size
-                Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered branches"; 1 -> "1 branch is entered"; else -> "$size branches are entered"})
+            paddingValues ->
+        if (productViewModel.isLoading.value) {
+            Box(modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
+        } else {
 
-            itemsIndexed(branches) {
-                _, item ->
-                BranchListItem(branch = item, edit = {
-                    edit.invoke(item)
-                }) {
-                    branch = item
-                    showDeleteDialog = true
+            LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                item {
+                    val size = branches.size
+                    Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered branches"; 1 -> "1 branch is entered"; else -> "$size branches are entered"})
                 }
-            }
 
-            item {
-                Spacer(modifier = Modifier.height(50.dp))
+                itemsIndexed(branches) {
+                        _, item ->
+                    BranchListItem(branch = item, edit = {
+                        edit.invoke(item)
+                    }) {
+                        branch = item
+                        showDeleteDialog = true
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(50.dp))
+                }
             }
         }
 

@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Sam Speed IMS</string>
+    <string name="web_client_id">1004425230241-25m7obmrfg0hkjkcbkvicklt8vbhg1it.apps.googleusercontent.com</string>
     <string name="submit_button">SUBMIT</string>
     <string name="cancel_button">CANCEL</string>
     <string name="dashboard">Dashboard</string>

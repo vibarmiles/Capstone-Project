@@ -2,21 +2,22 @@ package com.example.capstoneproject.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
+import androidx.compose.material.darkColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorPalette = darkColors(
-    primary = primaryColor,
-    primaryVariant = Purple700,
+    primary = darkprimary1,
     secondary = secondaryColor,
-    background = Color.White,
-    surface = Color.White,
-    onPrimary = Color.Black,
-    onSecondary = Color.Black,
-    onBackground = Color.Black,
-    onSurface = Color.Black,
+    background = darkbg,
+    surface = darkbg,
+    onPrimary = darkText1,
+    onSecondary = darkText1,
+    onBackground = darkText1,
+    onSurface = darkText1,
+    error = Color.Red,
+    onError = Color.Red,
 )
 
 private val LightColorPalette = lightColors(
@@ -29,6 +30,8 @@ private val LightColorPalette = lightColors(
     onSecondary = Color.Black,
     onBackground = Color.Black,
     onSurface = Color.Black,
+    error = Color.Red,
+    onError = Color.Red
 )
 
 @Composable
@@ -37,10 +40,10 @@ fun CapstoneProjectTheme(
     content: @Composable () -> Unit
 ) {
     val colors = if (darkTheme) {
-        //DarkColorPalette
-        LightColorPalette
+        DarkColorPalette
     } else {
-        LightColorPalette
+        //LightColorPalette
+        DarkColorPalette
     }
 
     MaterialTheme(

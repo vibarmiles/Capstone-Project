@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.R
-import com.example.capstoneproject.product_management.data.firebase.branch.Branch
 
 @Composable
 fun FormButtons(cancel: () -> Unit, submit: () -> Unit) {

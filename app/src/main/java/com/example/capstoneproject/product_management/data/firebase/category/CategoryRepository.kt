@@ -10,7 +10,7 @@ class CategoryRepository : ICategoryRepository {
     private val firestore = Firebase.firestore
     private val categoryCollectionReference = firestore.collection("categories")
 
-    override fun getAll(): MutableLiveData<List<Category>> {
+    override fun getAll(callback: () -> Unit): MutableLiveData<List<Category>> {
         var categories = MutableLiveData<List<Category>>()
         categoryCollectionReference.addSnapshotListener { value, error ->
             error?.let {
@@ -18,6 +18,7 @@ class CategoryRepository : ICategoryRepository {
             }
             value?.let {
                 categories.value = value.toObjects()
+                callback.invoke()
             }
         }
         return categories

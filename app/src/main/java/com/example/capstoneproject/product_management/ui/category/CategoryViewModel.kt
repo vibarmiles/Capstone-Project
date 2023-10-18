@@ -1,5 +1,7 @@
 package com.example.capstoneproject.product_management.ui.category
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,10 +14,11 @@ import kotlinx.coroutines.launch
 class CategoryViewModel : ViewModel() {
     private lateinit var categories: MutableLiveData<List<Category>>
     private val categoryRepository: ICategoryRepository = CategoryRepository()
+    var isLoading: MutableState<Boolean> = mutableStateOf(true)
 
     fun getAll(): MutableLiveData<List<Category>> {
         if (!this::categories.isInitialized) {
-            categories = categoryRepository.getAll()
+            categories = categoryRepository.getAll { updateLoadingState() }
         }
 
         return categories
@@ -31,5 +34,9 @@ class CategoryViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             categoryRepository.delete(category = category)
         }
+    }
+
+    private fun updateLoadingState() {
+        isLoading.value = isLoading.value.not()
     }
 }

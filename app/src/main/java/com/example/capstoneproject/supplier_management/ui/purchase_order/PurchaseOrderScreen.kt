@@ -56,18 +56,24 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, pur
         }
     ) {
         paddingValues ->
-        Column(modifier = Modifier
-            .padding(paddingValues)) {
-            FilterByDate(onClick = { noOfDaysShown = it })
+        if (purchaseOrderViewModel.isLoading.value) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+                CircularProgressIndicator()
+            }
+        } else {
+            Column(modifier = Modifier
+                .padding(paddingValues)) {
+                FilterByDate(onClick = { noOfDaysShown = it })
 
-            LazyColumn {
-                itemsIndexed(purchaseOrders.filter { purchaseOrder -> LocalDate.parse(purchaseOrder.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())} ) {
-                    _, it ->
+                LazyColumn {
+                    itemsIndexed(purchaseOrders.filter { purchaseOrder -> LocalDate.parse(purchaseOrder.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())} ) {
+                            _, it ->
                         PurchaseOrderItem(purchaseOrder = it, goto = {
-                }) }
-                
-                item {
-                    Spacer(modifier = Modifier.height(50.dp))
+                        }) }
+
+                    item {
+                        Spacer(modifier = Modifier.height(50.dp))
+                    }
                 }
             }
         }

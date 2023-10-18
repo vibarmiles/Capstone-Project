@@ -10,7 +10,7 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
     private val firestore = Firebase.firestore
     private val purchaseOrderCollectionReference = firestore.collection("purchase_orders")
 
-    override fun getAll(): MutableLiveData<List<PurchaseOrder>> {
+    override fun getAll(callback: () -> Unit): MutableLiveData<List<PurchaseOrder>> {
         val po = MutableLiveData<List<PurchaseOrder>>()
         purchaseOrderCollectionReference.addSnapshotListener { value, error ->
             error?.let {
@@ -18,6 +18,7 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
             }
             value?.let {
                 po.value = value.toObjects()
+                callback.invoke()
             }
         }
         return po

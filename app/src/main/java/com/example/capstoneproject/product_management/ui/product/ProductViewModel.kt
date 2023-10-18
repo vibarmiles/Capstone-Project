@@ -1,5 +1,7 @@
 package com.example.capstoneproject.product_management.ui.product
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,10 +14,11 @@ import kotlinx.coroutines.launch
 class ProductViewModel : ViewModel() {
     private lateinit var products: SnapshotStateMap<String, Product>
     private val productRepository: IProductRepository = ProductRepository()
+    var isLoading: MutableState<Boolean> = mutableStateOf(true)
 
     fun getAll(): SnapshotStateMap<String, Product> {
         if (!this::products.isInitialized) {
-            products = productRepository.getAll()
+            products = productRepository.getAll { updateLoadingState() }
         }
 
         return products
@@ -49,5 +52,9 @@ class ProductViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             productRepository.removeBranchStock(branchId = branchId)
         }
+    }
+
+    private fun updateLoadingState() {
+        isLoading.value = isLoading.value.not()
     }
 }

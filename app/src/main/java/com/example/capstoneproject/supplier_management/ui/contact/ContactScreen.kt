@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material3.ListItem
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,9 +43,15 @@ fun ContactScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactVi
         }
     ) {
             paddingValues ->
-        ContactScreenContent(paddingValues = paddingValues, contacts = contacts.value, edit = { edit.invoke(it) }) {
-            contact = it
-            showDeleteDialog = true
+        if (contactViewModel.isLoading.value) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+                CircularProgressIndicator()
+            }
+        } else {
+            ContactScreenContent(paddingValues = paddingValues, contacts = contacts.value, edit = { edit.invoke(it) }) {
+                contact = it
+                showDeleteDialog = true
+            }
         }
 
         if (showDeleteDialog) {

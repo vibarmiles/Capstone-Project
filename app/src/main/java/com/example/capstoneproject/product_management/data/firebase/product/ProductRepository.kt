@@ -19,7 +19,7 @@ class ProductRepository : IProductRepository {
     private val firestorage = Firebase.storage.reference
     private val productImageReference = firestorage.child("images")
 
-    override fun getAll(): SnapshotStateMap<String, Product> {
+    override fun getAll(callback: () -> Unit): SnapshotStateMap<String, Product> {
         val products = mutableStateMapOf<String, Product>()
 
         productCollectionReference.addChildEventListener(object : ChildEventListener {
@@ -47,6 +47,18 @@ class ProductRepository : IProductRepository {
             }
 
         })
+
+        productCollectionReference.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                callback.invoke()
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+
+        })
+
         return products
     }
 

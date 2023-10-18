@@ -1,5 +1,7 @@
 package com.example.capstoneproject.supplier_management.ui.contact
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,10 +14,11 @@ import kotlinx.coroutines.launch
 class ContactViewModel : ViewModel() {
     private lateinit var contacts: MutableLiveData<List<Contact>>
     private val contactRepository: IContactRepository = ContactRepository()
+    var isLoading: MutableState<Boolean> = mutableStateOf(true)
 
     fun getAll(): MutableLiveData<List<Contact>> {
         if (!this::contacts.isInitialized) {
-            contacts = contactRepository.getAll()
+            contacts = contactRepository.getAll { updateLoadingState() }
         }
 
         return contacts
@@ -31,5 +34,9 @@ class ContactViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             contactRepository.delete(contact = contact)
         }
+    }
+
+    private fun updateLoadingState() {
+        isLoading.value = isLoading.value.not()
     }
 }

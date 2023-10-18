@@ -19,9 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.global.ui.misc.FormButtons
@@ -48,7 +45,7 @@ fun ProductQuantityFormScreen(dismissRequest: () -> Unit, productViewModel: Prod
             .padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             itemsIndexed(branches.value) {
                     _, it ->
-                var text by rememberSaveable { mutableStateOf(if (map != null) if (map!!.containsKey(it.id)) map!![it.id].toString() else "" else "")}
+                var text by rememberSaveable { mutableStateOf(if (map != null) if (map.containsKey(it.id)) map[it.id].toString() else "" else "")}
                 var isValid by remember { mutableStateOf(true) }
                 if (text.isNotBlank()) {
                     viewModel.stockPerBranch[it.id] = text
@@ -63,12 +60,12 @@ fun ProductQuantityFormScreen(dismissRequest: () -> Unit, productViewModel: Prod
                         viewModel.checkInput[pair.key] = pair.value.isDigitsOnly()
                     }
                     val check = !viewModel.checkInput.containsValue(false)
-                    var map = mutableMapOf<String, Int>()
+                    val newMap = mutableMapOf<String, Int>()
                     if (check) {
                         for (pair in viewModel.stockPerBranch) {
-                            map[pair.key] = pair.value.toInt()
+                            newMap[pair.key] = pair.value.toInt()
                         }
-                        productViewModel.setStock(productId, map)
+                        productViewModel.setStock(productId, newMap)
                         dismissRequest.invoke()
                     }
                 }

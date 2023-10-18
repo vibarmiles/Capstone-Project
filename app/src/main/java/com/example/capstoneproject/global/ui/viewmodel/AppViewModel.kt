@@ -8,5 +8,4 @@ class AppViewModel : ViewModel() {
     var isLoading = mutableStateOf(true)
     private val connectionRepository: ConnectionRepository = ConnectionRepository()
     val connection = connectionRepository.connection
-    val viewModelLoaded = mutableStateOf(false)
 }

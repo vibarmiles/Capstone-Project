@@ -10,14 +10,15 @@ class BranchRepository : IBranchRepository {
     private val firestore = Firebase.firestore
     private val branchCollectionReference = firestore.collection("branches")
 
-    override fun getAll(): MutableLiveData<List<Branch>> {
+    override fun getAll(callback: () -> Unit): MutableLiveData<List<Branch>> {
         var branches = MutableLiveData<List<Branch>>()
         branchCollectionReference.addSnapshotListener { value, error ->
             error?.let {
                 return@addSnapshotListener
             }
             value?.let {
-                 branches.value = value.toObjects()
+                branches.value = value.toObjects()
+                callback.invoke()
             }
         }
         return branches
