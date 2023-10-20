@@ -4,9 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,7 +15,7 @@ import com.example.capstoneproject.R
 @Composable
 fun FormButtons(cancel: () -> Unit, submit: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Button(onClick = cancel, modifier = Modifier.weight(1f), border = BorderStroke(1.dp, Color.Black), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)) {
+        TextButton(onClick = cancel, modifier = Modifier.weight(1f), border = BorderStroke(1.dp, MaterialTheme.colors.onPrimary), colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.onPrimary)) {
             Text(text = stringResource(id = R.string.cancel_button))
         }
 

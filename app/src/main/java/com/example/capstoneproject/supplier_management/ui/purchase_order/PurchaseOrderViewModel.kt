@@ -32,6 +32,6 @@ class PurchaseOrderViewModel : ViewModel() {
     }
 
     private fun updateLoadingState() {
-        isLoading.value = isLoading.value.not()
+        isLoading.value = false
     }
 }

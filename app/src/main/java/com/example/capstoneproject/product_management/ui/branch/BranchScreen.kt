@@ -1,7 +1,5 @@
 package com.example.capstoneproject.product_management.ui.branch
 
-import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,17 +21,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
-import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.ui.theme.Purple500
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: BranchViewModel, productViewModel: ProductViewModel, add: () -> Unit, edit: (Branch) -> Unit) {
+fun BranchScreen(
+    scope: CoroutineScope,
+    scaffoldState: ScaffoldState,
+    viewModel: BranchViewModel,
+    productViewModel: ProductViewModel,
+    add: () -> Unit,
+    edit: (Branch) -> Unit
+) {
     val branches by viewModel.getAll().observeAsState(listOf())
-    var branch: Branch? = null
+    lateinit var branch: Branch
     var showDeleteDialog by remember {
         mutableStateOf(false)
     }
@@ -49,14 +54,13 @@ fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel:
         }
     ) {
             paddingValues ->
-        if (productViewModel.isLoading.value) {
+        if (viewModel.isLoading.value) {
             Box(modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else {
-
             LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 item {
                     val size = branches.size
@@ -80,9 +84,9 @@ fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel:
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = branch!!.name, onCancel = { showDeleteDialog = false }) {
-                viewModel.delete(branch!!)
-                productViewModel.removeBranchStock(branchId = branch!!.id)
+            ConfirmDeletion(item = branch.name, onCancel = { showDeleteDialog = false }) {
+                viewModel.delete(branch)
+                productViewModel.removeBranchStock(branchId = branch.id)
                 showDeleteDialog = false
             }
         }
@@ -90,8 +94,12 @@ fun BranchScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel:
 }
 
 @Composable
-fun BranchListItem(branch: Branch, edit: () -> Unit, delete: () -> Unit) {
-    androidx.compose.material3.ListItem(headlineContent = { Text(text = branch.name, fontWeight = FontWeight.Bold, overflow = TextOverflow.Ellipsis, maxLines = 1) }, supportingContent = { Text(text = branch.address, overflow = TextOverflow.Ellipsis, maxLines = 1) }, trailingContent = {
+fun BranchListItem(
+    branch: Branch,
+    edit: () -> Unit,
+    delete: () -> Unit
+) {
+    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), headlineContent = { Text(text = branch.name, fontWeight = FontWeight.Bold, overflow = TextOverflow.Ellipsis, maxLines = 1) }, supportingContent = { Text(text = branch.address, overflow = TextOverflow.Ellipsis, maxLines = 1) }, trailingContent = {
         Row {
             IconButton(onClick = edit) {
                 Icon(Icons.Filled.Edit, contentDescription = null)

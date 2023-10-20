@@ -99,7 +99,7 @@ fun ProductForm(dismissRequest: () -> Unit, function: String, productId: String?
             OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = name, onValueChange = { name = it }, placeholder = { Text(text = "Enter Product's Name") }, label = { Text(text = "Product Name") }, isError = !isNameValid, trailingIcon = { if (!isNameValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) })
 
             ExposedDropdownMenuBox(expanded = expandedContacts, onExpandedChange = { expandedContacts = !expandedContacts }) {
-                androidx.compose.material3.OutlinedTextField(isError = contactId == null, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedContacts) }, modifier = Modifier.fillMaxWidth(), value = selectedContact, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.supplier)) })
+                OutlinedTextField(isError = contactId == null, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedContacts) }, modifier = Modifier.fillMaxWidth(), value = selectedContact, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.supplier)) })
 
                 DropdownMenu(modifier = Modifier
                     .exposedDropdownSize()

@@ -15,6 +15,8 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.StackedBarChart
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +30,7 @@ import coil.compose.SubcomposeAsyncImage
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
 import com.example.capstoneproject.global.ui.misc.ImageNotAvailable
+import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
 import com.example.capstoneproject.product_management.data.firebase.category.Category
@@ -53,7 +56,8 @@ fun ProductScreen(
     val products = productViewModel.getAll()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var pair: Pair<String, Product>? = null
-    var page by remember { mutableStateOf(0) }
+    var page by rememberSaveable { mutableStateOf(0) }
+    val loading = productViewModel.isLoading.value || branchViewModel.isLoading.value || categoryViewModel.isLoading.value
 
     Scaffold(
         topBar = {
@@ -70,8 +74,10 @@ fun ProductScreen(
         }
     ) {
             paddingValues ->
-        if (productViewModel.isLoading.value || branchViewModel.isLoading.value || categoryViewModel.isLoading.value) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+        if (loading) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()) {
                 CircularProgressIndicator()
             }
         } else {
@@ -98,10 +104,11 @@ fun ProductScreen(
 
 @Composable
 fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, onClick: (Int) -> Unit) {
+    val defaultMap = products.filter { product -> product.stock.values.sum() <= product.criticalLevel }
+
     ScrollableTabRow(selectedTabIndex = selectedTab, edgePadding = 0.dp, modifier = Modifier
         .height(50.dp)
         .fillMaxWidth()) {
-        val defaultMap = products.filter { product -> product.stock.values.sum() <= product.criticalLevel }
         Tab(selected = selectedTab == 0, onClick = { onClick.invoke(0) }, text = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(text = "All")
@@ -129,10 +136,10 @@ fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, onC
                         Text(text = map.count().toString(),
                             color = Color.Black,
                             modifier = Modifier
-                            .clip(CircleShape)
-                            .height(IntrinsicSize.Min)
-                            .aspectRatio(1f)
-                            .background(MaterialTheme.colors.error))
+                                .clip(CircleShape)
+                                .height(IntrinsicSize.Min)
+                                .aspectRatio(1f)
+                                .background(MaterialTheme.colors.error))
                     }
                 }
             })
@@ -142,51 +149,87 @@ fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, onC
 
 @Composable
 fun ProductScreenContent(branchId: String, categories: List<Category>, products: Map<String, Product>, edit: (Pair<String, Product>) -> Unit, set: (Pair<String, Product>) -> Unit, delete: (Pair<String, Product>) -> Unit, view: (Pair<String, Product>) -> Unit) {
+    var recompose by remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = Unit) {
+        recompose = recompose.not()
+    }
+
+    val critical = remember(branchId) {
+        derivedStateOf {
+            products.filterValues {
+                it.criticalLevel >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
+            }.toList()
+        }
+    }
+
+    val default = remember(branchId) {
+        derivedStateOf {
+            products.filterValues {
+                it.category !in categories.map { category -> category.id } && it.criticalLevel < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
+            }.toList()
+        }
+    }
+
+    val productsInCategories = remember(recompose, branchId) {
+        val map = mutableMapOf<Category, List<Pair<String, Product>>>()
+        for (category in categories) {
+            val list = products.filterValues {
+                it.category == category.id && it.criticalLevel < (if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
+            }.toList()
+
+            if (list.isEmpty()) {
+                continue
+            }
+
+            map[category] = list
+        }
+
+        derivedStateOf { map }
+    }
+
     LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         if (products.isEmpty()) {
             item {
                 Text(modifier = Modifier.padding(16.dp), text = "There are no entered products")
             }
         } else {
-            val critical = products.filterValues { it.criticalLevel >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0 }.toList()
-            val default = products.filterValues { it.category !in categories.map { category -> category.id } && it.criticalLevel < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0 }.toList()
-            if (critical.isNotEmpty()) {
+            if (critical.value.isNotEmpty()) {
                 item {
-                    androidx.compose.material3.ListItem(headlineContent = {
+                    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), headlineContent = {
                         Text(text = "Under Critical Level", fontWeight = FontWeight.Bold)
-                    }, tonalElevation = 5.dp)
+                    })
                 }
 
-                itemsIndexed(critical) {
+                itemsIndexed(critical.value) {
                         _, it ->
                     Log.d("id", products.toString())
                     Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
                 }
             }
 
-            if (default.isNotEmpty()) {
+            if (default.value.isNotEmpty()) {
                 item {
-                    androidx.compose.material3.ListItem(headlineContent = { Text(text = "No Category") }, tonalElevation = 5.dp)
+                    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), headlineContent = {
+                        Text(text = "No Category")
+                    })
                 }
 
-                itemsIndexed(default) {
+                itemsIndexed(default.value) {
                         _, it ->
                     Log.d("id", products.toString())
                     Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
                 }
             }
 
-            for (category in categories) {
-                val list = products.filterValues { it.category == category.id && it.criticalLevel < (if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0) }.toList()
-                if (list.isEmpty()) {
-                    continue
-                }
-
+            for (category in productsInCategories.value) {
                 item {
-                    androidx.compose.material3.ListItem(headlineContent = { Text(text = category.categoryName) }, tonalElevation = 5.dp)
+                    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), headlineContent = {
+                        Text(text = category.key.categoryName)
+                    })
                 }
 
-                itemsIndexed(list) {
+                itemsIndexed(category.value) {
                         _, it ->
                     Log.d("id", products.toString())
                     Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
@@ -203,7 +246,7 @@ fun ProductScreenContent(branchId: String, categories: List<Category>, products:
 @Composable
 fun Products(product: Product, quantity: Int, edit: () -> Unit, set: () -> Unit, delete: () -> Unit, view: () -> Unit) {
     var expanded: Boolean by remember { mutableStateOf(false) }
-    androidx.compose.material3.ListItem(leadingContent = { SubcomposeAsyncImage(error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) },  model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier
+    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = { SubcomposeAsyncImage(error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) },  model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier
         .clip(RoundedCornerShape(5.dp))
         .size(50.dp), loading = { CircularProgressIndicator() }, contentDescription = null) }, headlineContent = { Text(text = "Qty: $quantity", fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = product.productName, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
         IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })

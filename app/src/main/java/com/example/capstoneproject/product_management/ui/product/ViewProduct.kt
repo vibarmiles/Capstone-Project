@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
 import com.example.capstoneproject.global.ui.misc.ImageNotAvailable
+import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
@@ -139,18 +140,18 @@ fun ViewProductDetails(productId: String, product: Product, supplier: String, ca
 fun ViewProductStock(stock: Map<String, Int>, branch: List<Branch>) {
     LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         item {
-            androidx.compose.material3.ListItem(headlineContent = {
+            androidx.compose.material3.ListItem(colors = ProjectListItemColors(), headlineContent = {
                 Row {
                     Text(text = "Branch", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = "Stock", fontWeight = FontWeight.Bold)
                 }
-            }, tonalElevation = 5.dp)
+            }, tonalElevation = 20.dp)
         }
 
         itemsIndexed(branch) {
                 _, branch ->
-            androidx.compose.material3.ListItem(headlineContent = {
+            androidx.compose.material3.ListItem(colors = ProjectListItemColors(), headlineContent = {
                 Row {
                     Text(text = branch.name, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     Spacer(modifier = Modifier.width(8.dp))

@@ -7,9 +7,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.Divider
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -18,16 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
-import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
-import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Product
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Status
-import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import kotlinx.coroutines.CoroutineScope
 import java.time.LocalDate
 
@@ -45,6 +40,9 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, pur
     val purchaseOrders by purchaseOrderViewModel.purchaseOrders.observeAsState(listOf())
     var noOfDaysShown by remember { mutableStateOf(0) }
     val days = listOf(1, 3, 7, 30)
+    val purchaseOrdersFilteredByDays = remember(noOfDaysShown) {
+        mutableStateOf(purchaseOrders.filter { purchaseOrder -> LocalDate.parse(purchaseOrder.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())})
+    }
     Scaffold(
         topBar = {
             BaseTopAppBar(title = stringResource(id = R.string.purchase_order), scope = scope, scaffoldState = scaffoldState)
@@ -66,7 +64,7 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, pur
                 FilterByDate(onClick = { noOfDaysShown = it })
 
                 LazyColumn {
-                    itemsIndexed(purchaseOrders.filter { purchaseOrder -> LocalDate.parse(purchaseOrder.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())} ) {
+                    itemsIndexed(purchaseOrdersFilteredByDays.value) {
                             _, it ->
                         PurchaseOrderItem(purchaseOrder = it, goto = {
                         }) }
@@ -83,6 +81,7 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, pur
 @Composable
 fun PurchaseOrderItem(purchaseOrder: PurchaseOrder, goto: (String) -> Unit) {
     androidx.compose.material3.ListItem(
+        colors = ProjectListItemColors(),
         modifier = Modifier.clickable { goto.invoke(purchaseOrder.id) },
         headlineContent = { Text(text = purchaseOrder.date) },
         supportingContent = { Text(text = "Number of Items: ${purchaseOrder.products.count()}") },

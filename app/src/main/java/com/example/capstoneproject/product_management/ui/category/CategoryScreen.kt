@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.product_management.data.firebase.category.Category
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.ui.theme.Purple500
@@ -47,7 +48,7 @@ fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewMode
         }
     ) {
             paddingValues ->
-        if (productViewModel.isLoading.value) {
+        if (viewModel.isLoading.value) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(paddingValues).fillMaxSize()) {
                 CircularProgressIndicator()
             }
@@ -96,7 +97,7 @@ fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewMode
 
 @Composable
 fun CategoryListItem(category: String = "Category", edit: () -> Unit, delete: () -> Unit) {
-    androidx.compose.material3.ListItem(leadingContent = { Box(modifier = Modifier
+    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = { Box(modifier = Modifier
         .size(50.dp)
         .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Icon(imageVector = Icons.Filled.Bookmark, contentDescription = null, tint = Color.White) } }, headlineContent = { Text(text = category, fontWeight = FontWeight.Bold) }, trailingContent = {
         Row {
