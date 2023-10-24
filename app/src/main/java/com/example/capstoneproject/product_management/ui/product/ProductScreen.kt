@@ -47,9 +47,9 @@ fun ProductScreen(
     productViewModel: ProductViewModel,
     categoryViewModel: CategoryViewModel,
     add: () -> Unit,
-    set: (String, String) -> Unit,
-    edit: (String, Product) -> Unit,
-    view: (String, Product) -> Unit
+    set: (String) -> Unit,
+    edit: (String) -> Unit,
+    view: (String) -> Unit
 ) {
     val branch = branchViewModel.getAll().observeAsState(listOf())
     val categories = categoryViewModel.getAll().observeAsState(listOf())
@@ -84,9 +84,9 @@ fun ProductScreen(
             Column(modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)) {
-                TabLayout(tabs = branch.value, selectedTab = page, products = products.values.toList()) { page = it }
+                TabLayout(tabs = branch.value, selectedTab = page, products = products.values.toList(), productUpdate = productViewModel.update.value) { page = it }
 
-                ProductScreenContent(branchId = if (page == 0) "Default" else branch.value[page - 1].id, categories = categories.value, products = products, edit = { edit.invoke(it.first, it.second) }, set = { set.invoke(it.first, it.second.stock.toString()) }, view = { view.invoke(it.first, it.second) }, delete = {
+                ProductScreenContent(branchId = if (page == 0) "Default" else branch.value[page - 1].id, categories = categories.value, products = products, productUpdate = productViewModel.update.value, edit = { edit.invoke(it) }, set = { set.invoke(it) }, view = { view.invoke(it) }, delete = {
                     pair = it
                     showDeleteDialog = true
                 })
@@ -103,8 +103,8 @@ fun ProductScreen(
 }
 
 @Composable
-fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, onClick: (Int) -> Unit) {
-    val defaultMap = products.filter { product -> product.stock.values.sum() <= product.criticalLevel }
+fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, productUpdate: Boolean, onClick: (Int) -> Unit) {
+    val defaultMap = remember(tabs) { products.filter { product -> product.stock.values.sum() <= product.criticalLevel } }
 
     ScrollableTabRow(selectedTabIndex = selectedTab, edgePadding = 0.dp, modifier = Modifier
         .height(50.dp)
@@ -128,7 +128,12 @@ fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, onC
 
         tabs.forEachIndexed {
                 index, tab ->
-            val map = products.filter { product -> (product.stock[tab.id] ?: 0) <= product.criticalLevel }
+            val map = remember(productUpdate) {
+                products.filter { product ->
+                    (product.stock[tab.id] ?: 0) <= product.criticalLevel
+                }
+            }
+
             Tab(selected = selectedTab == index + 1, onClick = { onClick.invoke(index + 1) }, text = {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(modifier = Modifier.widthIn(max = 150.dp), text = tab.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -148,14 +153,8 @@ fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, onC
 }
 
 @Composable
-fun ProductScreenContent(branchId: String, categories: List<Category>, products: Map<String, Product>, edit: (Pair<String, Product>) -> Unit, set: (Pair<String, Product>) -> Unit, delete: (Pair<String, Product>) -> Unit, view: (Pair<String, Product>) -> Unit) {
-    var recompose by remember { mutableStateOf(false) }
-
-    LaunchedEffect(key1 = Unit) {
-        recompose = recompose.not()
-    }
-
-    val critical = remember(branchId) {
+fun ProductScreenContent(branchId: String, categories: List<Category>, products: Map<String, Product>, productUpdate: Boolean, edit: (String) -> Unit, set: (String) -> Unit, delete: (Pair<String, Product>) -> Unit, view: (String) -> Unit) {
+    val critical = remember(branchId, productUpdate) {
         derivedStateOf {
             products.filterValues {
                 it.criticalLevel >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
@@ -163,7 +162,7 @@ fun ProductScreenContent(branchId: String, categories: List<Category>, products:
         }
     }
 
-    val default = remember(branchId) {
+    val default = remember(branchId, productUpdate) {
         derivedStateOf {
             products.filterValues {
                 it.category !in categories.map { category -> category.id } && it.criticalLevel < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
@@ -171,7 +170,7 @@ fun ProductScreenContent(branchId: String, categories: List<Category>, products:
         }
     }
 
-    val productsInCategories = remember(recompose, branchId) {
+    val productsInCategories = remember(branchId, productUpdate) {
         val map = mutableMapOf<Category, List<Pair<String, Product>>>()
         for (category in categories) {
             val list = products.filterValues {
@@ -185,7 +184,10 @@ fun ProductScreenContent(branchId: String, categories: List<Category>, products:
             map[category] = list
         }
 
-        derivedStateOf { map }
+        derivedStateOf {
+            Log.d("Map", map.values.toString())
+            map
+        }
     }
 
     LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -204,7 +206,7 @@ fun ProductScreenContent(branchId: String, categories: List<Category>, products:
                 itemsIndexed(critical.value) {
                         _, it ->
                     Log.d("id", products.toString())
-                    Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
+                    Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it.first) }, set = { set.invoke(it.first) }, delete = { delete.invoke(it) }, view = { view.invoke(it.first) })
                 }
             }
 
@@ -218,7 +220,7 @@ fun ProductScreenContent(branchId: String, categories: List<Category>, products:
                 itemsIndexed(default.value) {
                         _, it ->
                     Log.d("id", products.toString())
-                    Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
+                    Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it.first) }, set = { set.invoke(it.first) }, delete = { delete.invoke(it) }, view = { view.invoke(it.first) })
                 }
             }
 
@@ -232,7 +234,7 @@ fun ProductScreenContent(branchId: String, categories: List<Category>, products:
                 itemsIndexed(category.value) {
                         _, it ->
                     Log.d("id", products.toString())
-                    Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it) }, set = { set.invoke(it) }, delete = { delete.invoke(it) }, view = { view.invoke(it) })
+                    Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it.first) }, set = { set.invoke(it.first) }, delete = { delete.invoke(it) }, view = { view.invoke(it.first) })
                 }
             }
 

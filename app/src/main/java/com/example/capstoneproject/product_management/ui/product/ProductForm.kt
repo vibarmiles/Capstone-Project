@@ -33,7 +33,28 @@ import com.example.capstoneproject.supplier_management.ui.contact.ContactViewMod
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ProductForm(dismissRequest: () -> Unit, function: String, productId: String? = null, product: Product? = null, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, contactViewModel: ContactViewModel) {
+fun ProductForm(dismissRequest: () -> Unit, function: String, productId: String? = null, productViewModel: ProductViewModel, categoryViewModel: CategoryViewModel, contactViewModel: ContactViewModel) {
+    val product = productViewModel.getProduct(productId)
+    val category = categoryViewModel.getAll().observeAsState(listOf())
+    val supplier = contactViewModel.getAll().observeAsState(listOf())
+    var name by remember { mutableStateOf(product?.productName ?: "") }
+    var isNameValid by remember { mutableStateOf(true) }
+    var purchasePrice by remember { mutableStateOf(String.format("%.99f", product?.purchasePrice ?: 0.0).trimEnd('0').trimEnd('.')) }
+    var sellingPrice by remember { mutableStateOf(String.format("%.99f", product?.sellingPrice ?: 0.0).trimEnd('0').trimEnd('.')) }
+    var isPurchasePriceValid by remember { mutableStateOf(true) }
+    var isSellingPriceValid by remember { mutableStateOf(true) }
+    var expandedContacts by remember { mutableStateOf(false) }
+    var expandedCategories by remember { mutableStateOf(false) }
+    var contactId: String? by remember { mutableStateOf(product?.supplier ?: supplier.value.firstOrNull()?.id) }
+    var selectedContact by remember { mutableStateOf(supplier.value.firstOrNull { contact -> contact.id == contactId }?.name ?: supplier.value.firstOrNull()?.name ?: "No Suppliers Entered") }
+    var categoryId: String? by remember { mutableStateOf(product?.category) }
+    var selectedCategory by remember { mutableStateOf(if (categoryId == null) "None" else category.value.firstOrNull { category -> categoryId == category.id }?.categoryName ?: "None") }
+    var imageUri by remember { mutableStateOf(if (product?.image == null) null else Uri.parse(product.image)) }
+    var criticalLevel by remember { mutableStateOf(product?.criticalLevel ?: 0) }
+    var criticalLevelText by remember { mutableStateOf(criticalLevel.toString()) }
+    var isCriticalLevelValid by remember { mutableStateOf(true) }
+    val imageUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument(), onResult = { imageUri = it })
+
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "$function Product") }, navigationIcon = {
@@ -48,25 +69,6 @@ fun ProductForm(dismissRequest: () -> Unit, function: String, productId: String?
             .padding(paddingValues)
             .padding(16.dp)
             .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            val category = categoryViewModel.getAll().observeAsState(listOf())
-            val supplier = contactViewModel.getAll().observeAsState(listOf())
-            var name by remember { mutableStateOf(product?.productName ?: "") }
-            var isNameValid by remember { mutableStateOf(true) }
-            var purchasePrice by remember { mutableStateOf(String.format("%.99f", product?.purchasePrice ?: 0.0).trimEnd('0').trimEnd('.')) }
-            var sellingPrice by remember { mutableStateOf(String.format("%.99f", product?.sellingPrice ?: 0.0).trimEnd('0').trimEnd('.')) }
-            var isPurchasePriceValid by remember { mutableStateOf(true) }
-            var isSellingPriceValid by remember { mutableStateOf(true) }
-            var expandedContacts by remember { mutableStateOf(false) }
-            var expandedCategories by remember { mutableStateOf(false) }
-            var contactId: String? by remember { mutableStateOf(product?.supplier ?: supplier.value.firstOrNull()?.id) }
-            var selectedContact by remember { mutableStateOf(supplier.value.firstOrNull { contact -> contact.id == contactId }?.name ?: supplier.value.firstOrNull()?.name ?: "No Suppliers Entered") }
-            var categoryId: String? by remember { mutableStateOf(product?.category) }
-            var selectedCategory by remember { mutableStateOf(if (categoryId == null) "None" else category.value.firstOrNull { category -> categoryId == category.id }?.categoryName ?: "None") }
-            var imageUri by remember { mutableStateOf(if (product?.image == null) null else Uri.parse(product.image)) }
-            var criticalLevel by remember { mutableStateOf(product?.criticalLevel ?: 0) }
-            var criticalLevelText by remember { mutableStateOf(criticalLevel.toString()) }
-            var isCriticalLevelValid by remember { mutableStateOf(true) }
-            val imageUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument(), onResult = { imageUri = it })
 
             Box(modifier = Modifier
                 .fillMaxWidth()

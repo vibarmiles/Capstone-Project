@@ -16,7 +16,9 @@ import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
 
 @Composable
-fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", branch: Branch? = null, back: () -> Unit) {
+fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", id: String? = null, back: () -> Unit) {
+    val branch = viewModel.getBranch(id)
+
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "$function Branch")}, navigationIcon = {

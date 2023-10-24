@@ -1,4 +1,4 @@
-package com.example.capstoneproject.user_management.ui
+package com.example.capstoneproject.login.ui.login
 
 import android.content.pm.PackageManager
 import android.util.Log
@@ -17,7 +17,7 @@ import androidx.core.content.ContextCompat
 import com.example.capstoneproject.R
 
 @Composable
-fun LoginScreen(onLoad: (Boolean) -> Unit) {
+fun LoginScreen(signedIn: Boolean, signIn: () -> Unit, onClick: () -> Unit) {
     val context = LocalContext.current
     var hasPermission by remember { mutableStateOf(true) }
     val permissions = arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.INTERNET, android.Manifest.permission.ACCESS_NETWORK_STATE, android.Manifest.permission.ACCESS_WIFI_STATE)
@@ -26,10 +26,9 @@ fun LoginScreen(onLoad: (Boolean) -> Unit) {
         if (it.value) {
             hasPermission = false
         }
-    }
-    })
+    } })
 
-    LaunchedEffect(key1 = hasPermission, block = {
+    SideEffect {
         permissionState.launch(permissions)
         if (
             PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permissions[1]) &&
@@ -37,16 +36,17 @@ fun LoginScreen(onLoad: (Boolean) -> Unit) {
             PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permissions[3])
         ) {
             Log.d("Checking", "True")
-            onLoad.invoke(true)
         } else {
             Log.d("Permission", "Denied")
         }
-    })
+    }
+
+    LaunchedEffect(key1 = signedIn) {
+        signIn.invoke()
+    }
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Button(onClick = {
-
-        }) {
+        Button(onClick = onClick) {
             Text(text = stringResource(R.string.login))
         }
     }

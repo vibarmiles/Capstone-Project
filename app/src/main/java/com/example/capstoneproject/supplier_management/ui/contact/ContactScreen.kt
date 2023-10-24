@@ -27,7 +27,13 @@ import com.example.capstoneproject.supplier_management.data.firebase.contact.Con
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun ContactScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, contactViewModel: ContactViewModel, edit: (Contact) -> Unit, add: () -> Unit) {
+fun ContactScreen(
+    scope: CoroutineScope,
+    scaffoldState: ScaffoldState,
+    contactViewModel: ContactViewModel,
+    edit: (Contact) -> Unit,
+    add: () -> Unit
+) {
     val contacts = contactViewModel.getAll().observeAsState(listOf())
     var contact: Contact? = null
     var showDeleteDialog by remember { mutableStateOf(false) }

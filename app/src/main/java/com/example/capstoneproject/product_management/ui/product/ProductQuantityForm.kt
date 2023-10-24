@@ -25,8 +25,9 @@ import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 
 @Composable
-fun ProductQuantityFormScreen(dismissRequest: () -> Unit, productViewModel: ProductViewModel, branchViewModel: BranchViewModel, productId: String, map: Map<String, Int>? = null) {
+fun ProductQuantityFormScreen(dismissRequest: () -> Unit, productViewModel: ProductViewModel, branchViewModel: BranchViewModel, productId: String) {
     val branches = branchViewModel.getAll().observeAsState(listOf())
+    val map = productViewModel.getProduct(productId)?.stock
     val viewModel: BranchQuantityViewModel = viewModel()
 
     Scaffold(

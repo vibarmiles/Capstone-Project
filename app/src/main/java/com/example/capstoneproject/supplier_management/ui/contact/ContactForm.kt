@@ -1,7 +1,5 @@
 package com.example.capstoneproject.supplier_management.ui.contact
 
-import android.util.Log
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,7 +21,8 @@ import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 
 @Composable
-fun ContactFormScreen(function: String, contactViewModel: ContactViewModel, contact: Contact? = null, back: () -> Unit) {
+fun ContactFormScreen(function: String, contactViewModel: ContactViewModel, id: String? = null, back: () -> Unit) {
+    val contact = contactViewModel.getContact(id)
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "$function Contact") }, navigationIcon = {
@@ -46,7 +45,7 @@ fun ContactFormScreen(function: String, contactViewModel: ContactViewModel, cont
                 isNameValid = name.isNotBlank()
                 isContactValid = contact.isNotBlank()
                 if (isContactValid && isNameValid) {
-                    contactViewModel.insert(contact = Contact(name = name, contact = contact))
+                    contactViewModel.insert(contact = Contact(id = id ?: "", name = name, contact = contact))
                     back.invoke()
                 }
             }

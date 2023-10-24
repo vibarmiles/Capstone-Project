@@ -39,4 +39,8 @@ class BranchViewModel : ViewModel() {
     private fun updateLoadingState() {
         isLoading.value = false
     }
+
+    fun getBranch(id: String?): Branch? {
+        return branches.value?.firstOrNull { branch -> branch.id == id }
+    }
 }

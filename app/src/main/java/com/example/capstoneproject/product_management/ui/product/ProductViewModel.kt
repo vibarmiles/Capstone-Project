@@ -18,10 +18,14 @@ class ProductViewModel : ViewModel() {
     private lateinit var products: SnapshotStateMap<String, Product>
     private val productRepository: IProductRepository = ProductRepository()
     var isLoading: MutableState<Boolean> = mutableStateOf(true)
+    val update = mutableStateOf(true)
 
     fun getAll(): SnapshotStateMap<String, Product> {
         if (!this::products.isInitialized) {
-            products = productRepository.getAll { updateLoadingState() }
+            products = productRepository.getAll(callback = { updateLoadingState() } ) {
+                update.value = update.value.not()
+                Log.d("Update", "Finished")
+            }
         }
 
         return products
@@ -59,5 +63,9 @@ class ProductViewModel : ViewModel() {
 
     private fun updateLoadingState() {
         isLoading.value = false
+    }
+
+    fun getProduct(id: String?): Product? {
+        return products[id]
     }
 }

@@ -39,4 +39,8 @@ class ContactViewModel : ViewModel() {
     private fun updateLoadingState() {
         isLoading.value = false
     }
+
+    fun getContact(id: String?): Contact? {
+        return contacts.value?.firstOrNull { contact -> contact.id == id }
+    }
 }

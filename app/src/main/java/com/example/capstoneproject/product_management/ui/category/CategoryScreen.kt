@@ -27,7 +27,12 @@ import com.example.capstoneproject.ui.theme.Purple500
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun CategoryScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: CategoryViewModel, productViewModel: ProductViewModel) {
+fun CategoryScreen(
+    scope: CoroutineScope,
+    scaffoldState: ScaffoldState,
+    viewModel: CategoryViewModel,
+    productViewModel: ProductViewModel
+) {
     val categories = viewModel.getAll().observeAsState(listOf())
     var category: Category? = null
     var showDialog by remember {

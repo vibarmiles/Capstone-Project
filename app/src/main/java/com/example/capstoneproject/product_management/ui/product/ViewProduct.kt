@@ -39,8 +39,9 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ViewProduct(dismissRequest: () -> Unit, productViewModel: ProductViewModel, contactViewModel: ContactViewModel, categoryViewModel: CategoryViewModel, branchViewModel: BranchViewModel, productId: String, product: Product, edit: () -> Unit, set: () -> Unit, delete: () -> Unit) {
+fun ViewProduct(dismissRequest: () -> Unit, productViewModel: ProductViewModel, contactViewModel: ContactViewModel, categoryViewModel: CategoryViewModel, branchViewModel: BranchViewModel, productId: String, edit: () -> Unit, set: () -> Unit, delete: () -> Unit) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val product = productViewModel.getProduct(productId)!!
     val pagerState = rememberPagerState(initialPage = 0)
     val coroutineScope = rememberCoroutineScope()
     Scaffold(

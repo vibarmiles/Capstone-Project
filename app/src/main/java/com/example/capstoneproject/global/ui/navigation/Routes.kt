@@ -3,31 +3,31 @@ package com.example.capstoneproject.global.ui.navigation
 import com.example.capstoneproject.R
 
 sealed class Routes(val route: String) {
-    object SplashScreen : Routes("Splash")
+    object LoginScreen : Routes("Login")
     object Dashboard : Routes((R.string.dashboard).toString())
     object Product : Routes((R.string.product).toString()) {
-        object View : Routes(this.route + "/View/{productId}/{name}/{image}/{purchasePrice}/{sellingPrice}/{supplier}/{categoryId}/{criticalLevel}/{stock}") {
-            fun createRoute(productId: String, name: String, image: String, purchasePrice: Double, sellingPrice: Double, supplier: String, categoryId: String, criticalLevel: Int, stock: String) = Routes.Product.route + "/View/$productId/$name/$image/$purchasePrice/$sellingPrice/$supplier/$categoryId/$criticalLevel/$stock"
+        object View : Routes("$route/View/{productId}") {
+            fun createRoute(productId: String) = Product.route + "/View/$productId"
         }
-        object Add : Routes(this.route + "/Add")
-        object Set : Routes(this.route + "/Set/{productId}/{stock}") {
-            fun createRoute(productId: String, stock: String) = Routes.Product.route + "/Set/$productId/$stock"
+        object Add : Routes("$route/Add")
+        object Set : Routes("$route/Set/{productId}") {
+            fun createRoute(productId: String) = Product.route + "/Set/$productId"
         }
-        object Edit : Routes(this.route + "/Edit/{productId}/{name}/{image}/{purchasePrice}/{sellingPrice}/{supplier}/{categoryId}/{criticalLevel}/{stock}") {
-            fun createRoute(productId: String, name: String, image: String, purchasePrice: Double, sellingPrice: Double, supplier: String, categoryId: String, criticalLevel: Int, stock: String) = Routes.Product.route + "/Edit/$productId/$name/$image/$purchasePrice/$sellingPrice/$supplier/$categoryId/$criticalLevel/$stock"
+        object Edit : Routes("$route/Edit/{productId}") {
+            fun createRoute(productId: String) = Product.route + "/Edit/$productId"
         }
     }
     object Branch : Routes((R.string.branch).toString()) {
         object Add : Routes(this.route + "/Add")
-        object Edit : Routes(this.route + "/Edit/{branchId}/{branchName}/{branchAddress}") {
-            fun createRoute(branchId: String, branchName: String, branchAddress: String) = Routes.Branch.route + "/Edit/$branchId/$branchName/$branchAddress"
+        object Edit : Routes(this.route + "/Edit/{branchId}") {
+            fun createRoute(branchId: String) = Branch.route + "/Edit/$branchId"
         }
     }
     object Category : Routes((R.string.category).toString())
     object Contact : Routes((R.string.contact).toString()) {
         object Add : Routes(this.route + "/Add")
-        object Edit : Routes(this.route + "/Edit/{contactId}/{contactName}/{contactNumber}") {
-            fun createRoute(contactId: String, contactName: String, contactNumber: String) = Routes.Contact.route + "/Edit/$contactId/$contactName/$contactNumber"
+        object Edit : Routes(this.route + "/Edit/{contactId}") {
+            fun createRoute(contactId: String) = Contact.route + "/Edit/$contactId"
         }
     }
     object PurchaseOrder : Routes((R.string.purchase_order).toString()) {
