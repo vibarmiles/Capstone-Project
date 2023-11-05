@@ -52,7 +52,7 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
         scaffoldState = scaffoldState,
         drawerScrimColor = Color.Black.copy(0.7f),
         drawerGesturesEnabled = !appViewModel.isLoading.value,
-        drawerContent = { Drawer {
+        drawerContent = { Drawer(user = appViewModel.user.value) {
             selectedItem = it
             navController.navigate(selectedItem.toString()) {
                 popUpTo(0)

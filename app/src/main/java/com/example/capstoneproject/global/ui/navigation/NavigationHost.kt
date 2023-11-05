@@ -5,9 +5,10 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material.ScaffoldState
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -57,13 +58,13 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
                         val signInResult = googleAuthUiClient.getSignInResult(
                             intent = result.data ?: return@launch
                         )
-                        viewModel.signedIn.value = signInResult.data != null
+                        viewModel.user.value = signInResult
                     }
                 }
             })
 
-            LoginScreen(signedIn = viewModel.signedIn.value, signIn = {
-                if (viewModel.signedIn.value) {
+            LoginScreen(signedIn = viewModel.user.value.data != null, signIn = {
+                if (viewModel.user.value.data != null) {
                     Toast.makeText(context, "Signed in successfully", Toast.LENGTH_LONG).show()
 
                     navController.navigate(Routes.Dashboard.route) {
@@ -83,7 +84,11 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
             }
         }
         composable(Routes.Dashboard.route) {
-
+            Column {
+                Text(text = viewModel.user.value.data?.profilePicture.toString())
+                Text(text = viewModel.user.value.data?.username.toString())
+                Text(text = viewModel.connection.value.toString())
+            }
         }
 
         composable(Routes.Product.route) {

@@ -10,7 +10,7 @@ import com.example.capstoneproject.ui.theme.darkbg
 import com.example.capstoneproject.ui.theme.darkprimary1
 
 @Composable
-fun ProjectListItemColors(): ListItemColors = if (isSystemInDarkTheme()) ListItemDefaults.colors(
+fun ProjectListItemColors(): ListItemColors = /*if (isSystemInDarkTheme()) ListItemDefaults.colors(
     containerColor = darkbg,
     headlineColor = darkText1,
     leadingIconColor = darkprimary1,
@@ -20,4 +20,4 @@ fun ProjectListItemColors(): ListItemColors = if (isSystemInDarkTheme()) ListIte
     disabledHeadlineColor = Color.Transparent,
     disabledLeadingIconColor = Color.Transparent,
     disabledTrailingIconColor = Color.Transparent
-) else ListItemDefaults.colors()
+) else*/ ListItemDefaults.colors()

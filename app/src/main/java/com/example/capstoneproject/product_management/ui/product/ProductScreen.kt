@@ -16,7 +16,6 @@ import androidx.compose.material.icons.outlined.StackedBarChart
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -115,7 +114,7 @@ fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, pro
                 if (defaultMap.isNotEmpty()) {
                     Text(
                         text = defaultMap.count().toString(),
-                        color = Color.Black,
+                        color = Color.White,
                         modifier = Modifier
                             .clip(CircleShape)
                             .height(IntrinsicSize.Min)
@@ -139,7 +138,7 @@ fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, pro
                     Text(modifier = Modifier.widthIn(max = 150.dp), text = tab.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (map.isNotEmpty()) {
                         Text(text = map.count().toString(),
-                            color = Color.Black,
+                            color = Color.White,
                             modifier = Modifier
                                 .clip(CircleShape)
                                 .height(IntrinsicSize.Min)
@@ -248,7 +247,7 @@ fun ProductScreenContent(branchId: String, categories: List<Category>, products:
 @Composable
 fun Products(product: Product, quantity: Int, edit: () -> Unit, set: () -> Unit, delete: () -> Unit, view: () -> Unit) {
     var expanded: Boolean by remember { mutableStateOf(false) }
-    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = { SubcomposeAsyncImage(error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) },  model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier
+    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = { SubcomposeAsyncImage(error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) },  model = product.image, contentScale = ContentScale.Crop, modifier = Modifier
         .clip(RoundedCornerShape(5.dp))
         .size(50.dp), loading = { CircularProgressIndicator() }, contentDescription = null) }, headlineContent = { Text(text = "Qty: $quantity", fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = product.productName, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
         IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })

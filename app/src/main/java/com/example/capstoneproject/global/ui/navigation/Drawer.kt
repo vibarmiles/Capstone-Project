@@ -7,7 +7,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -21,16 +20,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
+import coil.compose.SubcomposeAsyncImage
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ImageNotAvailable
 import com.example.capstoneproject.global.ui.misc.NavigationItemColors
+import com.example.capstoneproject.login.data.login.SignInResult
 
 @Composable
-fun Drawer(onClick: (Int) -> Unit) {
+fun Drawer(
+    user: SignInResult,
+    onClick: (Int) -> Unit
+) {
     var selectedItem: Int by remember { mutableStateOf(R.string.dashboard) }
     val navigationList: List<NavigationItems> = listOf(NavigationItems.Dashboard, NavigationItems.Inventory, NavigationItems.Supplier, NavigationItems.Users, NavigationItems.Report, NavigationItems.POS)
     val subNavigationList: List<NavigationItems> = listOf(NavigationItems.Inventory.Product, NavigationItems.Inventory.Branch, NavigationItems.Inventory.Category, NavigationItems.Supplier.Contact, NavigationItems.Supplier.PurchaseOrder, NavigationItems.Supplier.ReturnOrder)
@@ -45,18 +49,17 @@ fun Drawer(onClick: (Int) -> Unit) {
             .fillMaxWidth()) {
             Spacer(modifier = Modifier.size(30.dp))
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Image(painter = painterResource(id = R.mipmap.app_icon_foreground), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier
+                SubcomposeAsyncImage(error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) },  model = user.data?.profilePicture, contentScale = ContentScale.Crop, modifier = Modifier
                     .size(50.dp)
-                    .clip(CircleShape)
-                    .background(Color.Gray))
-                Text(text = "First Name M. Last", color = Color.Black, fontSize = 24.sp)
+                    .clip(CircleShape), loading = { CircularProgressIndicator() }, contentDescription = null)
+                Text(text = user.data?.username.toString(), color = Color.Black, fontSize = 24.sp)
                 Text(text = "ADMIN", color = Color.Black, fontSize = 14.sp)
             }
         }
         LazyColumn(modifier = Modifier.padding(8.dp)) {
             navigationList.forEach {
                 item {
-                    NavigationDrawerItem(colors = NavigationItemColors(), icon = { Icon(imageVector = it.icon, contentDescription = null) }, label = { Row { Text(text = stringResource(id = it.title), modifier = Modifier.weight(1f)); if (it.isParent) Icon(imageVector = when (it.title) { R.string.inventory -> if (showSubItemForInventory) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown; R.string.supplier -> if (showSubItemForSupplier) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown; else -> {} } as ImageVector, contentDescription = null) } }, selected = it.title == selectedItem, onClick = {
+                    NavigationDrawerItem(colors = NavigationItemColors(), icon = { Icon(imageVector = it.icon, contentDescription = null) }, label = { Row { Text(text = stringResource(id = it.title), modifier = Modifier.weight(1f)); if (it.isParent) Icon(imageVector = when (it.title) { R.string.inventory -> if (showSubItemForInventory) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown; R.string.supplier -> if (showSubItemForSupplier) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown; else -> null } as ImageVector, contentDescription = null) } }, selected = it.title == selectedItem, onClick = {
                         if (it.isParent && (it.title == R.string.inventory)) {
                             showSubItemForInventory = !showSubItemForInventory
                             showSubItemForSupplier = false

@@ -2,6 +2,7 @@
 <resources>
 
     <style name="Theme.CapstoneProject" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/statusBar</item>
         <item name="android:windowBackground">@drawable/splash_screen</item>
     </style>
 </resources>

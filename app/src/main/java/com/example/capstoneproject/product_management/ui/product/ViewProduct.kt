@@ -80,7 +80,7 @@ fun ViewProduct(dismissRequest: () -> Unit, productViewModel: ProductViewModel, 
                     ImageNotAvailable(modifier = Modifier.size(200.dp))
                     Text(text = "NO IMAGE", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 24.sp)
                 } else {
-                    SubcomposeAsyncImage(error = { ImageNotAvailable() },  model = product.image ?: "", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), loading = { Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) { CircularProgressIndicator() } }, contentDescription = null)
+                    SubcomposeAsyncImage(error = { ImageNotAvailable() },  model = product.image, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), loading = { Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) { CircularProgressIndicator() } }, contentDescription = null)
                 }
             }
 

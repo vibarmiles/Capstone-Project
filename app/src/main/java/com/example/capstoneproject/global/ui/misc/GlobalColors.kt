@@ -11,7 +11,7 @@ import androidx.core.graphics.ColorUtils
 
 @Composable
 fun NavigationItemColors(): NavigationDrawerItemColors = NavigationDrawerItemDefaults.colors(
-    selectedContainerColor = if (isSystemInDarkTheme()) Color.DarkGray else Color.LightGray,
+    selectedContainerColor = /*if (isSystemInDarkTheme()) Color.DarkGray else*/ Color.LightGray,
     unselectedContainerColor = Color(ColorUtils.blendARGB(MaterialTheme.colors.surface.toArgb(), Color.White.toArgb(), 0.2f)),
     unselectedIconColor = MaterialTheme.colors.onSurface,
     unselectedTextColor = MaterialTheme.colors.onSurface

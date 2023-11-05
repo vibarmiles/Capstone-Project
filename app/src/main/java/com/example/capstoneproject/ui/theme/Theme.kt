@@ -42,17 +42,19 @@ fun CapstoneProjectTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val systemUiController = rememberSystemUiController()
-    val colors = if (darkTheme) {
+    /*val systemUiController = rememberSystemUiController()*/
+    /*val colors = if (darkTheme) {
         DarkColorPalette
     } else {
         LightColorPalette
-    }
-    if (darkTheme) {
+    }*/
+    val colors = LightColorPalette
+
+    /*if (darkTheme) {
         systemUiController.setSystemBarsColor(color = Color(ColorUtils.blendARGB(darkprimary1.toArgb(), Color.Black.toArgb(), 0.2f)))
     } else {
         systemUiController.setSystemBarsColor(color = Color(ColorUtils.blendARGB(primaryColor.toArgb(), Color.Black.toArgb(), 0.2f)))
-    }
+    }*/
 
     MaterialTheme(
         colors = colors,
