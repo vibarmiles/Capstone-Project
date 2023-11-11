@@ -7,6 +7,7 @@
     <string name="product">Product</string>
     <string name="branch">Branch</string>
     <string name="supplier">Supplier</string>
+    <string name="user_level">User Level</string>
     <string name="purchase_order">Purchase Order</string>
     <string name="return_order">Return Order</string>
     <string name="user">User</string>

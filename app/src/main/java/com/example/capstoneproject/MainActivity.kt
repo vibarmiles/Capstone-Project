@@ -8,7 +8,6 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.capstoneproject.global.ui.navigation.Drawer
@@ -46,7 +45,6 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
     var selectedItem by remember { mutableStateOf(R.string.dashboard) }
-    val connection = appViewModel.connection
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -63,13 +61,13 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
             }
         }}
     ) {
-        paddingValues ->
+        paddingValues -> paddingValues
+
         NavigationHost(navController = navController, scope = scope, scaffoldState = scaffoldState, viewModel = appViewModel)
-        if (!connection.value) {
-            Snackbar(modifier = Modifier
-                .padding(paddingValues)
-                .padding(8.dp)) {
-                Text(text = "No Internet Connection")
+
+        LaunchedEffect(key1 = appViewModel.connection.value) {
+            if (!appViewModel.connection.value) {
+                scaffoldState.snackbarHostState.showSnackbar(message = "Lost Connection!", duration = SnackbarDuration.Indefinite)
             }
         }
     }

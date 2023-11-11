@@ -34,6 +34,7 @@ fun CategoryScreen(
     productViewModel: ProductViewModel
 ) {
     val categories = viewModel.getAll().observeAsState(listOf())
+    val state by viewModel.result.collectAsState()
     var category: Category? = null
     var showDialog by remember {
         mutableStateOf(false)
@@ -54,7 +55,9 @@ fun CategoryScreen(
     ) {
             paddingValues ->
         if (viewModel.isLoading.value) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()) {
                 CircularProgressIndicator()
             }
         } else {
@@ -95,6 +98,16 @@ fun CategoryScreen(
                 viewModel.delete(category!!)
                 productViewModel.removeCategory(categoryId = category!!.id)
                 showDeleteDialog = false
+            }
+        }
+
+        LaunchedEffect(key1 = state.result, state.errorMessage) {
+            if (!state.result && state.errorMessage != null) {
+                scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
+                viewModel.resetMessage()
+            } else if (state.result) {
+                scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                viewModel.resetMessage()
             }
         }
     }

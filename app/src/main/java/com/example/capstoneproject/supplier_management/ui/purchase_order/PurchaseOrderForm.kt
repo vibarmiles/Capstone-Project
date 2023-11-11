@@ -32,9 +32,7 @@ import java.time.LocalDate
 @Composable
 fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel: PurchaseOrderViewModel, productViewModel: ProductViewModel, back: () -> Unit) {
     val purchasedProductsViewModel: PurchasedProductsViewModel = viewModel()
-    val contacts = contactViewModel.getAll().observeAsState()
     val products = productViewModel.getAll()
-    var supplierId: String by remember { mutableStateOf(contacts.value?.first()?.id ?: "") }
     var showProductDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var productToRemove: Product? = null
@@ -47,7 +45,7 @@ fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel
                 }
             }, actions = {
                 IconButton(onClick = {
-                    purchaseOrderViewModel.insert(PurchaseOrder(supplier = supplierId, date = LocalDate.now().toString(), status = Status.WAITING, products = purchasedProductsViewModel.purchases.associateBy { product -> "Item ${purchasedProductsViewModel.purchases.indexOf(product)}" }))
+                    purchaseOrderViewModel.insert(PurchaseOrder(date = LocalDate.now().toString(), status = Status.WAITING, products = purchasedProductsViewModel.purchases.associateBy { product -> "Item ${purchasedProductsViewModel.purchases.indexOf(product)}" }))
                     back.invoke()
                 }) {
                     Icon(imageVector = Icons.Filled.Save, contentDescription = null)

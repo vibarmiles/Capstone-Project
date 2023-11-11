@@ -9,4 +9,5 @@ data class User(
     val id: String,
     val username: String,
     val profilePicture: String?,
+    val email: String
 )

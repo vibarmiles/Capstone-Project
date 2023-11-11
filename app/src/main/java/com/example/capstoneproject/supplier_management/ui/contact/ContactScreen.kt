@@ -37,6 +37,8 @@ fun ContactScreen(
     val contacts = contactViewModel.getAll().observeAsState(listOf())
     var contact: Contact? = null
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val state by contactViewModel.result.collectAsState()
+
     Scaffold(
         topBar = {
             BaseTopAppBar(title = stringResource(id = R.string.contact), scope = scope, scaffoldState = scaffoldState)
@@ -49,7 +51,9 @@ fun ContactScreen(
     ) {
             paddingValues ->
         if (contactViewModel.isLoading.value) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()) {
                 CircularProgressIndicator()
             }
         } else {
@@ -63,6 +67,16 @@ fun ContactScreen(
             ConfirmDeletion(item = contact!!.name, onCancel = { showDeleteDialog = false }) {
                 contactViewModel.delete(contact = contact!!)
                 showDeleteDialog = false
+            }
+        }
+
+        LaunchedEffect(key1 = state.result, state.errorMessage) {
+            if (!state.result && state.errorMessage != null) {
+                scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
+                contactViewModel.resetMessage()
+            } else if (state.result) {
+                scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                contactViewModel.resetMessage()
             }
         }
     }

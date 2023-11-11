@@ -8,10 +8,14 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.product_management.data.firebase.product.IProductRepository
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.data.firebase.product.ProductRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ProductViewModel : ViewModel() {
@@ -19,12 +23,17 @@ class ProductViewModel : ViewModel() {
     private val productRepository: IProductRepository = ProductRepository()
     var isLoading: MutableState<Boolean> = mutableStateOf(true)
     val update = mutableStateOf(true)
+    private val resultState = MutableStateFlow(FirebaseResult())
+    val result = resultState.asStateFlow()
 
     fun getAll(): SnapshotStateMap<String, Product> {
         if (!this::products.isInitialized) {
-            products = productRepository.getAll(callback = { updateLoadingState() } ) {
+            products = productRepository.getAll(callback = { updateLoadingState() }, update = {
                 update.value = update.value.not()
                 Log.d("Update", "Finished")
+            }) {
+                    result ->
+                resultState.update { result }
             }
         }
 
@@ -33,31 +42,46 @@ class ProductViewModel : ViewModel() {
 
     fun insert(id: String? = null, product: Product) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.insert(key = id, product = product)
+            productRepository.insert(key = id, product = product) {
+                    result ->
+                resultState.update { result }
+            }
         }
     }
 
     fun delete(key: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.delete(key = key)
+            productRepository.delete(key = key) {
+                    result ->
+                resultState.update { result }
+            }
         }
     }
 
     fun setStock(key: String, value: Map<String, Int>) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.setQuantityForBranch(key = key, value = value)
+            productRepository.setQuantityForBranch(key = key, value = value) {
+                    result ->
+                resultState.update { result }
+            }
         }
     }
 
     fun removeCategory(categoryId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.removeCategory(categoryId = categoryId)
+            productRepository.removeCategory(categoryId = categoryId) {
+                    result ->
+                resultState.update { result }
+            }
         }
     }
 
     fun removeBranchStock(branchId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.removeBranchStock(branchId = branchId)
+            productRepository.removeBranchStock(branchId = branchId) {
+                    result ->
+                resultState.update { result }
+            }
         }
     }
 
@@ -67,5 +91,9 @@ class ProductViewModel : ViewModel() {
 
     fun getProduct(id: String?): Product? {
         return products[id]
+    }
+
+    fun resetMessage() {
+        resultState.update { FirebaseResult() }
     }
 }

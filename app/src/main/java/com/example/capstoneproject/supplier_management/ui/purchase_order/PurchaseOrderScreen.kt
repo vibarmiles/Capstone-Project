@@ -28,19 +28,19 @@ import java.time.LocalDate
 
 /*
 * TODO(
-*   1.  Automatically edit the supplier products upon submitting a new purchase order
-*   2.  Clicking the purchase order displays its contents
-*   3.  Editing the purchase order's status from WAITING to CANCELLED or DONE
-*   4.  Purchased Products should be removed from the product red mark.
+*   1.  Clicking the purchase order displays its contents
+*   2.  Editing the purchase order's status from WAITING to CANCELLED or DONE
+*   3.  Purchased Products should be removed from the product red mark.
 * )
 */
 
 @Composable
-fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, purchaseOrderViewModel: PurchaseOrderViewModel, add: () -> Unit) {
-    val purchaseOrders by purchaseOrderViewModel.purchaseOrders.observeAsState(listOf())
+fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, purchaseOrderViewModel: PurchaseOrderViewModel, add: () -> Unit, view: (String) -> Unit) {
+    val purchaseOrders by purchaseOrderViewModel.getAll().observeAsState(listOf())
     var noOfDaysShown by remember { mutableStateOf(0) }
     val days = listOf(1, 3, 7, 30)
-    val purchaseOrdersFilteredByDays = remember(noOfDaysShown) {
+    val state by purchaseOrderViewModel.result.collectAsState()
+    val purchaseOrdersFilteredByDays = remember(purchaseOrders, noOfDaysShown) {
         mutableStateOf(purchaseOrders.filter { purchaseOrder -> LocalDate.parse(purchaseOrder.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())})
     }
     Scaffold(
@@ -53,7 +53,7 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, pur
             }
         }
     ) {
-        paddingValues ->
+            paddingValues ->
         if (purchaseOrderViewModel.isLoading.value) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(paddingValues).fillMaxSize()) {
                 CircularProgressIndicator()
@@ -66,12 +66,22 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, pur
                 LazyColumn {
                     itemsIndexed(purchaseOrdersFilteredByDays.value) {
                             _, it ->
-                        PurchaseOrderItem(purchaseOrder = it, goto = {
-                        }) }
+                        PurchaseOrderItem(purchaseOrder = it, goto = { view.invoke(it) })
+                    }
 
                     item {
                         Spacer(modifier = Modifier.height(50.dp))
                     }
+                }
+            }
+
+            LaunchedEffect(key1 = state.result, state.errorMessage) {
+                if (!state.result && state.errorMessage != null) {
+                    scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
+                    purchaseOrderViewModel.resetMessage()
+                } else if (state.result) {
+                    scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                    purchaseOrderViewModel.resetMessage()
                 }
             }
         }

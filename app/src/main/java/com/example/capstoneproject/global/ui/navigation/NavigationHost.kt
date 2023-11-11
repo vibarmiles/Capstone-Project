@@ -1,12 +1,11 @@
 package com.example.capstoneproject.global.ui.navigation
 
 import android.app.Activity
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.ScaffoldState
+import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -31,8 +30,10 @@ import com.example.capstoneproject.supplier_management.ui.purchase_order.Purchas
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderScreen
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderViewModel
 import com.example.capstoneproject.login.ui.login.LoginScreen
-import com.example.capstoneproject.user_management.ui.add_users.composable.AddEditUserScreen
-import com.example.capstoneproject.user_management.ui.users.composable.UserScreen
+import com.example.capstoneproject.supplier_management.ui.purchase_order.ViewPurchaseOrder
+import com.example.capstoneproject.user_management.ui.users.UserForm
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
+import com.example.capstoneproject.user_management.ui.users.UserScreen
 import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -44,6 +45,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
     val productViewModel: ProductViewModel = viewModel()
     val purchaseOrderViewModel: PurchaseOrderViewModel = viewModel()
     val contactViewModel: ContactViewModel = viewModel()
+    val userViewModel: UserViewModel = viewModel()
     val context = LocalContext.current
 
     val googleAuthUiClient by lazy {
@@ -58,6 +60,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
                         val signInResult = googleAuthUiClient.getSignInResult(
                             intent = result.data ?: return@launch
                         )
+
                         viewModel.user.value = signInResult
                     }
                 }
@@ -65,22 +68,33 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
 
             LoginScreen(signedIn = viewModel.user.value.data != null, signIn = {
                 if (viewModel.user.value.data != null) {
-                    Toast.makeText(context, "Signed in successfully", Toast.LENGTH_LONG).show()
+                    userViewModel.getUser(viewModel.user.value.data!!.email) {
+                        if (it) {
+                            scope.launch {
+                                scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully! $it", duration = SnackbarDuration.Short)
+                            }
 
-                    navController.navigate(Routes.Dashboard.route) {
-                        popUpTo(0)
+                            navController.navigate(Routes.Dashboard.route) {
+                                popUpTo(0)
+                            }
+
+                            viewModel.isLoading.value = false
+                        }
                     }
-                    viewModel.isLoading.value = false
                 }
             }) {
-                scope.launch {
+                navController.navigate(Routes.Dashboard.route) {
+                    popUpTo(0)
+                }
+                viewModel.isLoading.value = false
+                /*scope.launch {
                     val signIn = googleAuthUiClient.signIn()
                     launcher.launch(
                         IntentSenderRequest.Builder(
                             signIn ?: return@launch
                         ).build()
                     )
-                }
+                }*/
             }
         }
         composable(Routes.Dashboard.route) {
@@ -182,11 +196,19 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.PurchaseOrder.route) {
-            PurchaseOrderScreen(scope = scope, scaffoldState = scaffoldState, purchaseOrderViewModel = purchaseOrderViewModel, add = { navController.navigate(Routes.PurchaseOrder.Add.route) })
+            PurchaseOrderScreen(scope = scope, scaffoldState = scaffoldState, purchaseOrderViewModel = purchaseOrderViewModel, add = { navController.navigate(Routes.PurchaseOrder.Add.route) }, view = { navController.navigate(Routes.PurchaseOrder.View.createRoute(it)) })
         }
 
         composable(Routes.PurchaseOrder.Add.route) {
             PurchaseOrderForm(contactViewModel = contactViewModel, purchaseOrderViewModel = purchaseOrderViewModel, productViewModel = productViewModel) {
+                navController.popBackStack()
+            }
+        }
+
+        composable(Routes.PurchaseOrder.View.route) {
+            val id = it.arguments?.getString("POID")!!
+
+            ViewPurchaseOrder(purchaseOrderId = id, purchaseOrderViewModel = purchaseOrderViewModel) {
                 navController.popBackStack()
             }
         }
@@ -196,7 +218,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.User.route) {
-            UserScreen(scope = scope, scaffoldState = scaffoldState, add = { navController.navigate(Routes.User.Add.route) }) {
+            UserScreen(scope = scope, scaffoldState = scaffoldState, userViewModel = userViewModel, add = { navController.navigate(Routes.User.Add.route) }) {
                 navController.navigate(it)
             }
         }
@@ -210,11 +232,11 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
         }
 
         composable(Routes.User.Add.route) {
-            AddEditUserScreen(decision = stringResource(id = R.string.add), back = { navController.popBackStack() })
+            UserForm(userViewModel = userViewModel, decision = stringResource(id = R.string.add), back = { navController.popBackStack() })
         }
 
         composable(Routes.User.Edit.route) {
-            AddEditUserScreen(decision = stringResource(id = R.string.edit), back = { navController.popBackStack() }, userId = it.arguments?.getString("userId") ?: "")
+            UserForm(userViewModel = userViewModel, decision = stringResource(id = R.string.edit), back = { navController.popBackStack() }, userId = it.arguments?.getString("userId")!!)
         }
     }
 }

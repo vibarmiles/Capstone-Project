@@ -1,5 +1,6 @@
 package com.example.capstoneproject.product_management.ui.branch
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -42,6 +43,8 @@ fun BranchScreen(
     var showDeleteDialog by remember {
         mutableStateOf(false)
     }
+
+    val state by viewModel.result.collectAsState()
 
     Scaffold(
         topBar = {
@@ -88,6 +91,17 @@ fun BranchScreen(
                 viewModel.delete(branch)
                 productViewModel.removeBranchStock(branchId = branch.id)
                 showDeleteDialog = false
+            }
+        }
+
+        LaunchedEffect(state.result, state.errorMessage) {
+            Log.d("=============", "Called")
+            if (!state.result && state.errorMessage != null) {
+                scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
+                viewModel.resetMessage()
+            } else if (state.result) {
+                scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                viewModel.resetMessage()
             }
         }
     }

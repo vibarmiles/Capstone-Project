@@ -1,5 +1,6 @@
 package com.example.capstoneproject.supplier_management.ui.contact
 
+import android.util.Patterns
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,7 +44,7 @@ fun ContactFormScreen(function: String, contactViewModel: ContactViewModel, id: 
             OutlinedTextField(leadingIcon = { Icon(imageVector = Icons.Filled.Phone, contentDescription = null) }, modifier = Modifier.fillMaxWidth(), value = contact, onValueChange = { value -> contact = value }, placeholder = { Text(text = "Enter Contact's Number") }, label = { Text(text = "Contact's Number") }, isError = !isContactValid, trailingIcon = { if (!isContactValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone))
             FormButtons(cancel = back) {
                 isNameValid = name.isNotBlank()
-                isContactValid = contact.isNotBlank()
+                isContactValid = contact.let { it.isNotBlank() && Patterns.PHONE.matcher(it).matches() }
                 if (isContactValid && isNameValid) {
                     contactViewModel.insert(contact = Contact(id = id ?: "", name = name, contact = contact))
                     back.invoke()

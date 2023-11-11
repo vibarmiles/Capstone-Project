@@ -1,9 +1,10 @@
 package com.example.capstoneproject.supplier_management.data.firebase.purchase_order
 
 import androidx.lifecycle.MutableLiveData
+import com.example.capstoneproject.global.data.firebase.FirebaseResult
 
 interface IPurchaseOrderRepository {
-    fun getAll(callback: () -> Unit): MutableLiveData<List<PurchaseOrder>>
-    fun insert(purchaseOrder: PurchaseOrder)
-    fun delete(purchaseOrder: PurchaseOrder)
+    fun getAll(callback: () -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<PurchaseOrder>>
+    fun insert(purchaseOrder: PurchaseOrder, result: (FirebaseResult) -> Unit)
+    fun delete(purchaseOrder: PurchaseOrder, result: (FirebaseResult) -> Unit)
 }

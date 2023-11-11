@@ -53,6 +53,7 @@ fun ProductScreen(
     val branch = branchViewModel.getAll().observeAsState(listOf())
     val categories = categoryViewModel.getAll().observeAsState(listOf())
     val products = productViewModel.getAll()
+    val state by productViewModel.result.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var pair: Pair<String, Product>? = null
     var page by rememberSaveable { mutableStateOf(0) }
@@ -96,6 +97,16 @@ fun ProductScreen(
             ConfirmDeletion(item = pair!!.second.productName, onCancel = { showDeleteDialog = false }) {
                 productViewModel.delete(key = pair!!.first)
                 showDeleteDialog = false
+            }
+        }
+
+        LaunchedEffect(key1 = state.result, state.errorMessage) {
+            if (!state.result && state.errorMessage != null) {
+                scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
+                productViewModel.resetMessage()
+            } else if (state.result) {
+                scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                productViewModel.resetMessage()
             }
         }
     }

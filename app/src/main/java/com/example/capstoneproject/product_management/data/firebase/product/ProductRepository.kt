@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
+import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -19,7 +20,7 @@ class ProductRepository : IProductRepository {
     private val firestorage = Firebase.storage.reference
     private val productImageReference = firestorage.child("images")
 
-    override fun getAll(callback: () -> Unit, update: () -> Unit): SnapshotStateMap<String, Product> {
+    override fun getAll(callback: () -> Unit, update: () -> Unit, result: (FirebaseResult) -> Unit): SnapshotStateMap<String, Product> {
         val products = mutableStateMapOf<String, Product>()
 
         productCollectionReference.addChildEventListener(object : ChildEventListener {
@@ -41,11 +42,11 @@ class ProductRepository : IProductRepository {
             }
 
             override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
-                TODO("Not yet implemented")
+                products[snapshot.key!!] = snapshot.getValue<Product>()!!
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Log.d("Database Error", error.message)
+                result.invoke(FirebaseResult(result = false, errorMessage = error.message))
             }
 
         })
@@ -56,19 +57,22 @@ class ProductRepository : IProductRepository {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                TODO("Not yet implemented")
+                result.invoke(FirebaseResult(result = false, errorMessage = error.message))
             }
-
         })
 
         return products
     }
 
-    override fun setQuantityForBranch(key: String, value: Map<String, Int>) {
-        productCollectionReference.child(key).child("stock").setValue(value)
+    override fun setQuantityForBranch(key: String, value: Map<String, Int>, result: (FirebaseResult) -> Unit) {
+        productCollectionReference.child(key).child("stock").setValue(value).addOnSuccessListener {
+            result.invoke(FirebaseResult(result = true))
+        }.addOnFailureListener {
+            result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+        }
     }
 
-    override fun insert(key: String?, product: Product) {
+    override fun insert(key: String?, product: Product, result: (FirebaseResult) -> Unit) {
         val uri: Uri? = if (product.image != null) Uri.parse(product.image) else null
 
         if (key != null) {
@@ -78,19 +82,33 @@ class ProductRepository : IProductRepository {
                 firestorage.child(uri.lastPathSegment!!).downloadUrl.addOnSuccessListener {
                     product.image = it.toString()
                     Log.d("Image", product.image.toString())
-                    productCollectionReference.child(key).setValue(product)
+                    productCollectionReference.child(key).setValue(product).addOnSuccessListener {
+                        result.invoke(FirebaseResult(result = true))
+                    }.addOnFailureListener {
+                            e ->
+                        result.invoke(FirebaseResult(result = false, errorMessage = e.message))
+                    }
                 }.addOnFailureListener {
                     Log.d("Image", "File does not exist")
                     productImageReference.child(uri.lastPathSegment!!).putFile(uri).addOnSuccessListener {
                         productImageReference.child(uri.lastPathSegment!!).downloadUrl.addOnSuccessListener {
                             product.image = it.toString()
                             Log.d("Image", product.image.toString())
-                            productCollectionReference.child(key).setValue(product)
+                            productCollectionReference.child(key).setValue(product).addOnSuccessListener {
+                                result.invoke(FirebaseResult(result = true))
+                            }.addOnFailureListener {
+                                    e ->
+                                result.invoke(FirebaseResult(result = false, errorMessage = e.message))
+                            }
                         }
                     }
                 }
             } else {
-                productCollectionReference.child(key).setValue(product)
+                productCollectionReference.child(key).setValue(product).addOnSuccessListener {
+                    result.invoke(FirebaseResult(result = true))
+                }.addOnFailureListener {
+                    result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+                }
             }
         } else {
             Log.d("ID is blank", product.toString())
@@ -99,42 +117,60 @@ class ProductRepository : IProductRepository {
                     productImageReference.child(uri.lastPathSegment!!).downloadUrl.addOnSuccessListener {
                         product.image = it.toString()
                         Log.d("Image", product.image.toString())
-                        productCollectionReference.push().setValue(product)
+                        productCollectionReference.push().setValue(product).addOnSuccessListener {
+                            result.invoke(FirebaseResult(result = true))
+                        }.addOnFailureListener {
+                            result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+                        }
                     }
                 }
             } else {
-                productCollectionReference.push().setValue(product)
+                productCollectionReference.push().setValue(product).addOnSuccessListener {
+                    result.invoke(FirebaseResult(result = true))
+                }.addOnFailureListener {
+                    result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+                }
             }
         }
     }
 
-    override fun delete(key: String) {
-        productCollectionReference.child(key).removeValue()
+    override fun delete(key: String, result: (FirebaseResult) -> Unit) {
+        productCollectionReference.child(key).removeValue().addOnSuccessListener {
+            result.invoke(FirebaseResult(result = true))
+        }.addOnFailureListener {
+            result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+        }
     }
 
-    override fun removeCategory(categoryId: String) = productCollectionReference.orderByChild("category").equalTo(categoryId).addListenerForSingleValueEvent(object : ValueEventListener {
+    override fun removeCategory(categoryId: String, result: (FirebaseResult) -> Unit) = productCollectionReference.orderByChild("category").equalTo(categoryId).addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             for (child in snapshot.children) {
-                child.ref.child("category").removeValue()
+                child.ref.child("category").removeValue().addOnSuccessListener {
+                    result.invoke(FirebaseResult(result = true))
+                }.addOnFailureListener {
+                    result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+                }
             }
         }
 
         override fun onCancelled(error: DatabaseError) {
-            TODO("Not yet implemented")
+            result.invoke(FirebaseResult(result = false, errorMessage = error.message))
         }
 
     })
 
-    override fun removeBranchStock(branchId: String) = productCollectionReference.orderByChild("stock/$branchId").startAt(0.0).addListenerForSingleValueEvent(object : ValueEventListener {
+    override fun removeBranchStock(branchId: String, result: (FirebaseResult) -> Unit) = productCollectionReference.orderByChild("stock/$branchId").startAt(0.0).addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             Log.d("Calling", "Remove Branch Stock")
             for (child in snapshot.children) {
                 child.ref.child("stock/$branchId").removeValue()
             }
+
+            result.invoke(FirebaseResult(result = true))
         }
 
         override fun onCancelled(error: DatabaseError) {
-            TODO("Not yet implemented")
+            result.invoke(FirebaseResult(result = false, errorMessage = error.message))
         }
 
     })

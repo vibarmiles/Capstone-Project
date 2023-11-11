@@ -36,7 +36,7 @@ class GoogleLoginRepository(
         return try {
             val user = auth.signInWithCredential(googleCredentials).await().user
             SignInResult(
-                data = user?.run { User(id = uid, username = displayName ?: "", profilePicture = photoUrl.toString()) },
+                data = user?.run { User(id = uid, username = displayName ?: "", profilePicture = photoUrl.toString(), email = email ?: "") },
                 errorMessage = null
             )
         } catch (e: Exception) {
@@ -53,7 +53,7 @@ class GoogleLoginRepository(
         }
     }
 
-    fun getSignedInUser(): User? = auth.currentUser?.run { User(id = uid, username = displayName ?: "", profilePicture = photoUrl.toString()) }
+    fun getSignedInUser(): User? = auth.currentUser?.run { User(id = uid, username = displayName ?: "", profilePicture = photoUrl.toString(), email = email ?: "") }
 
     private fun buildSignInRequest(): BeginSignInRequest {
         return BeginSignInRequest.builder()
