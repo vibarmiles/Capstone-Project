@@ -35,7 +35,13 @@ import java.time.LocalDate
 */
 
 @Composable
-fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, purchaseOrderViewModel: PurchaseOrderViewModel, add: () -> Unit, view: (String) -> Unit) {
+fun PurchaseOrderScreen(
+    scope: CoroutineScope,
+    scaffoldState: ScaffoldState,
+    purchaseOrderViewModel: PurchaseOrderViewModel,
+    add: () -> Unit,
+    view: (String) -> Unit
+) {
     val purchaseOrders by purchaseOrderViewModel.getAll().observeAsState(listOf())
     var noOfDaysShown by remember { mutableStateOf(0) }
     val days = listOf(1, 3, 7, 30)
@@ -89,7 +95,10 @@ fun PurchaseOrderScreen(scope: CoroutineScope, scaffoldState: ScaffoldState, pur
 }
 
 @Composable
-fun PurchaseOrderItem(purchaseOrder: PurchaseOrder, goto: (String) -> Unit) {
+fun PurchaseOrderItem(
+    purchaseOrder: PurchaseOrder,
+    goto: (String) -> Unit
+) {
     androidx.compose.material3.ListItem(
         colors = ProjectListItemColors(),
         modifier = Modifier.clickable { goto.invoke(purchaseOrder.id) },
@@ -115,7 +124,9 @@ fun PurchaseOrderItem(purchaseOrder: PurchaseOrder, goto: (String) -> Unit) {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun FilterByDate(onClick: (Int) -> Unit) {
+fun FilterByDate(
+    onClick: (Int) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp), expanded = expanded, onExpandedChange = { expanded = !expanded }) {
         var textFieldValue by remember { mutableStateOf("Today") }

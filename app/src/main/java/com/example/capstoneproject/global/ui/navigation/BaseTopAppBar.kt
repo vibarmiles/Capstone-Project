@@ -9,7 +9,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun BaseTopAppBar (title: String, scope: CoroutineScope, scaffoldState: ScaffoldState, actions: (@Composable RowScope.() -> Unit) = {}) {
+fun BaseTopAppBar(
+    title: String,
+    scope: CoroutineScope,
+    scaffoldState: ScaffoldState,
+    actions: (@Composable RowScope.() -> Unit) = {}
+) {
     TopAppBar(
         title = { Text(text = (title).uppercase()) },
         navigationIcon = { IconButton(onClick = {

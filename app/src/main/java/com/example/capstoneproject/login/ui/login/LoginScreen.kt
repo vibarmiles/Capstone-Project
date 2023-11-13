@@ -17,7 +17,11 @@ import androidx.core.content.ContextCompat
 import com.example.capstoneproject.R
 
 @Composable
-fun LoginScreen(signedIn: Boolean, signIn: () -> Unit, onClick: () -> Unit) {
+fun LoginScreen(
+    signedIn: Boolean,
+    signIn: () -> Unit,
+    onClick: () -> Unit
+) {
     val context = LocalContext.current
     var hasPermission by remember { mutableStateOf(true) }
     val permissions = arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.INTERNET, android.Manifest.permission.ACCESS_NETWORK_STATE, android.Manifest.permission.ACCESS_WIFI_STATE)

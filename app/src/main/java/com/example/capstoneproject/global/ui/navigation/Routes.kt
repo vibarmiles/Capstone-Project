@@ -40,7 +40,7 @@ sealed class Routes(val route: String) {
     object User : Routes((R.string.user).toString()) {
         object Add : Routes( this.route + "/Add")
         object Edit : Routes( this.route + "/Edit/{userId}") {
-            fun createRoute(userId: Int) = User.route + "/Edit/$userId"
+            fun createRoute(userId: String) = User.route + "/Edit/$userId"
         }
     }
     object Report : Routes((R.string.report).toString())

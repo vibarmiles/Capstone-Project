@@ -13,7 +13,10 @@ import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.R
 
 @Composable
-fun FormButtons(cancel: () -> Unit, submit: () -> Unit) {
+fun FormButtons(
+    cancel: () -> Unit,
+    submit: () -> Unit
+) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         TextButton(onClick = cancel, modifier = Modifier.weight(1f), border = BorderStroke(1.dp, MaterialTheme.colors.onPrimary), colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.onPrimary)) {
             Text(text = stringResource(id = R.string.cancel_button))

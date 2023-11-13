@@ -30,9 +30,9 @@ import com.example.capstoneproject.login.data.login.SignInResult
 @Composable
 fun Drawer(
     user: SignInResult,
+    currentItem: Int,
     onClick: (Int) -> Unit
 ) {
-    var selectedItem: Int by remember { mutableStateOf(R.string.dashboard) }
     val navigationList: List<NavigationItems> = listOf(NavigationItems.Dashboard, NavigationItems.Inventory, NavigationItems.Supplier, NavigationItems.Users, NavigationItems.Report, NavigationItems.POS)
     val subNavigationList: List<NavigationItems> = listOf(NavigationItems.Inventory.Product, NavigationItems.Inventory.Branch, NavigationItems.Inventory.Category, NavigationItems.Supplier.Contact, NavigationItems.Supplier.PurchaseOrder, NavigationItems.Supplier.ReturnOrder)
     var showSubItemForInventory by remember { mutableStateOf(false) }
@@ -54,7 +54,7 @@ fun Drawer(
     LazyColumn(modifier = Modifier.padding(8.dp)) {
         navigationList.forEach {
             item {
-                NavigationDrawerItem(colors = NavigationItemColors(), icon = { Icon(imageVector = it.icon, contentDescription = null) }, label = { Row { Text(text = stringResource(id = it.title), modifier = Modifier.weight(1f)); if (it.isParent) Icon(imageVector = when (it.title) { R.string.inventory -> if (showSubItemForInventory) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown; R.string.supplier -> if (showSubItemForSupplier) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown; else -> null } as ImageVector, contentDescription = null) } }, selected = it.title == selectedItem, onClick = {
+                NavigationDrawerItem(colors = NavigationItemColors(), icon = { Icon(imageVector = it.icon, contentDescription = null) }, label = { Row { Text(text = stringResource(id = it.title), modifier = Modifier.weight(1f)); if (it.isParent) Icon(imageVector = when (it.title) { R.string.inventory -> if (showSubItemForInventory) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown; R.string.supplier -> if (showSubItemForSupplier) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown; else -> null } as ImageVector, contentDescription = null) } }, selected = it.title == currentItem, onClick = {
                     if (it.isParent && (it.title == R.string.inventory)) {
                         showSubItemForInventory = !showSubItemForInventory
                         showSubItemForSupplier = false
@@ -64,7 +64,6 @@ fun Drawer(
                     } else {
                         showSubItemForInventory = false
                         showSubItemForSupplier = false
-                        selectedItem = it.title
                         onClick.invoke(it.title)
                     }
                 })
@@ -77,12 +76,12 @@ fun Drawer(
                         if (it.title == subItem.parentItem && subItem.parentItem == R.string.inventory) {
                             AnimatedVisibility(visible = showSubItemForInventory, enter = expandVertically(expandFrom = Alignment.CenterVertically), exit = shrinkVertically()) {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                NavigationDrawerItem(colors = NavigationItemColors(), icon = { Icon(imageVector = subItem.icon, contentDescription = null) }, label = { Text(text = stringResource(id = subItem.title)) }, onClick = { selectedItem = subItem.title; onClick.invoke(subItem.title) }, selected = subItem.title == selectedItem)
+                                NavigationDrawerItem(colors = NavigationItemColors(), icon = { Icon(imageVector = subItem.icon, contentDescription = null) }, label = { Text(text = stringResource(id = subItem.title)) }, onClick = { onClick.invoke(subItem.title) }, selected = subItem.title == currentItem)
                             }
                         } else if (it.title == subItem.parentItem && subItem.parentItem == R.string.supplier) {
                             AnimatedVisibility(visible = showSubItemForSupplier, enter = expandVertically(expandFrom = Alignment.Top), exit = shrinkVertically()) {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                NavigationDrawerItem(colors = NavigationItemColors(), icon = { Icon(imageVector = subItem.icon, contentDescription = null) }, label = { Text(text = stringResource(id = subItem.title)) }, onClick = { selectedItem = subItem.title; onClick.invoke(subItem.title) }, selected = subItem.title == selectedItem)
+                                NavigationDrawerItem(colors = NavigationItemColors(), icon = { Icon(imageVector = subItem.icon, contentDescription = null) }, label = { Text(text = stringResource(id = subItem.title)) }, onClick = { onClick.invoke(subItem.title) }, selected = subItem.title == currentItem)
                             }
                         }
                     }

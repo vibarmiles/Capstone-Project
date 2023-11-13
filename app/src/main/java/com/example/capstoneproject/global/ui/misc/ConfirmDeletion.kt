@@ -10,7 +10,11 @@ import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
 
 @Composable
-fun ConfirmDeletion(item: String, onCancel: () -> Unit, onSubmit: () -> Unit) {
+fun ConfirmDeletion(
+    item: String,
+    onCancel: () -> Unit,
+    onSubmit: () -> Unit
+) {
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onCancel,
         title = {

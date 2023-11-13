@@ -40,10 +40,7 @@ fun BranchScreen(
 ) {
     val branches by viewModel.getAll().observeAsState(listOf())
     lateinit var branch: Branch
-    var showDeleteDialog by remember {
-        mutableStateOf(false)
-    }
-
+    var showDeleteDialog by remember { mutableStateOf(false) }
     val state by viewModel.result.collectAsState()
 
     Scaffold(

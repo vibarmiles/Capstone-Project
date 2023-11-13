@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.ui.theme.Purple500
@@ -33,6 +36,8 @@ fun UserScreen(
 ) {
     val users = userViewModel.getAll()
     val state by userViewModel.result.collectAsState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    lateinit var user: Pair<String, User>
 
     Scaffold(
         topBar = {
@@ -64,8 +69,18 @@ fun UserScreen(
                 }
 
                 itemsIndexed(listOfUsers.value) {
-                        _, user ->
-                    UserListItem(user = user.second)
+                        _, it ->
+                    UserListItem(user = it.second, edit = { edit.invoke(it.first) }) {
+                        user = it
+                        showDeleteDialog = true
+                    }
+                }
+            }
+
+            if (showDeleteDialog) {
+                ConfirmDeletion(item = user.second.email, onCancel = { showDeleteDialog = false }) {
+                    userViewModel.delete(user.first)
+                    showDeleteDialog = false
                 }
             }
 
@@ -83,11 +98,24 @@ fun UserScreen(
 }
 
 @Composable
-fun UserListItem(user: User) {
+fun UserListItem(
+    user: User,
+    edit: () -> Unit,
+    delete: () -> Unit
+) {
     androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = {
         Box(modifier = Modifier
             .size(50.dp)
             .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Text(text = user.email.substring(startIndex = 0, endIndex = 1), fontSize = 16.sp, color = Color.White, textAlign = TextAlign.Center)
         }
-    }, headlineContent = { Text(text = "${user.lastName}, ${user.firstName}") }, supportingContent = { Text(text = user.email) })
+    }, headlineContent = { Text(text = "${user.lastName}, ${user.firstName}") }, supportingContent = { Text(text = user.email) }, trailingContent = {
+        Row {
+            IconButton(onClick = edit) {
+                Icon(Icons.Filled.Edit, contentDescription = null)
+            }
+            IconButton(onClick = delete) {
+                Icon(Icons.Filled.Delete, contentDescription = null)
+            }
+        }
+    })
 }

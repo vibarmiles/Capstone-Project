@@ -23,14 +23,20 @@ import com.example.capstoneproject.user_management.data.firebase.UserLevel
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun UserForm(userViewModel: UserViewModel, decision: String, userId: String? = null, back: () -> Unit) {
+fun UserForm(
+    userViewModel: UserViewModel,
+    decision: String,
+    userId: String? = null,
+    back: () -> Unit
+) {
+    val user = userViewModel.getUserDetails(id = userId)
     var expandedUsers by remember { mutableStateOf(false) }
-    var userLevel by remember { mutableStateOf(UserLevel.Employee) }
-    var firstName by remember { mutableStateOf("") }
+    var userLevel by remember { mutableStateOf(user?.userLevel ?: UserLevel.Employee) }
+    var firstName by remember { mutableStateOf(user?.firstName ?: "") }
     var isFirstNameValid by remember { mutableStateOf(true) }
-    var lastName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf(user?.lastName ?: "") }
     var isLastNameValid by remember { mutableStateOf(true) }
-    var email by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf(user?.email ?: "") }
     var isEmailValid by remember { mutableStateOf(true) }
 
     Scaffold(

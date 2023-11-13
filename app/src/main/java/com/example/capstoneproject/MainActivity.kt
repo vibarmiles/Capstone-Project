@@ -40,7 +40,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
+fun GlobalContent(
+    appViewModel: AppViewModel = viewModel()
+) {
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
@@ -50,7 +52,7 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
         scaffoldState = scaffoldState,
         drawerScrimColor = Color.Black.copy(0.7f),
         drawerGesturesEnabled = !appViewModel.isLoading.value,
-        drawerContent = { Drawer(user = appViewModel.user.value) {
+        drawerContent = { Drawer(user = appViewModel.user.value, currentItem = selectedItem) {
             selectedItem = it
             navController.navigate(selectedItem.toString()) {
                 popUpTo(0)
@@ -63,7 +65,12 @@ fun GlobalContent(appViewModel: AppViewModel = viewModel()) {
     ) {
         paddingValues -> paddingValues
 
-        NavigationHost(navController = navController, scope = scope, scaffoldState = scaffoldState, viewModel = appViewModel)
+        NavigationHost(navController = navController, scope = scope, scaffoldState = scaffoldState, viewModel = appViewModel) {
+            selectedItem = it
+            navController.navigate(selectedItem.toString()) {
+                popUpTo(0)
+            }
+        }
 
         LaunchedEffect(key1 = appViewModel.connection.value) {
             if (!appViewModel.connection.value) {

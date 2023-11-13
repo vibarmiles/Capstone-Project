@@ -8,6 +8,8 @@ import com.example.capstoneproject.R
 
 
 @Composable
-fun ImageNotAvailable(modifier: Modifier = Modifier) {
+fun ImageNotAvailable(
+    modifier: Modifier = Modifier
+) {
     Image(painter = painterResource(R.mipmap.app_icon_foreground), contentDescription = null, modifier = modifier)
 }

@@ -83,7 +83,12 @@ fun ContactScreen(
 }
 
 @Composable
-fun ContactScreenContent(paddingValues: PaddingValues, contacts: List<Contact>, edit: (Contact) -> Unit, delete: (Contact) -> Unit) {
+fun ContactScreenContent(
+    paddingValues: PaddingValues,
+    contacts: List<Contact>,
+    edit: (Contact) -> Unit,
+    delete: (Contact) -> Unit
+) {
     LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         item {
             val size = contacts.count()

@@ -45,6 +45,10 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    fun getUserDetails(id: String?): User? {
+        return id?.let { users.getValue(it) }
+    }
+
     fun insert(id: String?, user: User) {
         viewModelScope.launch(Dispatchers.IO) {
             userRepository.insert(key = id, user = user) {

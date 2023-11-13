@@ -22,8 +22,12 @@ import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 
 @Composable
-fun ContactFormScreen(function: String, contactViewModel: ContactViewModel, id: String? = null, back: () -> Unit) {
-    val contact = contactViewModel.getContact(id)
+fun ContactFormScreen(
+    function: String,
+    contactViewModel: ContactViewModel,
+    id: String? = null, back: () -> Unit
+) {
+    val oldContact = contactViewModel.getContact(id)
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "$function Contact") }, navigationIcon = {
@@ -34,8 +38,8 @@ fun ContactFormScreen(function: String, contactViewModel: ContactViewModel, id: 
         }
     ) {
         paddingValues ->
-        var name by remember { mutableStateOf(contact?.name ?: "") }
-        var contact by remember { mutableStateOf(contact?.contact ?: "") }
+        var name by remember { mutableStateOf(oldContact?.name ?: "") }
+        var contact by remember { mutableStateOf(oldContact?.contact ?: "") }
         var isContactValid by remember { mutableStateOf(true) }
         var isNameValid by remember { mutableStateOf(true) }
 

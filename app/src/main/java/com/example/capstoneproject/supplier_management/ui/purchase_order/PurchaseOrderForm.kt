@@ -11,7 +11,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,7 +29,12 @@ import com.example.capstoneproject.supplier_management.ui.contact.ContactViewMod
 import java.time.LocalDate
 
 @Composable
-fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel: PurchaseOrderViewModel, productViewModel: ProductViewModel, back: () -> Unit) {
+fun PurchaseOrderForm(
+    contactViewModel: ContactViewModel,
+    purchaseOrderViewModel: PurchaseOrderViewModel,
+    productViewModel: ProductViewModel,
+    back: () -> Unit
+) {
     val purchasedProductsViewModel: PurchasedProductsViewModel = viewModel()
     val products = productViewModel.getAll()
     var showProductDialog by remember { mutableStateOf(false) }
@@ -124,7 +128,10 @@ fun PurchaseOrderForm(contactViewModel: ContactViewModel, purchaseOrderViewModel
 }
 
 @Composable
-fun ProductItem(products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>, product: Product, remove: (Product) -> Unit) {
+fun ProductItem(
+    products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>,
+    product: Product, remove: (Product) -> Unit
+) {
     androidx.compose.material3.ListItem(
         headlineContent = {
             Text(text = (products[product.id])!!.productName, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -148,7 +155,11 @@ fun ProductItem(products: Map<String, com.example.capstoneproject.product_manage
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun AddProductDialog(onDismissRequest: () -> Unit, submit: (String, Double, Int) -> Unit, products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>) {
+fun AddProductDialog(
+    onDismissRequest: () -> Unit,
+    submit: (String, Double, Int) -> Unit,
+    products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>
+) {
     var expanded by remember { mutableStateOf(false) }
     var isQuantityValid by remember { mutableStateOf(true) }
     var quantityText by remember { mutableStateOf("") }

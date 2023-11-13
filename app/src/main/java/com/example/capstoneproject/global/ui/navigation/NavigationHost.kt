@@ -2,11 +2,10 @@ package com.example.capstoneproject.global.ui.navigation
 
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.SnackbarDuration
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -15,6 +14,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.capstoneproject.R
+import com.example.capstoneproject.dashboard.ui.Dashboard
 import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
 import com.example.capstoneproject.login.data.login.GoogleLoginRepository
 import com.example.capstoneproject.product_management.ui.branch.BranchFormScreen
@@ -39,7 +39,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaffoldState: ScaffoldState, viewModel: AppViewModel) {
+fun NavigationHost(
+    navController: NavHostController,
+    scope: CoroutineScope,
+    scaffoldState: ScaffoldState,
+    viewModel: AppViewModel,
+    callback: (Int) -> Unit
+) {
     val branchViewModel: BranchViewModel = viewModel()
     val categoryViewModel: CategoryViewModel = viewModel()
     val productViewModel: ProductViewModel = viewModel()
@@ -71,7 +77,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
                     userViewModel.getUser(viewModel.user.value.data!!.email) {
                         if (it) {
                             scope.launch {
-                                scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully! $it", duration = SnackbarDuration.Short)
+                                scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully!", duration = SnackbarDuration.Short)
                             }
 
                             navController.navigate(Routes.Dashboard.route) {
@@ -83,26 +89,26 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
                     }
                 }
             }) {
-                navController.navigate(Routes.Dashboard.route) {
+                /*navController.navigate(Routes.Dashboard.route) {
                     popUpTo(0)
                 }
-                viewModel.isLoading.value = false
-                /*scope.launch {
+                viewModel.isLoading.value = false*/
+                scope.launch {
                     val signIn = googleAuthUiClient.signIn()
                     launcher.launch(
                         IntentSenderRequest.Builder(
                             signIn ?: return@launch
                         ).build()
                     )
-                }*/
+                }
             }
         }
         composable(Routes.Dashboard.route) {
-            Column {
-                Text(text = viewModel.user.value.data?.profilePicture.toString())
-                Text(text = viewModel.user.value.data?.username.toString())
-                Text(text = viewModel.connection.value.toString())
-            }
+            Dashboard(scope = scope, scaffoldState = scaffoldState, branchViewModel = branchViewModel, productViewModel = productViewModel, purchaseOrderViewModel = purchaseOrderViewModel, goToBranches = {
+                callback.invoke(R.string.branch)
+            }, goToProducts = {
+                callback.invoke(R.string.product)
+            })
         }
 
         composable(Routes.Product.route) {
@@ -219,7 +225,7 @@ fun NavigationHost(navController: NavHostController, scope: CoroutineScope, scaf
 
         composable(Routes.User.route) {
             UserScreen(scope = scope, scaffoldState = scaffoldState, userViewModel = userViewModel, add = { navController.navigate(Routes.User.Add.route) }) {
-                navController.navigate(it)
+                navController.navigate(Routes.User.Edit.createRoute(userId = it))
             }
         }
 
