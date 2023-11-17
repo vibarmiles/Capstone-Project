@@ -74,7 +74,7 @@ fun GlobalContent(
 
         LaunchedEffect(key1 = appViewModel.connection.value) {
             if (!appViewModel.connection.value) {
-                scaffoldState.snackbarHostState.showSnackbar(message = "Lost Connection!", duration = SnackbarDuration.Indefinite)
+                scaffoldState.snackbarHostState.showSnackbar(message = "Lost Connection!", duration = SnackbarDuration.Short)
             }
         }
     }

@@ -16,8 +16,13 @@ import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
 
 @Composable
-fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", id: String? = null, back: () -> Unit) {
-    val branch = viewModel.getBranch(id)
+fun BranchFormScreen(
+    viewModel: BranchViewModel,
+    function: String = "Add",
+    id: String? = null,
+    back: () -> Unit
+) {
+    val branch = viewModel.getBranch(id) ?: Branch()
 
     Scaffold(
         topBar = {
@@ -29,8 +34,8 @@ fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", id: S
         }
     ) {
             paddingValues ->
-        var name by remember { mutableStateOf(branch?.name ?: "") }
-        var address by remember { mutableStateOf(branch?.address ?: "") }
+        var name by remember { mutableStateOf(branch.name) }
+        var address by remember { mutableStateOf(branch.address) }
         var isNameValid by remember { mutableStateOf(true) }
         var isAddressValid by remember { mutableStateOf(true) }
         Column(modifier = Modifier
@@ -53,7 +58,7 @@ fun BranchFormScreen(viewModel: BranchViewModel, function: String = "Add", id: S
                 isAddressValid = address.isNotBlank()
 
                 if (isNameValid && isAddressValid) {
-                    viewModel.insert(Branch(id = branch?.id ?: "", name = name, address = address))
+                    viewModel.insert(branch.copy(name = name, address = address))
                     back.invoke()
                 }
             }

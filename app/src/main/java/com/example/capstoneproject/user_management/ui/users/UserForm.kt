@@ -29,14 +29,14 @@ fun UserForm(
     userId: String? = null,
     back: () -> Unit
 ) {
-    val user = userViewModel.getUserDetails(id = userId)
+    val user = userViewModel.getUserDetails(id = userId) ?: User()
     var expandedUsers by remember { mutableStateOf(false) }
-    var userLevel by remember { mutableStateOf(user?.userLevel ?: UserLevel.Employee) }
-    var firstName by remember { mutableStateOf(user?.firstName ?: "") }
+    var userLevel by remember { mutableStateOf(user.userLevel) }
+    var firstName by remember { mutableStateOf(user.firstName) }
     var isFirstNameValid by remember { mutableStateOf(true) }
-    var lastName by remember { mutableStateOf(user?.lastName ?: "") }
+    var lastName by remember { mutableStateOf(user.lastName) }
     var isLastNameValid by remember { mutableStateOf(true) }
-    var email by remember { mutableStateOf(user?.email ?: "") }
+    var email by remember { mutableStateOf(user.email) }
     var isEmailValid by remember { mutableStateOf(true) }
 
     Scaffold(
@@ -92,7 +92,7 @@ fun UserForm(
                     isEmailValid = email.let { it.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(it).matches() }
 
                     if (isFirstNameValid && isLastNameValid && isEmailValid) {
-                        userViewModel.insert(id = userId, user = User(lastName = lastName, firstName = firstName, email = email, userLevel = userLevel))
+                        userViewModel.insert(id = userId, user = user.copy(lastName = lastName, firstName = firstName, email = email, userLevel = userLevel))
                         back.invoke()
                     }
                 }

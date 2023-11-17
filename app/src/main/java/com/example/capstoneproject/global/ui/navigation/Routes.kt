@@ -36,7 +36,12 @@ sealed class Routes(val route: String) {
             fun createRoute(POID: String) = PurchaseOrder.route + "/View/$POID"
         }
     }
-    object ReturnOrder : Routes((R.string.return_order).toString())
+    object ReturnOrder : Routes((R.string.return_order).toString()) {
+        object Add : Routes(this.route + "/Add")
+        object View : Routes(this.route + "/View/{ROID}") {
+            fun createRoute(ROID: String) = ReturnOrder.route + "/View/$ROID"
+        }
+    }
     object User : Routes((R.string.user).toString()) {
         object Add : Routes( this.route + "/Add")
         object Edit : Routes( this.route + "/Edit/{userId}") {
@@ -45,4 +50,5 @@ sealed class Routes(val route: String) {
     }
     object Report : Routes((R.string.report).toString())
     object POS : Routes((R.string.pos).toString())
+    object Logout : Routes((R.string.logout).toString())
 }

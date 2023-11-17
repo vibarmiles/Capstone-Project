@@ -29,6 +29,7 @@ import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
+import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderViewModel
 import kotlinx.coroutines.CoroutineScope
 
@@ -40,7 +41,8 @@ fun Dashboard(
     productViewModel: ProductViewModel,
     purchaseOrderViewModel: PurchaseOrderViewModel,
     goToBranches: () -> Unit,
-    goToProducts: () -> Unit
+    goToProducts: () -> Unit,
+    goToPO: () -> Unit
 ) {
     val branches = branchViewModel.getAll().observeAsState(listOf())
     val products = productViewModel.getAll()
@@ -62,7 +64,7 @@ fun Dashboard(
             val numberOfBranches = branches.value.size
             val productsUnderCriticalLevel by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.count { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) <= product.criticalLevel } }) }
             val stockInHand by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.sumOf { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) } }) }
-            val stockToBeReceived by remember(purchaseOrders) { mutableStateOf(purchaseOrders.value.sumOf { purchaseOrders -> purchaseOrders.products.values.sumOf { product -> product.quantity } }) }
+            val stockToBeReceived by remember(purchaseOrders) { mutableStateOf(purchaseOrders.value.filter { purchaseOrder -> purchaseOrder.status == Status.WAITING }.sumOf { purchaseOrders -> purchaseOrders.products.values.sumOf { product -> product.quantity } }) }
 
             Column(modifier = Modifier
                 .verticalScroll(state = rememberScrollState())
@@ -78,8 +80,8 @@ fun Dashboard(
                 Text(text = "Inventory Summary (in Units)", fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(2.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DashboardItem(data = stockInHand.toString(), textColor = Color(red = 0f, green = 0.8f, blue = 0f), supportingText = "In Hand", modifier = Modifier.weight(1f), onClick = { /*TODO()*/ })
-                    DashboardItem(data = stockToBeReceived.toString(), textColor = Color.Red, supportingText = "To Be Received", modifier = Modifier.weight(1f), onClick = { /*TODO()*/ })
+                    DashboardItem(data = stockInHand.toString(), textColor = Color(red = 0f, green = 0.8f, blue = 0f), supportingText = "In Hand", modifier = Modifier.weight(1f), onClick = goToProducts)
+                    DashboardItem(data = stockToBeReceived.toString(), textColor = Color.Red, supportingText = "To Be Received", modifier = Modifier.weight(1f), onClick = goToPO)
                 }
             }
         }

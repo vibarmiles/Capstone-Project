@@ -95,6 +95,6 @@ fun Drawer(
         .padding(8.dp)) {
         Divider()
         Spacer(modifier = Modifier.height(8.dp))
-        NavigationDrawerItem(colors = NavigationItemColors(), icon = { Icon(imageVector = Icons.Filled.ExitToApp, contentDescription = null) }, label = { Text(text = stringResource(id = R.string.logout)) }, onClick = {  }, selected = false)
+        NavigationDrawerItem(colors = NavigationItemColors(), icon = { Icon(imageVector = Icons.Filled.ExitToApp, contentDescription = null) }, label = { Text(text = stringResource(id = R.string.logout)) }, onClick = { onClick.invoke(R.string.logout) }, selected = false)
     }
 }

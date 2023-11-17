@@ -8,5 +8,12 @@ data class Product(
     val category: String? = null,
     val supplier: String = "",
     val criticalLevel: Int = 0,
-    val stock: Map<String, Int> = mapOf()
+    val stock: Map<String, Int> = mapOf(),
+    val transaction: Transaction = Transaction()
+)
+
+data class Transaction(
+    val purchased: Int = 0,
+    val returned: Int = 0,
+    val sold: Int = 0
 )

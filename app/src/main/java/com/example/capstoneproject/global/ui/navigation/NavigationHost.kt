@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -31,6 +32,10 @@ import com.example.capstoneproject.supplier_management.ui.purchase_order.Purchas
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderViewModel
 import com.example.capstoneproject.login.ui.login.LoginScreen
 import com.example.capstoneproject.supplier_management.ui.purchase_order.ViewPurchaseOrder
+import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderForm
+import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderScreen
+import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderViewModel
+import com.example.capstoneproject.supplier_management.ui.return_order.ViewReturnOrder
 import com.example.capstoneproject.user_management.ui.users.UserForm
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import com.example.capstoneproject.user_management.ui.users.UserScreen
@@ -50,6 +55,7 @@ fun NavigationHost(
     val categoryViewModel: CategoryViewModel = viewModel()
     val productViewModel: ProductViewModel = viewModel()
     val purchaseOrderViewModel: PurchaseOrderViewModel = viewModel()
+    val returnOrderViewModel: ReturnOrderViewModel = viewModel()
     val contactViewModel: ContactViewModel = viewModel()
     val userViewModel: UserViewModel = viewModel()
     val context = LocalContext.current
@@ -103,11 +109,14 @@ fun NavigationHost(
                 }
             }
         }
+
         composable(Routes.Dashboard.route) {
             Dashboard(scope = scope, scaffoldState = scaffoldState, branchViewModel = branchViewModel, productViewModel = productViewModel, purchaseOrderViewModel = purchaseOrderViewModel, goToBranches = {
                 callback.invoke(R.string.branch)
             }, goToProducts = {
                 callback.invoke(R.string.product)
+            }, goToPO = {
+                callback.invoke(R.string.purchase_order)
             })
         }
 
@@ -214,13 +223,43 @@ fun NavigationHost(
         composable(Routes.PurchaseOrder.View.route) {
             val id = it.arguments?.getString("POID")!!
 
-            ViewPurchaseOrder(purchaseOrderId = id, purchaseOrderViewModel = purchaseOrderViewModel) {
+            ViewPurchaseOrder(purchaseOrderId = id, purchaseOrderViewModel = purchaseOrderViewModel, productViewModel = productViewModel, branchViewModel = branchViewModel) {
                 navController.popBackStack()
             }
         }
 
         composable(Routes.ReturnOrder.route) {
+            ReturnOrderScreen(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                returnOrderViewModel = returnOrderViewModel,
+                add = { navController.navigate(Routes.ReturnOrder.Add.route) },
+                view = { navController.navigate(Routes.ReturnOrder.View.createRoute(it)) }
+            )
+        }
 
+        composable(Routes.ReturnOrder.Add.route) {
+            ReturnOrderForm(
+                contactViewModel = contactViewModel,
+                returnOrderViewModel = returnOrderViewModel,
+                branchViewModel = branchViewModel,
+                productViewModel = productViewModel
+            ) {
+                navController.popBackStack()
+            }
+        }
+
+        composable(Routes.ReturnOrder.View.route) {
+            val id = it.arguments?.getString("ROID")!!
+
+            ViewReturnOrder(
+                returnOrderId = id,
+                returnOrderViewModel = returnOrderViewModel,
+                productViewModel = productViewModel,
+                branchViewModel = branchViewModel
+            ) {
+                navController.popBackStack()
+            }
         }
 
         composable(Routes.User.route) {
@@ -243,6 +282,16 @@ fun NavigationHost(
 
         composable(Routes.User.Edit.route) {
             UserForm(userViewModel = userViewModel, decision = stringResource(id = R.string.edit), back = { navController.popBackStack() }, userId = it.arguments?.getString("userId")!!)
+        }
+
+        composable(Routes.Logout.route) {
+            LaunchedEffect(key1 = Unit) {
+                googleAuthUiClient.signOut()
+                scaffoldState.snackbarHostState.showSnackbar(message = "Signed Out Successfully!", duration = SnackbarDuration.Short)
+                navController.navigate(Routes.LoginScreen.route) {
+                    popUpTo(0)
+                }
+            }
         }
     }
 }

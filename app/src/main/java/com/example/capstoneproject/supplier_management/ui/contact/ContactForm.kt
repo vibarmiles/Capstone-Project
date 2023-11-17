@@ -25,9 +25,11 @@ import com.example.capstoneproject.supplier_management.data.firebase.contact.Con
 fun ContactFormScreen(
     function: String,
     contactViewModel: ContactViewModel,
-    id: String? = null, back: () -> Unit
+    id: String? = null,
+    back: () -> Unit
 ) {
-    val oldContact = contactViewModel.getContact(id)
+    val oldContact = contactViewModel.getContact(id) ?: Contact()
+
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "$function Contact") }, navigationIcon = {
@@ -38,8 +40,8 @@ fun ContactFormScreen(
         }
     ) {
         paddingValues ->
-        var name by remember { mutableStateOf(oldContact?.name ?: "") }
-        var contact by remember { mutableStateOf(oldContact?.contact ?: "") }
+        var name by remember { mutableStateOf(oldContact.name) }
+        var contact by remember { mutableStateOf(oldContact.contact) }
         var isContactValid by remember { mutableStateOf(true) }
         var isNameValid by remember { mutableStateOf(true) }
 
@@ -50,7 +52,7 @@ fun ContactFormScreen(
                 isNameValid = name.isNotBlank()
                 isContactValid = contact.let { it.isNotBlank() && Patterns.PHONE.matcher(it).matches() }
                 if (isContactValid && isNameValid) {
-                    contactViewModel.insert(contact = Contact(id = id ?: "", name = name, contact = contact))
+                    contactViewModel.insert(contact = oldContact.copy(name = name, contact = contact))
                     back.invoke()
                 }
             }

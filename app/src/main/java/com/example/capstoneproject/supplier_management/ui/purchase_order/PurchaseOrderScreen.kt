@@ -22,17 +22,10 @@ import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
-import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Status
+import com.example.capstoneproject.supplier_management.data.firebase.Status
+import com.example.capstoneproject.supplier_management.ui.FilterByDate
 import kotlinx.coroutines.CoroutineScope
 import java.time.LocalDate
-
-/*
-* TODO(
-*   1.  Clicking the purchase order displays its contents
-*   2.  Editing the purchase order's status from WAITING to CANCELLED or DONE
-*   3.  Purchased Products should be removed from the product red mark.
-* )
-*/
 
 @Composable
 fun PurchaseOrderScreen(
@@ -49,6 +42,7 @@ fun PurchaseOrderScreen(
     val purchaseOrdersFilteredByDays = remember(purchaseOrders, noOfDaysShown) {
         mutableStateOf(purchaseOrders.filter { purchaseOrder -> LocalDate.parse(purchaseOrder.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())})
     }
+
     Scaffold(
         topBar = {
             BaseTopAppBar(title = stringResource(id = R.string.purchase_order), scope = scope, scaffoldState = scaffoldState)
@@ -110,35 +104,14 @@ fun PurchaseOrderItem(
                 Text(text = when (purchaseOrder.status) {
                     Status.WAITING -> "To Receive"
                     Status.CANCELLED -> "Cancelled"
-                    Status.DONE -> "Delivered"
+                    Status.COMPLETE -> "Delivered"
                 }, fontSize = 12.sp, color = when (purchaseOrder.status) {
                     Status.WAITING -> Color.Red
                     Status.CANCELLED -> Color.Gray
-                    Status.DONE -> Color.Green
+                    Status.COMPLETE -> Color.Green
                 }, fontWeight = FontWeight.Bold)
             }
         }
     )
     Divider()
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun FilterByDate(
-    onClick: (Int) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp), expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-        var textFieldValue by remember { mutableStateOf("Today") }
-        val dropdownMenuItems = listOf("Today", "Last 3 days", "Last 7 days", "Last 30 days")
-        OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, modifier = Modifier.fillMaxWidth(), value = textFieldValue, readOnly = true, onValueChange = {  })
-        DropdownMenu(modifier = Modifier
-            .exposedDropdownSize()
-            .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
-            dropdownMenuItems.forEachIndexed {
-                    index, s ->
-                androidx.compose.material3.DropdownMenuItem(text = { androidx.compose.material.Text(text = s) }, onClick = { onClick.invoke(index); textFieldValue = s; expanded = false })
-            }
-        }
-    }
 }

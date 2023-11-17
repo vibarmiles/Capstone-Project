@@ -27,7 +27,7 @@ import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 @Composable
 fun ProductQuantityFormScreen(dismissRequest: () -> Unit, productViewModel: ProductViewModel, branchViewModel: BranchViewModel, productId: String) {
     val branches = branchViewModel.getAll().observeAsState(listOf())
-    val map = productViewModel.getProduct(productId)?.stock
+    val map = productViewModel.getProduct(productId)?.stock ?: mapOf()
     val viewModel: BranchQuantityViewModel = viewModel()
 
     Scaffold(
@@ -46,7 +46,7 @@ fun ProductQuantityFormScreen(dismissRequest: () -> Unit, productViewModel: Prod
             .padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             itemsIndexed(branches.value) {
                     _, it ->
-                var text by rememberSaveable { mutableStateOf(if (map != null) if (map.containsKey(it.id)) map[it.id].toString() else "" else "")}
+                var text by rememberSaveable { mutableStateOf(if (map.containsKey(it.id)) map[it.id].toString() else "")}
                 var isValid by remember { mutableStateOf(true) }
                 if (text.isNotBlank()) {
                     viewModel.stockPerBranch[it.id] = text

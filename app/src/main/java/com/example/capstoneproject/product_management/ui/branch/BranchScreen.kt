@@ -121,5 +121,5 @@ fun BranchListItem(
         }
     }, leadingContent = { Box(modifier = Modifier
         .size(50.dp)
-        .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Text(text = branch.name.substring(startIndex = 0, endIndex = 1), fontSize = 16.sp, color = Color.White, textAlign = TextAlign.Center) } } )
+        .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Text(text = branch.name.substring(startIndex = 0, endIndex = 1).uppercase(), fontSize = 16.sp, color = Color.White, textAlign = TextAlign.Center) } } )
 }

@@ -35,7 +35,7 @@ fun CategoryScreen(
 ) {
     val categories = viewModel.getAll().observeAsState(listOf())
     val state by viewModel.result.collectAsState()
-    var category: Category? = null
+    var category = Category()
     var showDialog by remember {
         mutableStateOf(false)
     }
@@ -48,7 +48,7 @@ fun CategoryScreen(
             BaseTopAppBar(title = stringResource(id = R.string.category), scope = scope, scaffoldState = scaffoldState)
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showDialog = true; category = null }) {
+            FloatingActionButton(onClick = { showDialog = true; category = Category() }) {
                 Icon(Icons.Filled.Add, null)
             }
         }
@@ -94,9 +94,9 @@ fun CategoryScreen(
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = category?.categoryName ?: "", onCancel = { showDeleteDialog = false }) {
-                viewModel.delete(category!!)
-                productViewModel.removeCategory(categoryId = category!!.id)
+            ConfirmDeletion(item = category.categoryName, onCancel = { showDeleteDialog = false }) {
+                viewModel.delete(category)
+                productViewModel.removeCategory(categoryId = category.id)
                 showDeleteDialog = false
             }
         }
@@ -130,8 +130,8 @@ fun CategoryListItem(category: String = "Category", edit: () -> Unit, delete: ()
 }
 
 @Composable
-fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, onCancel: () -> Unit) {
-    var categoryName by remember { mutableStateOf(category?.categoryName ?: "") }
+fun CategoryDialog(category: Category, onConfirm: (Category) -> Unit, onCancel: () -> Unit) {
+    var categoryName by remember { mutableStateOf(category.categoryName) }
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onCancel,
@@ -146,7 +146,7 @@ fun CategoryDialog(category: Category? = null, onConfirm: (Category) -> Unit, on
         },
         confirmButton = {
             Button(enabled = categoryName.isNotBlank(), onClick = {
-                onConfirm.invoke(Category(id = category?.id ?: "", categoryName = categoryName))
+                onConfirm.invoke(category.copy(categoryName = categoryName))
             }) {
                 Text(text = stringResource(id = R.string.submit_button))
             }
