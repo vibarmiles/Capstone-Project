@@ -12,6 +12,7 @@ import com.example.capstoneproject.R
 sealed class Document(val doc: String) {
     object PO : Document("Purchase Order")
     object RO : Document("Return Order")
+    object TO : Document("Transfer Order")
 }
 
 @Composable

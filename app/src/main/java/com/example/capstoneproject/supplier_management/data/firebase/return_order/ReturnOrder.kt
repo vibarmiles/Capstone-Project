@@ -1,5 +1,6 @@
 package com.example.capstoneproject.supplier_management.data.firebase.return_order
 
+import com.example.capstoneproject.supplier_management.data.firebase.Product
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.google.firebase.firestore.DocumentId
 

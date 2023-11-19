@@ -5,4 +5,5 @@ data class User(
     val firstName: String = "",
     val email: String = "",
     val userLevel: UserLevel = UserLevel.Employee,
+    val isActive: Boolean = true
 )

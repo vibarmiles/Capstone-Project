@@ -19,7 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
-import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
+import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.product_management.data.firebase.category.Category
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
@@ -94,7 +95,7 @@ fun CategoryScreen(
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = category.categoryName, onCancel = { showDeleteDialog = false }) {
+            MakeInactiveDialog(item = category.categoryName, onCancel = { showDeleteDialog = false }) {
                 viewModel.delete(category)
                 productViewModel.removeCategory(categoryId = category.id)
                 showDeleteDialog = false
@@ -141,7 +142,7 @@ fun CategoryDialog(category: Category, onConfirm: (Category) -> Unit, onCancel: 
         text = {
             Column {
                 Text(text = "", fontSize = 1.sp)
-                OutlinedTextField(value = categoryName, onValueChange = { categoryName = it }, placeholder = { Text(text = "Enter Category") })
+                OutlinedTextField(value = categoryName, colors = GlobalTextFieldColors(), onValueChange = { categoryName = it }, placeholder = { Text(text = "Enter Category") })
             }
         },
         confirmButton = {

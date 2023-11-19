@@ -1,5 +1,6 @@
 package com.example.capstoneproject.supplier_management.ui.purchase_order
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -9,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -19,9 +19,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
+import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Product
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
@@ -46,23 +48,26 @@ fun PurchaseOrderForm(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { androidx.compose.material.Text(text = "Add " + stringResource(R.string.purchase_order)) }, navigationIcon = {
+                title = { Text(text = "Add " + stringResource(R.string.purchase_order)) }, navigationIcon = {
                 IconButton(onClick = back) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)
                 }
             }, actions = {
-                IconButton(onClick = {
-                    purchaseOrderViewModel.insert(
-                        PurchaseOrder(
-                            date = LocalDate.now().toString(),
-                            status = Status.WAITING,
-                            products = purchasedProductsViewModel.purchases.associateBy { product ->
-                                "Item ${purchasedProductsViewModel.purchases.indexOf(product)}"
-                            }
+                IconButton(
+                    enabled = purchasedProductsViewModel.purchases.isNotEmpty(),
+                    onClick = {
+                        purchaseOrderViewModel.insert(
+                            PurchaseOrder(
+                                date = LocalDate.now().toString(),
+                                status = Status.WAITING,
+                                products = purchasedProductsViewModel.purchases.associateBy { product ->
+                                    "Item ${purchasedProductsViewModel.purchases.indexOf(product)}"
+                                }
+                            )
                         )
-                    )
-                    back.invoke()
-                }) {
+                        back.invoke()
+                    }
+                ) {
                     Icon(imageVector = Icons.Filled.Save, contentDescription = null)
                 }
             })
@@ -75,8 +80,7 @@ fun PurchaseOrderForm(
     ) {
             paddingValues ->
         Column(
-            modifier = Modifier
-                .padding(paddingValues),
+            modifier = Modifier.padding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 androidx.compose.material3.ListItem(
@@ -125,12 +129,12 @@ fun PurchaseOrderForm(
 
         if (showProductDialog) {
             AddProductDialog(onDismissRequest = { showProductDialog = false }, submit = {
-                id, price, quantity, supplier -> purchasedProductsViewModel.purchases.add(Product(id = id, price = price, quantity = quantity, supplier = supplier)); showProductDialog = false
+                id, price, quantity, supplier -> purchasedProductsViewModel.purchases.add(Product(id = id, price = price, quantity = quantity, supplier = supplier)); Log.d("Added", purchasedProductsViewModel.purchases.size.toString() + purchasedProductsViewModel.purchases.isNotEmpty()); showProductDialog = false
             }, products = products.filter { it.key !in purchasedProductsViewModel.purchases.map { products -> products.id } })
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = productToRemove!!.id, onCancel = { showDeleteDialog = false }) {
+            MakeInactiveDialog(item = productToRemove!!.id, onCancel = { showDeleteDialog = false }) {
                 purchasedProductsViewModel.purchases.remove(productToRemove)
                 showDeleteDialog = false
             }
@@ -174,6 +178,7 @@ fun AddProductDialog(
     submit: (String, Double, Int, String) -> Unit,
     products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>
 ) {
+    var search = remember(products) { products }
     var expanded by remember { mutableStateOf(false) }
     var isQuantityValid by remember { mutableStateOf(true) }
     var quantityText by remember { mutableStateOf("") }
@@ -182,6 +187,8 @@ fun AddProductDialog(
     var price = 0.0
     var productId = ""
     var supplier = ""
+    var canSubmit by remember { mutableStateOf(false) }
+
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
@@ -191,7 +198,7 @@ fun AddProductDialog(
                     submit.invoke(productId, price, quantity, supplier)
                 }
             }) {
-                androidx.compose.material.Text(text = "Add")
+                Text(text = "Add")
             }
         },
         dismissButton = {
@@ -200,23 +207,50 @@ fun AddProductDialog(
             }
         },
         title = {
-            androidx.compose.material.Text(text = "Add Product")
+            Text(text = "Add Product")
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                    OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, modifier = Modifier.fillMaxWidth(), value = selectedProduct, onValueChange = {  }, readOnly = true, label = {
-                        androidx.compose.material.Text(text = stringResource(id = R.string.product))
-                    })
+                    OutlinedTextField(
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        colors = GlobalTextFieldColors(),
+                        modifier = Modifier.fillMaxWidth(),
+                        value = selectedProduct,
+                        isError = !canSubmit,
+                        onValueChange = {
+                            selectedProduct = it
+                            canSubmit = false
+                            search = products.filter { map ->
+                                map.value.productName.contains(other = selectedProduct, ignoreCase = true)
+                            }
+                        },
+                        label = { Text(text = stringResource(id = R.string.product)) }
+                    )
 
-                    DropdownMenu(modifier = Modifier
-                        .exposedDropdownSize()
-                        .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
-
-                        products.forEach {
+                    DropdownMenu(
+                        modifier = Modifier
+                            .exposedDropdownSize()
+                            .requiredHeightIn(max = 300.dp)
+                            .fillMaxWidth(),
+                        expanded = expanded,
+                        onDismissRequest = {  },
+                        properties = PopupProperties(focusable = false)
+                    ) {
+                        search.forEach {
                             DropdownMenuItem(text = {
-                                Text(text = it.value.productName)
+                                Column {
+                                    Text(text = it.value.productName)
+                                    it.value.stock.count { stock -> stock.value < it.value.criticalLevel }.let { count ->
+                                        Text(text = when (count) {
+                                            0 -> return@let
+                                            1 -> "Stock is critical in 1 branch"
+                                            else -> "Stock is critical in $count branches"
+                                        }, color = Color.Red)
+                                    }
+                                }
                             }, onClick = {
+                                canSubmit = true
                                 productId = it.key
                                 selectedProduct = it.value.productName
                                 price = it.value.purchasePrice
@@ -227,12 +261,12 @@ fun AddProductDialog(
                     }
                 }
 
-                androidx.compose.material3.OutlinedTextField(trailingIcon = { if (!isQuantityValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, supportingText = { if (!isQuantityValid) androidx.compose.material.Text(
+                androidx.compose.material3.OutlinedTextField(trailingIcon = { if (!isQuantityValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, supportingText = { if (!isQuantityValid) Text(
                     text = "Enter valid quantity only!",
                     color = Color.Red
-                ) }, isError = !isQuantityValid, value = quantityText, onValueChange = { it.toIntOrNull()?.let { input -> quantityText = if (input < 0) "0" else input.toString() } ?: run { isQuantityValid = false } }, modifier = Modifier.fillMaxWidth(), label = {
-                    androidx.compose.material.Text(text = "Quantity")
-                }, placeholder = { androidx.compose.material.Text(text = "Enter Quantity") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                ) }, isError = !isQuantityValid, value = quantityText, onValueChange = { it.toIntOrNull()?.let { input -> quantityText = if (input < 0) "" else input.toString() } ?: run { if (it.isBlank()) quantityText = "" else isQuantityValid = false } }, modifier = Modifier.fillMaxWidth(), label = {
+                    Text(text = "Quantity")
+                }, placeholder = { Text(text = "Enter Quantity") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
             }
         }
     )

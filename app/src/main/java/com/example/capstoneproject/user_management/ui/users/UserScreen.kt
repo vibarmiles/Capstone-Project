@@ -20,7 +20,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.ui.theme.Purple500
@@ -79,7 +79,7 @@ fun UserScreen(
             }
 
             if (showDeleteDialog) {
-                ConfirmDeletion(item = user.second.email, onCancel = { showDeleteDialog = false }) {
+                MakeInactiveDialog(item = user.second.email, onCancel = { showDeleteDialog = false }) {
                     userViewModel.delete(user.first)
                     showDeleteDialog = false
                 }

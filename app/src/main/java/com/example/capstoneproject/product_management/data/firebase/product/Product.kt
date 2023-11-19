@@ -9,11 +9,14 @@ data class Product(
     val supplier: String = "",
     val criticalLevel: Int = 0,
     val stock: Map<String, Int> = mapOf(),
-    val transaction: Transaction = Transaction()
+    val transaction: Transaction = Transaction(),
+    val isActive: Boolean = true
 )
 
 data class Transaction(
     val purchased: Int = 0,
     val returned: Int = 0,
-    val sold: Int = 0
+    val sold: Int = 0,
+    val transferred: Int = 0,
+    val received: Int = 0
 )

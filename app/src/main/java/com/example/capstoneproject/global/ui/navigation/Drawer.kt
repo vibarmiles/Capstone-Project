@@ -34,7 +34,7 @@ fun Drawer(
     onClick: (Int) -> Unit
 ) {
     val navigationList: List<NavigationItems> = listOf(NavigationItems.Dashboard, NavigationItems.Inventory, NavigationItems.Supplier, NavigationItems.Users, NavigationItems.Report, NavigationItems.POS)
-    val subNavigationList: List<NavigationItems> = listOf(NavigationItems.Inventory.Product, NavigationItems.Inventory.Branch, NavigationItems.Inventory.Category, NavigationItems.Supplier.Contact, NavigationItems.Supplier.PurchaseOrder, NavigationItems.Supplier.ReturnOrder)
+    val subNavigationList: List<NavigationItems> = listOf(NavigationItems.Inventory.Product, NavigationItems.Inventory.Branch, NavigationItems.Inventory.Category, NavigationItems.Supplier.Contact, NavigationItems.Supplier.PurchaseOrder, NavigationItems.Supplier.ReturnOrder, NavigationItems.Supplier.TransferOrder)
     var showSubItemForInventory by remember { mutableStateOf(false) }
     var showSubItemForSupplier by remember { mutableStateOf(false) }
 

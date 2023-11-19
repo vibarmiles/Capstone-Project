@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.R
@@ -19,7 +20,7 @@ fun FormButtons(
     submit: () -> Unit
 ) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        TextButton(onClick = cancel, modifier = Modifier.weight(1f), border = BorderStroke(1.dp, MaterialTheme.colors.onPrimary), colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.onPrimary)) {
+        OutlinedButton(border = BorderStroke(width = 1.dp, color = MaterialTheme.colors.onSurface),colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.onSurface), onClick = cancel, modifier = Modifier.weight(1f)) {
             Text(text = cancelText.uppercase())
         }
 

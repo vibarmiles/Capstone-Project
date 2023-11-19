@@ -5,7 +5,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -27,7 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.ImageNotAvailable
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -94,7 +93,7 @@ fun ProductScreen(
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = pair!!.second.productName, onCancel = { showDeleteDialog = false }) {
+            MakeInactiveDialog(item = pair!!.second.productName, onCancel = { showDeleteDialog = false }) {
                 productViewModel.delete(key = pair!!.first)
                 showDeleteDialog = false
             }
@@ -113,7 +112,13 @@ fun ProductScreen(
 }
 
 @Composable
-fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, productUpdate: Boolean, onClick: (Int) -> Unit) {
+fun TabLayout(
+    tabs: List<Branch>,
+    selectedTab: Int,
+    products: List<Product>,
+    productUpdate: Boolean,
+    onClick: (Int) -> Unit
+) {
     val defaultMap = remember(tabs) { products.filter { product -> product.stock.values.sum() <= product.criticalLevel } }
 
     ScrollableTabRow(selectedTabIndex = selectedTab, edgePadding = 0.dp, modifier = Modifier
@@ -123,15 +128,9 @@ fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, pro
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(text = "All")
                 if (defaultMap.isNotEmpty()) {
-                    Text(
-                        text = defaultMap.count().toString(),
-                        color = Color.White,
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .height(IntrinsicSize.Min)
-                            .aspectRatio(1f)
-                            .background(MaterialTheme.colors.error)
-                    )
+                    Badge {
+                        Text(text = defaultMap.count().toString(), color = MaterialTheme.colors.surface)
+                    }
                 }
             }
         })
@@ -148,13 +147,9 @@ fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, pro
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(modifier = Modifier.widthIn(max = 150.dp), text = tab.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (map.isNotEmpty()) {
-                        Text(text = map.count().toString(),
-                            color = Color.White,
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .height(IntrinsicSize.Min)
-                                .aspectRatio(1f)
-                                .background(MaterialTheme.colors.error))
+                        Badge {
+                            Text(text = map.count().toString(), color = MaterialTheme.colors.surface)
+                        }
                     }
                 }
             })
@@ -163,7 +158,16 @@ fun TabLayout(tabs: List<Branch>, selectedTab: Int, products: List<Product>, pro
 }
 
 @Composable
-fun ProductScreenContent(branchId: String, categories: List<Category>, products: Map<String, Product>, productUpdate: Boolean, edit: (String) -> Unit, set: (String) -> Unit, delete: (Pair<String, Product>) -> Unit, view: (String) -> Unit) {
+fun ProductScreenContent(
+    branchId: String,
+    categories: List<Category>,
+    products: Map<String, Product>,
+    productUpdate: Boolean,
+    edit: (String) -> Unit,
+    set: (String) -> Unit,
+    delete: (Pair<String, Product>) -> Unit,
+    view: (String) -> Unit
+) {
     val critical = remember(branchId, productUpdate) {
         derivedStateOf {
             products.filterValues {

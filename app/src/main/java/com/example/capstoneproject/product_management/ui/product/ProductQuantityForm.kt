@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.global.ui.misc.FormButtons
+import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 
 @Composable
@@ -53,7 +54,7 @@ fun ProductQuantityFormScreen(dismissRequest: () -> Unit, productViewModel: Prod
                 } else {
                     viewModel.stockPerBranch[it.id] = "0"
                 }
-                androidx.compose.material3.OutlinedTextField(supportingText = { if (!isValid) Text(text = "Enter whole numbers only!", color = Color.Red) }, trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, isError = !isValid, modifier = Modifier.fillMaxWidth(), value = text, label = { Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis) }, placeholder = { Text(text = "Insert Current Quantity") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), onValueChange = { value -> text = value; viewModel.stockPerBranch[it.id] = text; isValid = text.isDigitsOnly() })
+                OutlinedTextField(trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, colors = GlobalTextFieldColors(), isError = !isValid, modifier = Modifier.fillMaxWidth(), value = text, label = { Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis) }, placeholder = { Text(text = "Insert Current Quantity") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), onValueChange = { value -> value.toIntOrNull()?.let{ num -> if (num >= 0) text = value; viewModel.stockPerBranch[it.id] = text; } ?: run { if (value.isNotBlank()) isValid = false else text = "" } })
             }
             item {
                 FormButtons(cancel = dismissRequest) {

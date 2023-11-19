@@ -5,5 +5,6 @@ import com.google.firebase.firestore.DocumentId
 data class Branch(
     @DocumentId val id: String = "",
     val name: String = "",
-    val address: String = ""
+    val address: String = "",
+    val isActive: Boolean = true
 )

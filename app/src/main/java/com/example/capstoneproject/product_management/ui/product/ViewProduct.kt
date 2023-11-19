@@ -26,7 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
-import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.ImageNotAvailable
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
@@ -94,7 +94,7 @@ fun ViewProduct(dismissRequest: () -> Unit, productViewModel: ProductViewModel, 
             }
 
             if (showDeleteDialog) {
-                ConfirmDeletion(item = product.productName, onCancel = { showDeleteDialog = false }) {
+                MakeInactiveDialog(item = product.productName, onCancel = { showDeleteDialog = false }) {
                     productViewModel.delete(key = productId)
                     showDeleteDialog = false
                     delete.invoke()

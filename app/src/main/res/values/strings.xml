@@ -10,6 +10,7 @@
     <string name="user_level">User Level</string>
     <string name="purchase_order">Purchase Order</string>
     <string name="return_order">Return Order</string>
+    <string name="transfer_order">Transfer Order</string>
     <string name="user">User</string>
     <string name="report">Report</string>
     <string name="category">Category</string>

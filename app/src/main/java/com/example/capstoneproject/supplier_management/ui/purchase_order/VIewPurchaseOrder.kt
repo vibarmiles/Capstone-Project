@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.FormButtons
+import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.Status
@@ -95,9 +96,9 @@ fun ViewPurchaseOrder(
                 var expanded by remember { mutableStateOf(false) }
                 val branches = branchViewModel.getAll().observeAsState(listOf())
                 var selected by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches Entered") }
-                id = branches.value.first().id
+
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                    OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, modifier = Modifier.fillMaxWidth(), value = selected, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.branch)) })
+                    OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = selected, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.branch)) })
 
                     DropdownMenu(modifier = Modifier
                         .exposedDropdownSize()
@@ -109,12 +110,18 @@ fun ViewPurchaseOrder(
                     }
                 }
 
-                FormButtons(submitText = "Received", cancel = {
-                    action = Status.CANCELLED
-                    showDialog = true
-                }) {
-                    action = Status.COMPLETE
-                    showDialog = true
+                if (branches.value.isNotEmpty()) {
+                    if (id.isBlank()) {
+                        id = branches.value.first().id
+                    }
+
+                    FormButtons(submitText = "Received", cancel = {
+                        action = Status.CANCELLED
+                        showDialog = true
+                    }) {
+                        action = Status.COMPLETE
+                        showDialog = true
+                    }
                 }
             }
 

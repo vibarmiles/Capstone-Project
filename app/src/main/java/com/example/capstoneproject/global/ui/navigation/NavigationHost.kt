@@ -18,6 +18,7 @@ import com.example.capstoneproject.R
 import com.example.capstoneproject.dashboard.ui.Dashboard
 import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
 import com.example.capstoneproject.login.data.login.GoogleLoginRepository
+import com.example.capstoneproject.login.data.login.SignInResult
 import com.example.capstoneproject.product_management.ui.branch.BranchFormScreen
 import com.example.capstoneproject.product_management.ui.branch.BranchScreen
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
@@ -36,6 +37,10 @@ import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrd
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderScreen
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderViewModel
 import com.example.capstoneproject.supplier_management.ui.return_order.ViewReturnOrder
+import com.example.capstoneproject.supplier_management.ui.transfer_order.TransferOrderForm
+import com.example.capstoneproject.supplier_management.ui.transfer_order.TransferOrderScreen
+import com.example.capstoneproject.supplier_management.ui.transfer_order.TransferOrderViewModel
+import com.example.capstoneproject.supplier_management.ui.transfer_order.ViewTransferOrder
 import com.example.capstoneproject.user_management.ui.users.UserForm
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import com.example.capstoneproject.user_management.ui.users.UserScreen
@@ -56,6 +61,7 @@ fun NavigationHost(
     val productViewModel: ProductViewModel = viewModel()
     val purchaseOrderViewModel: PurchaseOrderViewModel = viewModel()
     val returnOrderViewModel: ReturnOrderViewModel = viewModel()
+    val transferOrderViewModel: TransferOrderViewModel = viewModel()
     val contactViewModel: ContactViewModel = viewModel()
     val userViewModel: UserViewModel = viewModel()
     val context = LocalContext.current
@@ -143,7 +149,7 @@ fun NavigationHost(
         }
 
         composable(Routes.Product.Add.route) {
-            ProductForm(function = "Add", productViewModel = productViewModel, contactViewModel = contactViewModel, categoryViewModel = categoryViewModel, dismissRequest = {
+            ProductForm(scaffoldState = scaffoldState, function = "Add", productViewModel = productViewModel, contactViewModel = contactViewModel, categoryViewModel = categoryViewModel, dismissRequest = {
                 navController.popBackStack()
             })
         }
@@ -151,7 +157,7 @@ fun NavigationHost(
         composable(Routes.Product.Edit.route) {
             val productId: String = it.arguments?.getString("productId")!!
 
-            ProductForm(function = "Edit", productViewModel = productViewModel, categoryViewModel = categoryViewModel, contactViewModel = contactViewModel, productId = productId, dismissRequest = {
+            ProductForm(scaffoldState = scaffoldState, function = "Edit", productViewModel = productViewModel, categoryViewModel = categoryViewModel, contactViewModel = contactViewModel, productId = productId, dismissRequest = {
                 navController.popBackStack()
             })
         }
@@ -262,6 +268,41 @@ fun NavigationHost(
             }
         }
 
+        composable(Routes.TransferOrder.route) {
+            TransferOrderScreen(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                transferOrderViewModel = transferOrderViewModel,
+                branchViewModel = branchViewModel,
+                add = { navController.navigate(Routes.TransferOrder.Add.route) },
+                view = { navController.navigate(Routes.TransferOrder.View.createRoute(it)) }
+            )
+        }
+
+        composable(Routes.TransferOrder.Add.route) {
+            TransferOrderForm(
+                contactViewModel = contactViewModel,
+                transferOrderViewModel = transferOrderViewModel,
+                branchViewModel = branchViewModel,
+                productViewModel = productViewModel
+            ) {
+                navController.popBackStack()
+            }
+        }
+
+        composable(Routes.TransferOrder.View.route) {
+            val id = it.arguments?.getString("TOID")!!
+
+            ViewTransferOrder(
+                transferOrderId = id,
+                transferOrderViewModel = transferOrderViewModel,
+                productViewModel = productViewModel,
+                branchViewModel = branchViewModel
+            ) {
+                navController.popBackStack()
+            }
+        }
+
         composable(Routes.User.route) {
             UserScreen(scope = scope, scaffoldState = scaffoldState, userViewModel = userViewModel, add = { navController.navigate(Routes.User.Add.route) }) {
                 navController.navigate(Routes.User.Edit.createRoute(userId = it))
@@ -286,11 +327,13 @@ fun NavigationHost(
 
         composable(Routes.Logout.route) {
             LaunchedEffect(key1 = Unit) {
+                viewModel.user.value = SignInResult(data = null, errorMessage = null)
+                viewModel.isLoading.value = true
                 googleAuthUiClient.signOut()
-                scaffoldState.snackbarHostState.showSnackbar(message = "Signed Out Successfully!", duration = SnackbarDuration.Short)
                 navController.navigate(Routes.LoginScreen.route) {
                     popUpTo(0)
                 }
+                scaffoldState.snackbarHostState.showSnackbar(message = "Signed Out Successfully!", duration = SnackbarDuration.Short)
             }
         }
     }

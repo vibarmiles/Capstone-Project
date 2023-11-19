@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
@@ -84,7 +84,7 @@ fun BranchScreen(
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = branch.name, onCancel = { showDeleteDialog = false }) {
+            MakeInactiveDialog(item = branch.name, onCancel = { showDeleteDialog = false }) {
                 viewModel.delete(branch)
                 productViewModel.removeBranchStock(branchId = branch.id)
                 showDeleteDialog = false
@@ -92,7 +92,6 @@ fun BranchScreen(
         }
 
         LaunchedEffect(state.result, state.errorMessage) {
-            Log.d("=============", "Called")
             if (!state.result && state.errorMessage != null) {
                 scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
                 viewModel.resetMessage()

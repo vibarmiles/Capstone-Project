@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.FormButtons
+import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.user_management.data.firebase.User
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
 
@@ -59,7 +60,7 @@ fun UserForm(
             .padding(16.dp)
             .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             ExposedDropdownMenuBox(expanded = expandedUsers, onExpandedChange = { expandedUsers = !expandedUsers }) {
-                OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedUsers) }, modifier = Modifier.fillMaxWidth(), value = userLevel.name, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.user_level)) })
+                OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedUsers) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = userLevel.name, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.user_level)) })
 
                 DropdownMenu(modifier = Modifier
                     .exposedDropdownSize()
@@ -69,17 +70,17 @@ fun UserForm(
                     }
                 }
             }
-            OutlinedTextField(value = firstName, onValueChange = { firstName = it }, label = { Text(text = "First Name") }, placeholder = { Text(text = "Enter First Name") }, isError = !isFirstNameValid, trailingIcon = { if (!isFirstNameValid) Icon(
+            OutlinedTextField(value = firstName, colors = GlobalTextFieldColors(), onValueChange = { firstName = it }, label = { Text(text = "First Name") }, placeholder = { Text(text = "Enter First Name") }, isError = !isFirstNameValid, trailingIcon = { if (!isFirstNameValid) Icon(
                 imageVector = Icons.Filled.Error,
                 contentDescription = null,
                 tint = Color.Red
             )}, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = lastName, onValueChange = { lastName = it }, label = { Text(text = "Last Name") }, placeholder = { Text(text = "Enter Last Name") }, isError = !isLastNameValid, trailingIcon = { if (!isLastNameValid) Icon(
+            OutlinedTextField(value = lastName, colors = GlobalTextFieldColors(), onValueChange = { lastName = it }, label = { Text(text = "Last Name") }, placeholder = { Text(text = "Enter Last Name") }, isError = !isLastNameValid, trailingIcon = { if (!isLastNameValid) Icon(
                 imageVector = Icons.Filled.Error,
                 contentDescription = null,
                 tint = Color.Red
             )}, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text(text = "Email") }, placeholder = { Text(text = "Enter Email") }, isError = !isEmailValid, trailingIcon = { if (!isEmailValid) Icon(
+            OutlinedTextField(value = email, colors = GlobalTextFieldColors(), onValueChange = { email = it }, label = { Text(text = "Email") }, placeholder = { Text(text = "Enter Email") }, isError = !isEmailValid, trailingIcon = { if (!isEmailValid) Icon(
                 imageVector = Icons.Filled.Error,
                 contentDescription = null,
                 tint = Color.Red

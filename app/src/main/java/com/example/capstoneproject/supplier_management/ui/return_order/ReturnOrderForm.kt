@@ -3,7 +3,6 @@ package com.example.capstoneproject.supplier_management.ui.return_order
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -13,19 +12,20 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
+import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.Status
-import com.example.capstoneproject.supplier_management.data.firebase.return_order.Product
+import com.example.capstoneproject.supplier_management.data.firebase.Product
 import com.example.capstoneproject.supplier_management.data.firebase.return_order.ReturnOrder
+import com.example.capstoneproject.supplier_management.ui.AddProductDialog
+import com.example.capstoneproject.supplier_management.ui.ProductItem
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import java.time.LocalDate
 
@@ -59,7 +59,7 @@ fun ReturnOrderForm(
                     }
                 },
                 actions = {
-                    IconButton(enabled = branches.value.isNotEmpty(),
+                    IconButton(enabled = branches.value.isNotEmpty() && returnedProductsViewModel.returns.isNotEmpty(),
                         onClick = {
                         returnOrderViewModel.insert(
                             ReturnOrder(
@@ -95,7 +95,7 @@ fun ReturnOrderForm(
                     if (returnedProductsViewModel.returns.isEmpty()) {
                         var expanded by remember { mutableStateOf(false) }
                         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                            OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, label = { Text(text = "Return Item from this branch") }, modifier = Modifier.fillMaxWidth(), value = textFieldValue, readOnly = true, onValueChange = {  })
+                            OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, colors = GlobalTextFieldColors(), label = { Text(text = "Return Item from this branch") }, modifier = Modifier.fillMaxWidth(), value = textFieldValue, readOnly = true, onValueChange = {  })
                             DropdownMenu(modifier = Modifier
                                 .exposedDropdownSize()
                                 .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -109,7 +109,7 @@ fun ReturnOrderForm(
                         OutlinedTextField(modifier = Modifier.fillMaxWidth(), label = { Text(text = "Return Item from this branch") }, value = textFieldValue, enabled = false, readOnly = true, onValueChange = {  })
                     }
 
-                    OutlinedTextField(value = reason, label = { Text(text = "Reason") }, modifier = Modifier.fillMaxWidth(), onValueChange = { reason = it })
+                    OutlinedTextField(value = reason, colors = GlobalTextFieldColors(), label = { Text(text = "Reason") }, modifier = Modifier.fillMaxWidth(), onValueChange = { reason = it })
                 }
                 
                 androidx.compose.material3.ListItem(
@@ -169,108 +169,10 @@ fun ReturnOrderForm(
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = productToRemove!!.id, onCancel = { showDeleteDialog = false }) {
+            MakeInactiveDialog(item = productToRemove!!.id, onCancel = { showDeleteDialog = false }) {
                 returnedProductsViewModel.returns.remove(productToRemove)
                 showDeleteDialog = false
             }
         }
     }
-}
-
-@Composable
-fun ProductItem(
-    products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>,
-    supplier: String,
-    product: Product,
-    remove: (Product) -> Unit
-) {
-    androidx.compose.material3.ListItem(
-        headlineContent = {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Text(text = (products[product.id])!!.productName, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                Text(text = "${ product.quantity }")
-            }
-        },
-        supportingContent = {
-            Text(text = "Supplier: $supplier", maxLines = 1, overflow = TextOverflow.Ellipsis)
-        },
-        trailingContent = {
-            IconButton(onClick = { remove.invoke(product) }) {
-                Icon(imageVector = Icons.Filled.Close, contentDescription = null)
-            }
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun AddProductDialog(
-    onDismissRequest: () -> Unit,
-    submit: (String, Int, String) -> Unit,
-    branchId: String?,
-    products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>
-) {
-    var expanded by remember { mutableStateOf(false) }
-    var isQuantityValid by remember { mutableStateOf(true) }
-    var quantityText by remember { mutableStateOf("") }
-    var quantity = 0
-    var maxQuantity = 0
-    var selectedProduct by remember { mutableStateOf("") }
-    var productId = ""
-    var supplier = ""
-
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismissRequest,
-        confirmButton = {
-            Button(enabled = selectedProduct.isNotBlank(), onClick = {
-                quantityText.toIntOrNull()?.let { quantity = it; isQuantityValid = true } ?: run { isQuantityValid = false }
-                if (isQuantityValid) {
-                    submit.invoke(productId, quantity, supplier)
-                }
-            }) {
-                androidx.compose.material.Text(text = "Add")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest, colors = ButtonDefaults.buttonColors(contentColor = Color.Black, backgroundColor = Color.Transparent)) {
-                Text(text = "Cancel")
-            }
-        },
-        title = {
-            androidx.compose.material.Text(text = "Add Product")
-        },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                    OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, modifier = Modifier.fillMaxWidth(), value = selectedProduct, onValueChange = {  }, readOnly = true, label = {
-                        androidx.compose.material.Text(text = stringResource(id = R.string.product))
-                    })
-
-                    DropdownMenu(modifier = Modifier
-                        .exposedDropdownSize()
-                        .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
-
-                        products.forEach {
-                            DropdownMenuItem(text = {
-                                Text(text = it.value.productName)
-                            }, onClick = {
-                                productId = it.key
-                                selectedProduct = it.value.productName
-                                maxQuantity = it.value.stock.getOrDefault(key = branchId, defaultValue = 0)
-                                supplier = it.value.supplier
-                                expanded = false
-                            })
-                        }
-                    }
-                }
-
-                androidx.compose.material3.OutlinedTextField(trailingIcon = { if (!isQuantityValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, supportingText = { if (!isQuantityValid) androidx.compose.material.Text(
-                    text = "Enter valid quantity only!",
-                    color = Color.Red
-                ) }, isError = !isQuantityValid, value = quantityText, onValueChange = { it.toIntOrNull()?.let { input -> if (maxQuantity > input) { quantityText = if (input > 0) it else "0"; isQuantityValid = true } else quantityText = maxQuantity.toString() } ?: run { if (it.isNotBlank()) isQuantityValid = false else quantityText = "" } }, modifier = Modifier.fillMaxWidth(), label = {
-                    androidx.compose.material.Text(text = "Quantity")
-                }, placeholder = { androidx.compose.material.Text(text = "Enter Quantity") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-            }
-        }
-    )
 }

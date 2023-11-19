@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.misc.ConfirmDeletion
+import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
@@ -64,7 +64,7 @@ fun ContactScreen(
         }
 
         if (showDeleteDialog) {
-            ConfirmDeletion(item = contact!!.name, onCancel = { showDeleteDialog = false }) {
+            MakeInactiveDialog(item = contact!!.name, onCancel = { showDeleteDialog = false }) {
                 contactViewModel.delete(contact = contact!!)
                 showDeleteDialog = false
             }

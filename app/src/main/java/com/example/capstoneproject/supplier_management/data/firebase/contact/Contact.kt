@@ -6,4 +6,5 @@ data class Contact(
     @DocumentId val id: String = "",
     val name: String = "",
     val contact: String = "",
+    val isActive: Boolean = true
 )
