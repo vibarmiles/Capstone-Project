@@ -16,7 +16,5 @@ data class Product(
 data class Transaction(
     val purchased: Int = 0,
     val returned: Int = 0,
-    val sold: Int = 0,
-    val transferred: Int = 0,
-    val received: Int = 0
+    val sold: Int = 0
 )

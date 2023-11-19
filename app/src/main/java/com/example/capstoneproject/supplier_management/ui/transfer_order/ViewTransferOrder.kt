@@ -97,7 +97,7 @@ fun ViewTransferOrder(
                                     val stock = product.stock.toMutableMap()
                                     stock[transferOrder.oldBranchId]?.let { quantity -> stock[transferOrder.oldBranchId] = if (quantity > it.value.quantity) quantity - it.value.quantity else 0 }
                                     stock[transferOrder.destinationBranchId]?.let { quantity -> stock[transferOrder.destinationBranchId] = quantity + it.value.quantity }
-                                    product.copy(stock = stock, transaction = product.transaction.let { transaction -> transaction.copy(returned = transaction.returned + it.value.quantity) })
+                                    product.copy(stock = stock)
                                 })
                             }
                         }
