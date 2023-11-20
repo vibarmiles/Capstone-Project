@@ -55,6 +55,11 @@ sealed class Routes(val route: String) {
         }
     }
     object Report : Routes((R.string.report).toString())
-    object POS : Routes((R.string.pos).toString())
+    object POS : Routes((R.string.pos).toString()) {
+        object Add : Routes(this.route + "/Add")
+        object View : Routes(this.route + "/View/{SIID}") {
+            fun createRoute(SIID: String) = POS.route + "/View/$SIID"
+        }
+    }
     object Logout : Routes((R.string.logout).toString())
 }

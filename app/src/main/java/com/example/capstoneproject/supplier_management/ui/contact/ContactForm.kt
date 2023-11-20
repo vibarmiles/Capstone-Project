@@ -33,7 +33,7 @@ fun ContactFormScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(text = "$function Contact") }, navigationIcon = {
+            TopAppBar(title = { Text(text = ("$function Contact").uppercase()) }, navigationIcon = {
                 IconButton(onClick = back) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)
                 }

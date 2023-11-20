@@ -27,7 +27,7 @@ fun BranchFormScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(text = "$function Branch")}, navigationIcon = {
+            TopAppBar(title = { Text(text = ("$function Branch").uppercase())}, navigationIcon = {
                 IconButton(onClick = back) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)
                 }

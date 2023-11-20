@@ -32,6 +32,10 @@ import com.example.capstoneproject.supplier_management.ui.purchase_order.Purchas
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderScreen
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderViewModel
 import com.example.capstoneproject.login.ui.login.LoginScreen
+import com.example.capstoneproject.point_of_sales.ui.POSForm
+import com.example.capstoneproject.point_of_sales.ui.POSScreen
+import com.example.capstoneproject.point_of_sales.ui.POSViewModel
+import com.example.capstoneproject.point_of_sales.ui.ViewInvoice
 import com.example.capstoneproject.supplier_management.ui.purchase_order.ViewPurchaseOrder
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderForm
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderScreen
@@ -64,13 +68,17 @@ fun NavigationHost(
     val transferOrderViewModel: TransferOrderViewModel = viewModel()
     val contactViewModel: ContactViewModel = viewModel()
     val userViewModel: UserViewModel = viewModel()
+    val posViewModel: POSViewModel = viewModel()
     val context = LocalContext.current
 
     val googleAuthUiClient by lazy {
         GoogleLoginRepository(context = context, oneTapClient = Identity.getSignInClient(context))
     }
 
-    NavHost(navController = navController, startDestination = Routes.LoginScreen.route) {
+    NavHost(
+        navController = navController,
+        startDestination = Routes.LoginScreen.route
+    ) {
         composable(Routes.LoginScreen.route) {
             val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartIntentSenderForResult(), onResult = { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
@@ -84,23 +92,26 @@ fun NavigationHost(
                 }
             })
 
-            LoginScreen(signedIn = viewModel.user.value.data != null, signIn = {
-                if (viewModel.user.value.data != null) {
-                    userViewModel.getUser(viewModel.user.value.data!!.email) {
-                        if (it) {
-                            scope.launch {
-                                scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully!", duration = SnackbarDuration.Short)
-                            }
+            LoginScreen(
+                signedIn = viewModel.user.value.data != null,
+                signIn = {
+                    if (viewModel.user.value.data != null) {
+                        userViewModel.getUser(viewModel.user.value.data!!.email) {
+                            if (it) {
+                                scope.launch {
+                                    scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully!", duration = SnackbarDuration.Short)
+                                }
 
-                            navController.navigate(Routes.Dashboard.route) {
-                                popUpTo(0)
-                            }
+                                navController.navigate(Routes.Dashboard.route) {
+                                    popUpTo(0)
+                                }
 
-                            viewModel.isLoading.value = false
+                                viewModel.isLoading.value = false
+                            }
                         }
                     }
                 }
-            }) {
+            ) {
                 /*navController.navigate(Routes.Dashboard.route) {
                     popUpTo(0)
                 }
@@ -117,67 +128,101 @@ fun NavigationHost(
         }
 
         composable(Routes.Dashboard.route) {
-            Dashboard(scope = scope, scaffoldState = scaffoldState, branchViewModel = branchViewModel, productViewModel = productViewModel, purchaseOrderViewModel = purchaseOrderViewModel, goToBranches = {
-                callback.invoke(R.string.branch)
-            }, goToProducts = {
-                callback.invoke(R.string.product)
-            }, goToPO = {
-                callback.invoke(R.string.purchase_order)
-            })
+            Dashboard(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                branchViewModel = branchViewModel,
+                productViewModel = productViewModel,
+                purchaseOrderViewModel = purchaseOrderViewModel,
+                goToBranches = { callback.invoke(R.string.branch) },
+                goToProducts = { callback.invoke(R.string.product) },
+                goToPO = { callback.invoke(R.string.purchase_order) },
+                goToPOS = { callback.invoke(R.string.pos) }
+            )
         }
 
         composable(Routes.Product.route) {
-            ProductScreen(scope = scope, scaffoldState = scaffoldState, branchViewModel = branchViewModel, productViewModel = productViewModel, categoryViewModel = categoryViewModel, set = {
-                id -> navController.navigate(Routes.Product.Set.createRoute(id))
-            }, add = { navController.navigate(Routes.Product.Add.route) }, edit = {
-                id -> navController.navigate(Routes.Product.Edit.createRoute(id))
-            }, view = {
-                id -> navController.navigate(Routes.Product.View.createRoute(id))
-            })
+            ProductScreen(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                branchViewModel = branchViewModel,
+                productViewModel = productViewModel,
+                categoryViewModel = categoryViewModel,
+                set = { id -> navController.navigate(Routes.Product.Set.createRoute(id)) },
+                add = { navController.navigate(Routes.Product.Add.route) },
+                edit = { id -> navController.navigate(Routes.Product.Edit.createRoute(id)) },
+                view = { id -> navController.navigate(Routes.Product.View.createRoute(id)) }
+            )
         }
 
         composable(Routes.Product.View.route) {
             val productId: String = it.arguments?.getString("productId")!!
 
-            ViewProduct(dismissRequest = { navController.popBackStack() }, productViewModel = productViewModel, contactViewModel = contactViewModel, categoryViewModel = categoryViewModel, branchViewModel = branchViewModel, productId = productId, edit = {
-                navController.navigate(Routes.Product.Edit.createRoute(productId))
-            }, set = {
-                navController.navigate(Routes.Product.Set.createRoute(productId))
-            }, delete = {
-                navController.popBackStack()
-            })
+            ViewProduct(
+                dismissRequest = { navController.popBackStack() },
+                productViewModel = productViewModel,
+                contactViewModel = contactViewModel,
+                categoryViewModel = categoryViewModel,
+                branchViewModel = branchViewModel,
+                productId = productId,
+                edit = { navController.navigate(Routes.Product.Edit.createRoute(productId)) },
+                set = { navController.navigate(Routes.Product.Set.createRoute(productId)) },
+                delete = { navController.popBackStack() }
+            )
         }
 
         composable(Routes.Product.Add.route) {
-            ProductForm(scaffoldState = scaffoldState, function = "Add", productViewModel = productViewModel, contactViewModel = contactViewModel, categoryViewModel = categoryViewModel, dismissRequest = {
-                navController.popBackStack()
-            })
+            ProductForm(
+                scaffoldState = scaffoldState,
+                function = "Add",
+                productViewModel = productViewModel,
+                contactViewModel = contactViewModel,
+                categoryViewModel = categoryViewModel,
+                dismissRequest = { navController.popBackStack() }
+            )
         }
 
         composable(Routes.Product.Edit.route) {
             val productId: String = it.arguments?.getString("productId")!!
 
-            ProductForm(scaffoldState = scaffoldState, function = "Edit", productViewModel = productViewModel, categoryViewModel = categoryViewModel, contactViewModel = contactViewModel, productId = productId, dismissRequest = {
-                navController.popBackStack()
-            })
+            ProductForm(
+                scaffoldState = scaffoldState,
+                function = "Edit",
+                productViewModel = productViewModel,
+                categoryViewModel = categoryViewModel,
+                contactViewModel = contactViewModel,
+                productId = productId,
+                dismissRequest = { navController.popBackStack() }
+            )
         }
 
         composable(Routes.Product.Set.route) {
             val productId: String = it.arguments?.getString("productId")!!
 
-            ProductQuantityFormScreen(productViewModel = productViewModel, branchViewModel = branchViewModel, productId = productId, dismissRequest = {
-                navController.popBackStack()
-            })
+            ProductQuantityFormScreen(
+                productViewModel = productViewModel,
+                branchViewModel = branchViewModel,
+                productId = productId,
+                dismissRequest = { navController.popBackStack() }
+            )
         }
 
         composable(Routes.Branch.route) {
-            BranchScreen(scope = scope, scaffoldState = scaffoldState, viewModel = branchViewModel, productViewModel = productViewModel, add = { navController.navigate(Routes.Branch.Add.route) }) {
-                branch -> navController.navigate(Routes.Branch.Edit.createRoute(branchId = branch.id))
+            BranchScreen(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                viewModel = branchViewModel,
+                productViewModel = productViewModel,
+                add = { navController.navigate(Routes.Branch.Add.route) }
+            ) { branch ->
+                navController.navigate(Routes.Branch.Edit.createRoute(branchId = branch.id))
             }
         }
 
         composable(Routes.Branch.Add.route) {
-            BranchFormScreen(viewModel = branchViewModel) {
+            BranchFormScreen(
+                viewModel = branchViewModel
+            ) {
                 navController.popBackStack()
             }
         }
@@ -185,25 +230,40 @@ fun NavigationHost(
         composable((Routes.Branch.Edit.route)) {
             val id: String = it.arguments?.getString("branchId")!!
 
-            BranchFormScreen(viewModel = branchViewModel, function = "Edit", id = id) {
+            BranchFormScreen(
+                viewModel = branchViewModel,
+                function = "Edit",
+                id = id
+            ) {
                 navController.popBackStack()
             }
         }
 
         composable(Routes.Category.route) {
-            CategoryScreen(scope = scope, scaffoldState = scaffoldState, viewModel = categoryViewModel, productViewModel = productViewModel)
+            CategoryScreen(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                viewModel = categoryViewModel,
+                productViewModel = productViewModel
+            )
         }
 
         composable(Routes.Contact.route) {
-            ContactScreen(scope = scope, scaffoldState = scaffoldState, contactViewModel = contactViewModel, edit = {
-                contact -> navController.navigate(Routes.Contact.Edit.createRoute(contactId = contact.id))
-            }) {
+            ContactScreen(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                contactViewModel = contactViewModel,
+                edit = { contact -> navController.navigate(Routes.Contact.Edit.createRoute(contactId = contact.id)) }
+            ) {
                 navController.navigate(Routes.Contact.Add.route)
             }
         }
 
         composable(Routes.Contact.Add.route) {
-            ContactFormScreen(function = "Add", contactViewModel = contactViewModel) {
+            ContactFormScreen(
+                function = "Add",
+                contactViewModel = contactViewModel
+            ) {
                 navController.popBackStack()
             }
         }
@@ -211,17 +271,31 @@ fun NavigationHost(
         composable(Routes.Contact.Edit.route) {
             val id: String = it.arguments?.getString("contactId")!!
 
-            ContactFormScreen(function = "Edit", contactViewModel = contactViewModel, id = id) {
+            ContactFormScreen(
+                function = "Edit",
+                contactViewModel = contactViewModel,
+                id = id
+            ) {
                 navController.popBackStack()
             }
         }
 
         composable(Routes.PurchaseOrder.route) {
-            PurchaseOrderScreen(scope = scope, scaffoldState = scaffoldState, purchaseOrderViewModel = purchaseOrderViewModel, add = { navController.navigate(Routes.PurchaseOrder.Add.route) }, view = { navController.navigate(Routes.PurchaseOrder.View.createRoute(it)) })
+            PurchaseOrderScreen(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                purchaseOrderViewModel = purchaseOrderViewModel,
+                add = { navController.navigate(Routes.PurchaseOrder.Add.route) },
+                view = { navController.navigate(Routes.PurchaseOrder.View.createRoute(it)) }
+            )
         }
 
         composable(Routes.PurchaseOrder.Add.route) {
-            PurchaseOrderForm(contactViewModel = contactViewModel, purchaseOrderViewModel = purchaseOrderViewModel, productViewModel = productViewModel) {
+            PurchaseOrderForm(
+                contactViewModel = contactViewModel,
+                purchaseOrderViewModel = purchaseOrderViewModel,
+                productViewModel = productViewModel
+            ) {
                 navController.popBackStack()
             }
         }
@@ -229,7 +303,12 @@ fun NavigationHost(
         composable(Routes.PurchaseOrder.View.route) {
             val id = it.arguments?.getString("POID")!!
 
-            ViewPurchaseOrder(purchaseOrderId = id, purchaseOrderViewModel = purchaseOrderViewModel, productViewModel = productViewModel, branchViewModel = branchViewModel) {
+            ViewPurchaseOrder(
+                purchaseOrderId = id,
+                purchaseOrderViewModel = purchaseOrderViewModel,
+                productViewModel = productViewModel,
+                branchViewModel = branchViewModel
+            ) {
                 navController.popBackStack()
             }
         }
@@ -304,7 +383,12 @@ fun NavigationHost(
         }
 
         composable(Routes.User.route) {
-            UserScreen(scope = scope, scaffoldState = scaffoldState, userViewModel = userViewModel, add = { navController.navigate(Routes.User.Add.route) }) {
+            UserScreen(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                userViewModel = userViewModel,
+                add = { navController.navigate(Routes.User.Add.route) }
+            ) {
                 navController.navigate(Routes.User.Edit.createRoute(userId = it))
             }
         }
@@ -314,15 +398,57 @@ fun NavigationHost(
         }
 
         composable(Routes.POS.route) {
+            POSScreen(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                posViewModel = posViewModel,
+                branchViewModel = branchViewModel,
+                add = { navController.navigate(Routes.POS.Add.route) },
+                view = { navController.navigate(Routes.POS.View.createRoute(it)) }
+            )
+        }
 
+        composable(Routes.POS.Add.route) {
+            POSForm(
+                userId = userViewModel.id,
+                posViewModel = posViewModel,
+                contactViewModel = contactViewModel,
+                branchViewModel = branchViewModel,
+                productViewModel = productViewModel
+            ) {
+                navController.popBackStack()
+            }
+        }
+
+        composable(Routes.POS.View.route) {
+            val id = it.arguments?.getString("SIID")!!
+
+            ViewInvoice(
+                invoiceId = id,
+                posViewModel = posViewModel,
+                userViewModel = userViewModel,
+                productViewModel = productViewModel,
+                branchViewModel = branchViewModel
+            ) {
+                navController.popBackStack()
+            }
         }
 
         composable(Routes.User.Add.route) {
-            UserForm(userViewModel = userViewModel, decision = stringResource(id = R.string.add), back = { navController.popBackStack() })
+            UserForm(
+                userViewModel = userViewModel,
+                decision = stringResource(id = R.string.add),
+                back = { navController.popBackStack() }
+            )
         }
 
         composable(Routes.User.Edit.route) {
-            UserForm(userViewModel = userViewModel, decision = stringResource(id = R.string.edit), back = { navController.popBackStack() }, userId = it.arguments?.getString("userId")!!)
+            UserForm(
+                userViewModel = userViewModel,
+                decision = stringResource(id = R.string.edit),
+                back = { navController.popBackStack() },
+                userId = it.arguments?.getString("userId")!!
+            )
         }
 
         composable(Routes.Logout.route) {

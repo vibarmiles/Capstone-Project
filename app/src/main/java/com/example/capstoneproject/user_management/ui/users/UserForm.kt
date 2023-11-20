@@ -44,7 +44,7 @@ fun UserForm(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "$decision User")
+                    Text(text = ("$decision User").uppercase())
                 },
                 navigationIcon = {
                     IconButton(onClick = back) {

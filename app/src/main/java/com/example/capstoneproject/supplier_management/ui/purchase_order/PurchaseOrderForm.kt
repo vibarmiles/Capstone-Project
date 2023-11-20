@@ -1,6 +1,5 @@
 package com.example.capstoneproject.supplier_management.ui.purchase_order
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -48,7 +47,7 @@ fun PurchaseOrderForm(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "Add " + stringResource(R.string.purchase_order)) }, navigationIcon = {
+                title = { Text(text = ("Add " + stringResource(R.string.purchase_order)).uppercase()) }, navigationIcon = {
                 IconButton(onClick = back) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)
                 }
@@ -129,7 +128,8 @@ fun PurchaseOrderForm(
 
         if (showProductDialog) {
             AddProductDialog(onDismissRequest = { showProductDialog = false }, submit = {
-                id, price, quantity, supplier -> purchasedProductsViewModel.purchases.add(Product(id = id, price = price, quantity = quantity, supplier = supplier)); Log.d("Added", purchasedProductsViewModel.purchases.size.toString() + purchasedProductsViewModel.purchases.isNotEmpty()); showProductDialog = false
+                id, price, quantity, supplier -> purchasedProductsViewModel.purchases.add(Product(id = id, price = price, quantity = quantity, supplier = supplier))
+                showProductDialog = false
             }, products = products.filter { it.key !in purchasedProductsViewModel.purchases.map { products -> products.id } })
         }
 
@@ -193,7 +193,7 @@ fun AddProductDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
             Button(enabled = selectedProduct.isNotBlank(), onClick = {
-                quantityText.toIntOrNull()?.let { quantity = it; isQuantityValid = true } ?: run { isQuantityValid = false }
+                quantityText.toIntOrNull()?.let { if (it > 0) { quantity = it; isQuantityValid = true } else isQuantityValid = false } ?: run { isQuantityValid = false }
                 if (isQuantityValid) {
                     submit.invoke(productId, price, quantity, supplier)
                 }

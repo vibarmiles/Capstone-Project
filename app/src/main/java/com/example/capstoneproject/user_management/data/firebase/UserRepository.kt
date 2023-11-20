@@ -56,9 +56,9 @@ class UserRepository : IUserRepository {
         return users
     }
 
-    override fun getUser(email: String, user: (User?) -> Unit) {
+    override fun getUser(email: String, user: (String?) -> Unit) {
         userCollectionReference.get().addOnSuccessListener {
-            user.invoke(it.getValue<Map<String, User>>()?.values?.firstOrNull { foundUser -> foundUser.email == email })
+            user.invoke(it.getValue<Map<String, User>>()?.entries?.firstOrNull { foundUser -> foundUser.value.email == email }?.key)
         }
     }
 

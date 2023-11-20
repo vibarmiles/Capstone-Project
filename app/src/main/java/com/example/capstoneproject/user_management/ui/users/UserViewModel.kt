@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 
 class UserViewModel : ViewModel() {
     private lateinit var users: SnapshotStateMap<String, User>
+    lateinit var id: String
     private val userRepository: IUserRepository = UserRepository()
     val isLoading = mutableStateOf(true)
     val update = mutableStateOf(true)
@@ -41,12 +42,14 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             userRepository.getUser(email = email) {
                 authorizationCallback.invoke(it != null)
+                getAll()
+                id = it ?: ""
             }
         }
     }
 
     fun getUserDetails(id: String?): User? {
-        return id?.let { users.getValue(it) }
+        return id?.let { users.getValue(id) }
     }
 
     fun insert(id: String?, user: User) {

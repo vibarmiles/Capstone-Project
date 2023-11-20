@@ -52,7 +52,7 @@ fun ReturnOrderForm(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { androidx.compose.material.Text(text = "Add " + stringResource(R.string.return_order)) },
+                title = { androidx.compose.material.Text(text = ("Add " + stringResource(R.string.return_order)).uppercase()) },
                 navigationIcon = {
                     IconButton(onClick = back) {
                         Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)

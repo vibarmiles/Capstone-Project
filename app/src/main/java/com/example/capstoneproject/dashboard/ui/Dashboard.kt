@@ -42,7 +42,8 @@ fun Dashboard(
     purchaseOrderViewModel: PurchaseOrderViewModel,
     goToBranches: () -> Unit,
     goToProducts: () -> Unit,
-    goToPO: () -> Unit
+    goToPO: () -> Unit,
+    goToPOS: () -> Unit
 ) {
     val branches = branchViewModel.getAll().observeAsState(listOf())
     val products = productViewModel.getAll()
@@ -63,6 +64,8 @@ fun Dashboard(
         } else {
             val numberOfBranches = branches.value.size
             val productsUnderCriticalLevel by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.count { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) <= product.criticalLevel } }) }
+            val productsSold by remember(productViewModel.update.value) { mutableStateOf(products.values.sumOf { product -> product.transaction.sold }) }
+            val productsPurchased by remember(productViewModel.update.value) { mutableStateOf(products.values.sumOf { product -> product.transaction.purchased }) }
             val stockInHand by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.sumOf { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) } }) }
             val stockToBeReceived by remember(purchaseOrders) { mutableStateOf(purchaseOrders.value.filter { purchaseOrder -> purchaseOrder.status == Status.WAITING }.sumOf { purchaseOrders -> purchaseOrders.products.values.sumOf { product -> product.quantity } }) }
 
@@ -74,8 +77,8 @@ fun Dashboard(
                 Spacer(modifier = Modifier.height(2.dp))
                 DashboardItem(icon = DashboardItemIcon(image = Icons.Default.Store, color = Color.Red), data = numberOfBranches.toString(), supportingText = "Branches", onClick = goToBranches)
                 DashboardItem(icon = DashboardItemIcon(image = Icons.Default.Reorder, color = Color.Blue), data = productsUnderCriticalLevel.toString(), supportingText = "Products Under Critical Level", onClick = goToProducts)
-                DashboardItem(icon = DashboardItemIcon(image = Icons.Default.ShoppingCart, color = Color.Magenta), data = "Not Implemented", supportingText = "Products Bought", onClick = { /*TODO()*/ })
-                DashboardItem(icon = DashboardItemIcon(image = Icons.Default.PointOfSale, color = Color.DarkGray), data = "Not Implemented", supportingText = "Products Sold", onClick = { /*TODO()*/ })
+                DashboardItem(icon = DashboardItemIcon(image = Icons.Default.ShoppingCart, color = Color.Magenta), data = productsPurchased.toString(), supportingText = "Products Bought", onClick = goToPO)
+                DashboardItem(icon = DashboardItemIcon(image = Icons.Default.PointOfSale, color = Color.DarkGray), data = productsSold.toString(), supportingText = "Products Sold", onClick = goToPOS)
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(text = "Inventory Summary (in Units)", fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(2.dp))

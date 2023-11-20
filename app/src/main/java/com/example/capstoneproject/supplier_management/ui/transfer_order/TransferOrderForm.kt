@@ -54,7 +54,7 @@ fun TransferOrderForm(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "Add " + stringResource(R.string.return_order)) },
+                title = { Text(text = ("Add " + stringResource(R.string.return_order)).uppercase()) },
                 navigationIcon = {
                     IconButton(onClick = back) {
                         Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)

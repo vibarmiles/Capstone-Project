@@ -33,7 +33,7 @@ fun ProductQuantityFormScreen(dismissRequest: () -> Unit, productViewModel: Prod
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(text = "Stock Adjustment") }, navigationIcon = {
+            TopAppBar(title = { Text(text = ("Stock Adjustment").uppercase()) }, navigationIcon = {
                 IconButton(onClick = dismissRequest) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)
                 }

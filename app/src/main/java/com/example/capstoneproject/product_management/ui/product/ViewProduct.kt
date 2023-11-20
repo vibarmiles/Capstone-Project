@@ -47,7 +47,7 @@ fun ViewProduct(dismissRequest: () -> Unit, productViewModel: ProductViewModel, 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = product.productName) },
+                title = { Text(text = product.productName.uppercase()) },
                 navigationIcon = {
                     IconButton(onClick = dismissRequest) {
                         Icon(

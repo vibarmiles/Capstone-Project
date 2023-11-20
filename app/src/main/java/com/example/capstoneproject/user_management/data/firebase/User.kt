@@ -1,5 +1,7 @@
 package com.example.capstoneproject.user_management.data.firebase
 
+import com.google.firebase.firestore.DocumentId
+
 data class User(
     val lastName: String = "",
     val firstName: String = "",

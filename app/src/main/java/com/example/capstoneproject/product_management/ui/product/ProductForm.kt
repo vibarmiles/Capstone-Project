@@ -72,7 +72,7 @@ fun ProductForm(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(text = "$function Product") }, navigationIcon = {
+            TopAppBar(title = { Text(text = ("$function Product").uppercase()) }, navigationIcon = {
                 IconButton(onClick = dismissRequest) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)
                 }

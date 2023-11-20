@@ -36,7 +36,7 @@ fun ViewTransferOrder(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "View ${Document.RO.doc}") },
+                title = { Text(text = ("View ${Document.RO.doc}").uppercase()) },
                 navigationIcon = {
                     IconButton(onClick = dismissRequest) {
                         Icon(
