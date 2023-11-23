@@ -30,7 +30,7 @@ fun UserForm(
     userId: String? = null,
     back: () -> Unit
 ) {
-    val user = userViewModel.getUserDetails(id = userId) ?: User()
+    val user = userViewModel.getUserDetails(userId = userId) ?: User()
     var expandedUsers by remember { mutableStateOf(false) }
     var userLevel by remember { mutableStateOf(user.userLevel) }
     var firstName by remember { mutableStateOf(user.firstName) }
@@ -70,12 +70,12 @@ fun UserForm(
                     }
                 }
             }
-            OutlinedTextField(value = firstName, colors = GlobalTextFieldColors(), onValueChange = { firstName = it }, label = { Text(text = "First Name") }, placeholder = { Text(text = "Enter First Name") }, isError = !isFirstNameValid, trailingIcon = { if (!isFirstNameValid) Icon(
+            OutlinedTextField(value = firstName, colors = GlobalTextFieldColors(), onValueChange = { firstName = it.filter { value -> value.isLetter() || value.isWhitespace() } }, label = { Text(text = "First Name") }, placeholder = { Text(text = "Enter First Name") }, isError = !isFirstNameValid, trailingIcon = { if (!isFirstNameValid) Icon(
                 imageVector = Icons.Filled.Error,
                 contentDescription = null,
                 tint = Color.Red
             )}, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = lastName, colors = GlobalTextFieldColors(), onValueChange = { lastName = it }, label = { Text(text = "Last Name") }, placeholder = { Text(text = "Enter Last Name") }, isError = !isLastNameValid, trailingIcon = { if (!isLastNameValid) Icon(
+            OutlinedTextField(value = lastName, colors = GlobalTextFieldColors(), onValueChange = { lastName = it.filter { value -> value.isLetter() || value.isWhitespace() } }, label = { Text(text = "Last Name") }, placeholder = { Text(text = "Enter Last Name") }, isError = !isLastNameValid, trailingIcon = { if (!isLastNameValid) Icon(
                 imageVector = Icons.Filled.Error,
                 contentDescription = null,
                 tint = Color.Red

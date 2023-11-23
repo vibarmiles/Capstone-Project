@@ -26,6 +26,7 @@ import com.example.capstoneproject.supplier_management.data.firebase.Product
 import com.example.capstoneproject.supplier_management.data.firebase.return_order.ReturnOrder
 import com.example.capstoneproject.supplier_management.ui.AddProductDialog
 import com.example.capstoneproject.supplier_management.ui.ProductItem
+import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import java.time.LocalDate
 
@@ -61,23 +62,22 @@ fun ReturnOrderForm(
                 actions = {
                     IconButton(enabled = branches.value.isNotEmpty() && returnedProductsViewModel.returns.isNotEmpty(),
                         onClick = {
-                        returnOrderViewModel.insert(
-                            ReturnOrder(
-                                date = LocalDate.now().toString(),
-                                status = Status.WAITING,
-                                reason = reason,
-                                branchId = branchId!!,
-                                products = returnedProductsViewModel.returns.associateBy { product ->
-                                    "Item ${
-                                        returnedProductsViewModel.returns.indexOf(product)
-                                    }"
-                                })
-                        )
-                        back.invoke()
-                    }) {
+                            returnOrderViewModel.insert(
+                                ReturnOrder(
+                                    date = LocalDate.now().toString(),
+                                    status = Status.WAITING,
+                                    reason = reason,
+                                    branchId = branchId!!,
+                                    products = returnedProductsViewModel.returns.associateBy { product -> "Item ${returnedProductsViewModel.returns.indexOf(product)}" }
+                                )
+                            )
+                            back.invoke()
+                        }
+                    ) {
                         Icon(imageVector = Icons.Filled.Save, contentDescription = null)
                     }
-                })
+                }
+            )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showProductDialog = true }) {
@@ -128,9 +128,7 @@ fun ReturnOrderForm(
                         }
                     },
                     trailingContent = {
-                        IconButton(onClick = { }, enabled = false) {
-                            Icon(imageVector = Icons.Filled.Remove, contentDescription = null)
-                        }
+                        Icon(imageVector = Icons.Filled.Remove, contentDescription = null)
                     },
                     tonalElevation = 5.dp
                 )
@@ -165,11 +163,12 @@ fun ReturnOrderForm(
                     ); showProductDialog = false
                 },
                 branchId = branchId,
-                products = products.filter { it.key !in returnedProductsViewModel.returns.map { products -> products.id } })
+                products = products.filter { it.key !in returnedProductsViewModel.returns.map { products -> products.id } }
+            )
         }
 
         if (showDeleteDialog) {
-            MakeInactiveDialog(item = productToRemove!!.id, onCancel = { showDeleteDialog = false }) {
+            RemoveProductDialog(productName = productViewModel.getProduct(productToRemove!!.id)!!.productName, dismissRequest = { showDeleteDialog = false }) {
                 returnedProductsViewModel.returns.remove(productToRemove)
                 showDeleteDialog = false
             }

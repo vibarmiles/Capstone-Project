@@ -1,6 +1,7 @@
 package com.example.capstoneproject.global.ui.navigation
 
 import android.app.Activity
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,10 +33,7 @@ import com.example.capstoneproject.supplier_management.ui.purchase_order.Purchas
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderScreen
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderViewModel
 import com.example.capstoneproject.login.ui.login.LoginScreen
-import com.example.capstoneproject.point_of_sales.ui.POSForm
-import com.example.capstoneproject.point_of_sales.ui.POSScreen
-import com.example.capstoneproject.point_of_sales.ui.POSViewModel
-import com.example.capstoneproject.point_of_sales.ui.ViewInvoice
+import com.example.capstoneproject.point_of_sales.ui.*
 import com.example.capstoneproject.supplier_management.ui.purchase_order.ViewPurchaseOrder
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderForm
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderScreen
@@ -113,6 +111,7 @@ fun NavigationHost(
                 }
             ) {
                 /*navController.navigate(Routes.Dashboard.route) {
+                    userViewModel.id = ""
                     popUpTo(0)
                 }
                 viewModel.isLoading.value = false*/
@@ -428,7 +427,25 @@ fun NavigationHost(
                 posViewModel = posViewModel,
                 userViewModel = userViewModel,
                 productViewModel = productViewModel,
-                branchViewModel = branchViewModel
+                branchViewModel = branchViewModel,
+                returnAndExchange = {
+                    navController.navigate(Routes.POS.RnE.createRoute(id))
+                }
+            ) {
+                navController.popBackStack()
+            }
+        }
+
+        composable(Routes.POS.RnE.route) {
+            val id = it.arguments?.getString("SIID")!!
+
+            ReturnAndExchangeForm(
+                userId = userViewModel.id,
+                invoiceId = id,
+                posViewModel = posViewModel,
+                returnOrderViewModel = returnOrderViewModel,
+                contactViewModel = contactViewModel,
+                productViewModel = productViewModel
             ) {
                 navController.popBackStack()
             }
@@ -456,9 +473,7 @@ fun NavigationHost(
                 viewModel.user.value = SignInResult(data = null, errorMessage = null)
                 viewModel.isLoading.value = true
                 googleAuthUiClient.signOut()
-                navController.navigate(Routes.LoginScreen.route) {
-                    popUpTo(0)
-                }
+                callback.invoke(R.string.login)
                 scaffoldState.snackbarHostState.showSnackbar(message = "Signed Out Successfully!", duration = SnackbarDuration.Short)
             }
         }

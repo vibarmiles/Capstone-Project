@@ -6,14 +6,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.KeyboardReturn
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
-import com.example.capstoneproject.supplier_management.ui.Document
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 
 @Composable
@@ -23,7 +25,8 @@ fun ViewInvoice(
     userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
     branchViewModel: BranchViewModel,
-    dismissRequest: () -> Unit
+    returnAndExchange: () -> Unit,
+    dismissRequest: () -> Unit,
 ) {
     val invoice = posViewModel.getDocument(id = invoiceId)!!
     val products = remember { invoice.products.map { (productViewModel.getProduct(it.value.id)?.productName ?: "Unknown Item") to it.value } }
@@ -39,6 +42,26 @@ fun ViewInvoice(
                             contentDescription = null
                         )
                     }
+                },
+                actions = {
+                    if (invoice.invoiceType != InvoiceType.REFUND) {
+                        var expanded by remember { mutableStateOf(false) }
+
+                        IconButton(onClick = { expanded = true }) {
+                            Icon(imageVector = Icons.Default.MoreVert, contentDescription = null)
+                        }
+
+                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                            androidx.compose.material3.DropdownMenuItem(
+                                leadingIcon = { Icon(imageVector = Icons.Outlined.KeyboardReturn, contentDescription = null) },
+                                text = { Text(text = "Issue Return And Exchange") },
+                                onClick = {
+                                    expanded = false
+                                    returnAndExchange.invoke()
+                                }
+                            )
+                        }
+                    }
                 }
             )
         }
@@ -53,7 +76,7 @@ fun ViewInvoice(
                         Text(text = "ID: ${invoice.id}")
                         Text(text = "Date: ${invoice.date}")
                         Text(text = "Branch: ${branchViewModel.getBranch(id = invoice.branchId)?.name}")
-                        Text(text = "Employee: ${userViewModel.getUserDetails(id = invoice.userId)?.let { it.lastName + ", " + it.firstName }}")
+                        Text(text = "Employee: ${userViewModel.getUserDetails(userId = invoice.userId)?.let { it.lastName + ", " + it.firstName }}")
                         Text(text = "Employee ID: ${invoice.userId}")
                         Divider()
                         Row(verticalAlignment = Alignment.CenterVertically) {

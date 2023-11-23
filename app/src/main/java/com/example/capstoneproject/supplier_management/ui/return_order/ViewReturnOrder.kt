@@ -88,7 +88,7 @@ fun ViewReturnOrder(
             }
 
             if (showDialog && action != null) {
-                DocumentDialog(action = action!!.name, type = Document.RO, onCancel = { showDialog = false }) {
+                DocumentDialog(action = action!!, type = Document.RO, onCancel = { showDialog = false }) {
                     if (action == Status.COMPLETE) {
                         returnOrder.products.forEach {
                             productViewModel.getProduct(id = it.value.id)?.let {

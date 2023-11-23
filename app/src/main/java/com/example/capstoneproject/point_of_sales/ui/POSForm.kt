@@ -22,11 +22,11 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
-import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.point_of_sales.data.firebase.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
+import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import java.time.LocalDate
 
@@ -65,7 +65,8 @@ fun POSForm(
                     ) {
                         Icon(imageVector = Icons.Filled.Save, contentDescription = null)
                     }
-                })
+                }
+            )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showProductDialog = true }) {
@@ -142,9 +143,7 @@ fun POSForm(
                         }
                     },
                     trailingContent = {
-                        IconButton(onClick = {  }, enabled = false) {
-                            Icon(imageVector = Icons.Filled.Remove, contentDescription = null)
-                        }
+                        Icon(imageVector = Icons.Filled.Remove, contentDescription = null)
                     },
                     tonalElevation = 5.dp
                 )
@@ -198,7 +197,7 @@ fun POSForm(
         }
 
         if (showDeleteDialog) {
-            MakeInactiveDialog(item = productToRemove!!.id, onCancel = { showDeleteDialog = false }) {
+            RemoveProductDialog(productName = productViewModel.getProduct(productToRemove!!.id)!!.productName, dismissRequest = { showDeleteDialog = false }) {
                 soldProductsViewModel.sales.remove(productToRemove)
                 showDeleteDialog = false
             }
@@ -272,7 +271,7 @@ fun AddProductDialog(
     submit: (String, Double, Int, String) -> Unit,
     products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>
 ) {
-    var search = remember(products) { products }
+    var search = products
     var expanded by remember { mutableStateOf(false) }
     var isQuantityValid by remember { mutableStateOf(true) }
     var quantityText by remember { mutableStateOf("") }
@@ -338,9 +337,9 @@ fun AddProductDialog(
                                     Text(text = it.value.productName)
                                     it.value.stock.getOrDefault(key = branchId, defaultValue = 0).let { count ->
                                         if (count > 0) {
-                                            Text(text = "$count Units", color = Color.Green)
+                                            Text(text = "$count Units", color = Color(red = 0f, green = 0.8f, blue = 0f))
                                         } else {
-                                            Text(text = "Out of Stock", color = Color.Red)
+                                            Text(text = "Out of Stock", color = MaterialTheme.colors.error)
                                         }
                                     }
                                 }
@@ -402,7 +401,7 @@ fun ConfirmationDialog(
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onCancel,
         title = {
-            Text(text = "Proceed with submission?", fontSize = 24.sp)
+            Text(text = "Proceed with submission?")
         },
         text = {
             Text(text = "Are you sure you want to make this transaction?")
@@ -416,6 +415,9 @@ fun ConfirmationDialog(
             TextButton(colors = ButtonDefaults.buttonColors(contentColor = Color.Black, backgroundColor = Color.Transparent), onClick = onCancel) {
                 Text(text = stringResource(id = R.string.cancel_button))
             }
+        },
+        icon = {
+            Icon(imageVector = Icons.Default.Send, contentDescription = null)
         }
     )
 }

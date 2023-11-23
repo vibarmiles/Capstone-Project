@@ -11,14 +11,19 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
+import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.supplier_management.ui.FilterByDate
 import kotlinx.coroutines.CoroutineScope
@@ -65,6 +70,7 @@ fun POSScreen(
                 LazyColumn {
                     itemsIndexed(invoicesFilteredByDays.value) {_, it->
                         POSItem(invoice = it, branchViewModel = branchViewModel, goto = { view.invoke(it) })
+                        Divider()
                     }
 
                     item {
@@ -111,9 +117,17 @@ fun POSItem(
         trailingContent = {
             Box(contentAlignment = Alignment.Center) {
                 Text(
-                    text = "${invoice.products.values.sumOf { it.quantity * it.price }} PHP",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    buildAnnotatedString {
+                        if (invoice.invoiceType == InvoiceType.SALE) {
+                            withStyle(style = SpanStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)) {
+                                append("${invoice.products.values.sumOf { it.quantity * it.price }} PHP")
+                            }
+                        } else {
+                            withStyle(style = SpanStyle(color = MaterialTheme.colors.error, fontSize = 16.sp, fontWeight = FontWeight.Bold)) {
+                                append("(${invoice.products.values.sumOf { it.quantity * it.price }} PHP)")
+                            }
+                        }
+                    }
                 )
             }
         },

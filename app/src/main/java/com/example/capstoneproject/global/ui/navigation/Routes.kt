@@ -3,7 +3,7 @@ package com.example.capstoneproject.global.ui.navigation
 import com.example.capstoneproject.R
 
 sealed class Routes(val route: String) {
-    object LoginScreen : Routes("Login")
+    object LoginScreen : Routes((R.string.login).toString())
     object Dashboard : Routes((R.string.dashboard).toString())
     object Product : Routes((R.string.product).toString()) {
         object View : Routes("$route/View/{productId}") {
@@ -59,6 +59,9 @@ sealed class Routes(val route: String) {
         object Add : Routes(this.route + "/Add")
         object View : Routes(this.route + "/View/{SIID}") {
             fun createRoute(SIID: String) = POS.route + "/View/$SIID"
+        }
+        object RnE : Routes(this.route + "/RnE/{SIID}") {
+            fun createRoute(SIID: String) = POS.route + "/RnE/$SIID"
         }
     }
     object Logout : Routes((R.string.logout).toString())

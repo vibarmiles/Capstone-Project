@@ -88,7 +88,7 @@ fun ViewTransferOrder(
             }
 
             if (showDialog && action != null) {
-                DocumentDialog(action = action!!.name, type = Document.TO, onCancel = { showDialog = false }) {
+                DocumentDialog(action = action!!, type = Document.TO, onCancel = { showDialog = false }) {
                     if (action == Status.COMPLETE) {
                         transferOrder.products.forEach {
                             productViewModel.getProduct(id = it.value.id)?.let {

@@ -27,6 +27,7 @@ import com.example.capstoneproject.product_management.ui.product.ProductViewMode
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Product
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
 import com.example.capstoneproject.supplier_management.data.firebase.Status
+import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import java.time.LocalDate
 
@@ -90,9 +91,7 @@ fun PurchaseOrderForm(
                         }
                     },
                     trailingContent = {
-                        IconButton(onClick = {  }, enabled = false) {
-                            Icon(imageVector = Icons.Filled.Remove, contentDescription = null)
-                        }
+                        Icon(imageVector = Icons.Filled.Remove, contentDescription = null)
                     },
                     tonalElevation = 5.dp
                 )
@@ -134,7 +133,7 @@ fun PurchaseOrderForm(
         }
 
         if (showDeleteDialog) {
-            MakeInactiveDialog(item = productToRemove!!.id, onCancel = { showDeleteDialog = false }) {
+            RemoveProductDialog(productName = productViewModel.getProduct(productToRemove!!.id)!!.productName, dismissRequest = { showDeleteDialog = false }) {
                 purchasedProductsViewModel.purchases.remove(productToRemove)
                 showDeleteDialog = false
             }
@@ -178,7 +177,7 @@ fun AddProductDialog(
     submit: (String, Double, Int, String) -> Unit,
     products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>
 ) {
-    var search = remember(products) { products }
+    var search = products
     var expanded by remember { mutableStateOf(false) }
     var isQuantityValid by remember { mutableStateOf(true) }
     var quantityText by remember { mutableStateOf("") }
@@ -264,7 +263,7 @@ fun AddProductDialog(
                 androidx.compose.material3.OutlinedTextField(trailingIcon = { if (!isQuantityValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, supportingText = { if (!isQuantityValid) Text(
                     text = "Enter valid quantity only!",
                     color = Color.Red
-                ) }, isError = !isQuantityValid, value = quantityText, onValueChange = { it.toIntOrNull()?.let { input -> quantityText = if (input < 0) "" else input.toString() } ?: run { if (it.isBlank()) quantityText = "" else isQuantityValid = false } }, modifier = Modifier.fillMaxWidth(), label = {
+                ) }, isError = !isQuantityValid, value = quantityText, onValueChange = { it.toIntOrNull()?.let { input -> quantityText = if (input < 0) "" else input.toString() } ?: run { if (it.isBlank()) quantityText = "" } }, modifier = Modifier.fillMaxWidth(), label = {
                     Text(text = "Quantity")
                 }, placeholder = { Text(text = "Enter Quantity") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
             }

@@ -26,5 +26,4 @@ sealed class NavigationItems(
     object Users : NavigationItems(icon = Icons.Filled.People, title = R.string.user)
     object Report : NavigationItems(icon = Icons.Filled.Report, title = R.string.report)
     object POS : NavigationItems(icon = Icons.Filled.PointOfSale, title = R.string.pos)
-    object Login : NavigationItems(icon = Icons.Filled.Login, title = R.string.login)
 }

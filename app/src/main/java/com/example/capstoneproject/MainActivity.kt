@@ -1,13 +1,16 @@
 package com.example.capstoneproject
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.capstoneproject.global.ui.navigation.Drawer
@@ -47,6 +50,8 @@ fun GlobalContent(
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
     var selectedItem by remember { mutableStateOf(R.string.dashboard) }
+    var canExit by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -62,9 +67,7 @@ fun GlobalContent(
                 scaffoldState.drawerState.close()
             }
         }}
-    ) {
-        paddingValues -> paddingValues
-
+    ) { paddingValues -> paddingValues
         NavigationHost(navController = navController, scope = scope, scaffoldState = scaffoldState, viewModel = appViewModel) {
             selectedItem = it
             navController.navigate(selectedItem.toString()) {
@@ -75,6 +78,29 @@ fun GlobalContent(
         LaunchedEffect(key1 = appViewModel.connection.value) {
             if (!appViewModel.connection.value) {
                 scaffoldState.snackbarHostState.showSnackbar(message = "Lost Connection!", duration = SnackbarDuration.Short)
+            }
+        }
+
+        BackHandler(!canExit) {
+            if (selectedItem == R.string.dashboard || selectedItem == R.string.login) {
+                canExit = true
+            } else {
+                if (navController.backQueue.size > 2) {
+                    navController.popBackStack()
+                } else {
+                    selectedItem = R.string.dashboard
+                    navController.navigate(selectedItem.toString()) {
+                        popUpTo(0)
+                    }
+                }
+            }
+        }
+
+        LaunchedEffect(key1 = canExit) {
+            if (canExit) {
+                Toast.makeText(context, "Press again to exit!", Toast.LENGTH_SHORT).show()
+                delay(2000)
+                canExit = false
             }
         }
     }

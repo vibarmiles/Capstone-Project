@@ -2,6 +2,7 @@ package com.example.capstoneproject.global.ui.misc
 
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -18,7 +19,7 @@ fun MakeInactiveDialog(
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onCancel,
         title = {
-            Text(text = "Make Inactive", fontSize = 24.sp)
+            Text(text = "Make Inactive")
         },
         text = {
             Text(text = "Are you sure you want to make $item inactive?")
@@ -34,7 +35,7 @@ fun MakeInactiveDialog(
             }
         },
         icon = {
-            Icon(imageVector = Icons.Filled.Delete, contentDescription = null)
+            Icon(imageVector = Icons.Filled.Block, contentDescription = null)
         }
     )
 }

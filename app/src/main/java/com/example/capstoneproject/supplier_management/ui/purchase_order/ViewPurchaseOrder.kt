@@ -126,7 +126,7 @@ fun ViewPurchaseOrder(
             }
 
             if (showDialog && action != null) {
-                DocumentDialog(action = action!!.name, type = Document.PO, onCancel = { showDialog = false }) {
+                DocumentDialog(action = action!!, type = Document.PO, onCancel = { showDialog = false }) {
                     if (action == Status.COMPLETE) {
                         purchaseOrder.products.forEach {
                             productViewModel.getProduct(id = it.value.id)?.let {

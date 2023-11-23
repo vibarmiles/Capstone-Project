@@ -48,8 +48,8 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    fun getUserDetails(id: String?): User? {
-        return id?.let { users.getValue(id) }
+    fun getUserDetails(userId: String?): User? {
+        return userId?.let { users.getValue(userId) }
     }
 
     fun insert(id: String?, user: User) {

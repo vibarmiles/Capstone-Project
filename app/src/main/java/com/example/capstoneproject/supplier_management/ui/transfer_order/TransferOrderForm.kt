@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
-import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.Product
@@ -27,6 +26,7 @@ import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.data.firebase.transfer_order.TransferOrder
 import com.example.capstoneproject.supplier_management.ui.AddProductDialog
 import com.example.capstoneproject.supplier_management.ui.ProductItem
+import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import java.time.LocalDate
 
@@ -54,7 +54,7 @@ fun TransferOrderForm(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = ("Add " + stringResource(R.string.return_order)).uppercase()) },
+                title = { Text(text = ("Add " + stringResource(R.string.transfer_order)).uppercase()) },
                 navigationIcon = {
                     IconButton(onClick = back) {
                         Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)
@@ -69,14 +69,12 @@ fun TransferOrderForm(
                                     status = Status.WAITING,
                                     oldBranchId = oldBranchId!!,
                                     destinationBranchId = destinationBranchId!!,
-                                    products = transferredProductsViewModel.transfers.associateBy { product ->
-                                        "Item ${
-                                            transferredProductsViewModel.transfers.indexOf(product)
-                                        }"
-                                    })
+                                    products = transferredProductsViewModel.transfers.associateBy { product -> "Item ${transferredProductsViewModel.transfers.indexOf(product)}" }
+                                )
                             )
                             back.invoke()
-                        }) {
+                        }
+                    ) {
                         Icon(imageVector = Icons.Filled.Save, contentDescription = null)
                     }
                 })
@@ -168,9 +166,7 @@ fun TransferOrderForm(
                         }
                     },
                     trailingContent = {
-                        IconButton(onClick = { }, enabled = false) {
-                            Icon(imageVector = Icons.Filled.Remove, contentDescription = null)
-                        }
+                        Icon(imageVector = Icons.Filled.Remove, contentDescription = null)
                     },
                     tonalElevation = 5.dp
                 )
@@ -209,7 +205,7 @@ fun TransferOrderForm(
         }
 
         if (showDeleteDialog) {
-            MakeInactiveDialog(item = productToRemove!!.id, onCancel = { showDeleteDialog = false }) {
+            RemoveProductDialog(productName = productViewModel.getProduct(productToRemove!!.id)!!.productName, dismissRequest = { showDeleteDialog = false }) {
                 transferredProductsViewModel.transfers.remove(productToRemove)
                 showDeleteDialog = false
             }
