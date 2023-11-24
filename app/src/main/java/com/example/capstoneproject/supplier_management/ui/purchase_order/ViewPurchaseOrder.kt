@@ -1,5 +1,6 @@
 package com.example.capstoneproject.supplier_management.ui.purchase_order
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,9 +11,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
@@ -21,6 +24,7 @@ import com.example.capstoneproject.product_management.ui.product.ProductViewMode
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.Document
 import com.example.capstoneproject.supplier_management.ui.DocumentDialog
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -28,6 +32,7 @@ fun ViewPurchaseOrder(
     purchaseOrderId: String,
     purchaseOrderViewModel: PurchaseOrderViewModel,
     productViewModel: ProductViewModel,
+    userViewModel: UserViewModel = viewModel(),
     branchViewModel: BranchViewModel,
     dismissRequest: () -> Unit
 ) {
@@ -36,6 +41,8 @@ fun ViewPurchaseOrder(
     var showDialog by remember { mutableStateOf(false) }
     var id by remember { mutableStateOf("") }
     var action: Status? = null
+    val state = purchaseOrderViewModel.result.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -127,6 +134,12 @@ fun ViewPurchaseOrder(
 
             if (showDialog && action != null) {
                 DocumentDialog(action = action!!, type = Document.PO, onCancel = { showDialog = false }) {
+                    purchaseOrderViewModel.insert(purchaseOrder = purchaseOrder.copy(status = action!!))
+                }
+            }
+            
+            LaunchedEffect(key1 = state.value) {
+                if (state.value.result) {
                     if (action == Status.COMPLETE) {
                         purchaseOrder.products.forEach {
                             productViewModel.getProduct(id = it.value.id)?.let {
@@ -140,9 +153,13 @@ fun ViewPurchaseOrder(
                         }
                     }
 
-                    purchaseOrderViewModel.insert(purchaseOrder = purchaseOrder.copy(status = action!!))
+                    userViewModel.log(event = "${if (action == Status.COMPLETE) "complete" else "cancel"}_purchase_order")
                     dismissRequest.invoke()
+                } else if (!state.value.result && state.value.errorMessage != null) {
+                    Toast.makeText(context, state.value.errorMessage, Toast.LENGTH_SHORT).show()
                 }
+
+                purchaseOrderViewModel.resetMessage()
             }
         }
     }

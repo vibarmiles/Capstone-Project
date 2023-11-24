@@ -12,21 +12,23 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 
 @Composable
 fun ContactFormScreen(
     function: String,
     contactViewModel: ContactViewModel,
     id: String? = null,
+    userViewModel: UserViewModel = viewModel(),
     back: () -> Unit
 ) {
     val oldContact = contactViewModel.getContact(id) ?: Contact()
@@ -58,6 +60,7 @@ fun ContactFormScreen(
                 isContactValid = contact.let { it.isNotBlank() && Patterns.PHONE.matcher(it).matches() && it.length == 10 }
                 if (isContactValid && isNameValid) {
                     contactViewModel.insert(contact = oldContact.copy(name = name, contact = contact))
+                    userViewModel.log(event = "${function.lowercase()}_supplier")
                     back.invoke()
                 }
             }

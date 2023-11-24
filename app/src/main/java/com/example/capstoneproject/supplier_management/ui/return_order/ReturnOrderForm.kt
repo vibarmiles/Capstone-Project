@@ -17,7 +17,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
@@ -28,6 +27,7 @@ import com.example.capstoneproject.supplier_management.ui.AddProductDialog
 import com.example.capstoneproject.supplier_management.ui.ProductItem
 import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -36,6 +36,7 @@ fun ReturnOrderForm(
     contactViewModel: ContactViewModel,
     returnOrderViewModel: ReturnOrderViewModel,
     branchViewModel: BranchViewModel,
+    userViewModel: UserViewModel = viewModel(),
     productViewModel: ProductViewModel,
     back: () -> Unit
 ) {
@@ -71,6 +72,7 @@ fun ReturnOrderForm(
                                     products = returnedProductsViewModel.returns.associateBy { product -> "Item ${returnedProductsViewModel.returns.indexOf(product)}" }
                                 )
                             )
+                            userViewModel.log(event = "create_return_order")
                             back.invoke()
                         }
                     ) {

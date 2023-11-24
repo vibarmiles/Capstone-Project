@@ -50,7 +50,7 @@ fun LoginScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Button(onClick = onClick) {
+        Button(onClick = {     onClick.invoke() }) {
             Text(text = stringResource(R.string.login))
         }
     }

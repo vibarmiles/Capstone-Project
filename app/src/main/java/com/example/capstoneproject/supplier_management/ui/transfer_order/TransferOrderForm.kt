@@ -28,6 +28,7 @@ import com.example.capstoneproject.supplier_management.ui.AddProductDialog
 import com.example.capstoneproject.supplier_management.ui.ProductItem
 import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -36,6 +37,7 @@ fun TransferOrderForm(
     contactViewModel: ContactViewModel,
     transferOrderViewModel: TransferOrderViewModel,
     branchViewModel: BranchViewModel,
+    userViewModel: UserViewModel = viewModel(),
     productViewModel: ProductViewModel,
     back: () -> Unit
 ) {
@@ -72,6 +74,7 @@ fun TransferOrderForm(
                                     products = transferredProductsViewModel.transfers.associateBy { product -> "Item ${transferredProductsViewModel.transfers.indexOf(product)}" }
                                 )
                             )
+                            userViewModel.log(event = "create_transfer_order")
                             back.invoke()
                         }
                     ) {

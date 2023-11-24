@@ -94,6 +94,7 @@ fun UserForm(
 
                     if (isFirstNameValid && isLastNameValid && isEmailValid) {
                         userViewModel.insert(id = userId, user = user.copy(lastName = lastName, firstName = firstName, email = email, userLevel = userLevel))
+                        userViewModel.log("${decision}_user")
                         back.invoke()
                     }
                 }

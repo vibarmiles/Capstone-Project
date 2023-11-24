@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.SubcomposeAsyncImage
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.FormButtons
@@ -34,6 +35,7 @@ import com.example.capstoneproject.product_management.data.firebase.product.Prod
 import com.example.capstoneproject.product_management.ui.category.CategoryDialog
 import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -44,7 +46,8 @@ fun ProductForm(
     productId: String? = null,
     productViewModel: ProductViewModel,
     categoryViewModel: CategoryViewModel,
-    contactViewModel: ContactViewModel
+    contactViewModel: ContactViewModel,
+    userViewModel: UserViewModel = viewModel()
 ) {
     val product = productViewModel.getProduct(productId) ?: Product()
     val category = categoryViewModel.getAll().observeAsState(listOf())
@@ -169,6 +172,7 @@ fun ProductForm(
                 Log.d("PATH",imageUri.toString())
                 if (isNameValid && isPurchasePriceValid && contactId != null && isSellingPriceValid && isCriticalLevelValid) {
                     productViewModel.insert(id = productId, product = product.copy(image = if (imageUri != null) imageUri.toString() else null, productName = name, purchasePrice = purchasePrice.toDouble(), sellingPrice = sellingPrice.toDouble(), category = categoryId, supplier = contactId!!, criticalLevel = criticalLevel))
+                    userViewModel.log(event = "${function.lowercase()}_product")
                     dismissRequest.invoke()
                 }
             }
@@ -195,6 +199,7 @@ fun ProductForm(
             } else if (state.result) {
                 categoryId = newCategory.id
                 selectedCategory = newCategory.categoryName
+                userViewModel.log(event = "add_category")
                 scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
                 categoryViewModel.resetMessage()
             }

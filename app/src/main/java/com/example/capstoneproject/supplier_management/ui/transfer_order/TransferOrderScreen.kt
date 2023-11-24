@@ -44,7 +44,7 @@ fun TransferOrderScreen(
     val transferOrders by transferOrderViewModel.getAll().observeAsState(listOf())
     var noOfDaysShown by remember { mutableStateOf(0) }
     val days = listOf(1, 3, 7, 30)
-    val state by transferOrderViewModel.result.collectAsState()
+    val state = transferOrderViewModel.result.collectAsState()
     val transferOrdersFilteredByDays = remember(transferOrders, noOfDaysShown) {
         mutableStateOf(transferOrders.filter { returnOrders -> LocalDate.parse(returnOrders.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())})
     }
@@ -83,14 +83,18 @@ fun TransferOrderScreen(
                 }
             }
             
-            LaunchedEffect(key1 = state.result, state.errorMessage) {
-                if (!state.result && state.errorMessage != null) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
+            LaunchedEffect(key1 = state.value.result, state.value.errorMessage) {
+                if (!state.value.result && state.value.errorMessage != null) {
+                    scaffoldState.snackbarHostState.showSnackbar(message = state.value.errorMessage!!, duration = SnackbarDuration.Short)
                     transferOrderViewModel.resetMessage()
-                } else if (state.result) {
+                } else if (state.value.result) {
                     scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
                     transferOrderViewModel.resetMessage()
                 }
+            }
+
+            LaunchedEffect(key1 = transferOrders) {
+                scaffoldState.snackbarHostState.showSnackbar(message = "Updating", duration = SnackbarDuration.Short)
             }
         }
     }

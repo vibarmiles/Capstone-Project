@@ -1,5 +1,6 @@
 package com.example.capstoneproject.supplier_management.ui.purchase_order
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,6 +26,7 @@ import com.example.capstoneproject.supplier_management.data.firebase.purchase_or
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.FilterByDate
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 
 @Composable
@@ -38,7 +40,7 @@ fun PurchaseOrderScreen(
     val purchaseOrders by purchaseOrderViewModel.getAll().observeAsState(listOf())
     var noOfDaysShown by remember { mutableStateOf(0) }
     val days = listOf(1, 3, 7, 30)
-    val state by purchaseOrderViewModel.result.collectAsState()
+    val state = purchaseOrderViewModel.result.collectAsState()
     val purchaseOrdersFilteredByDays = remember(purchaseOrders, noOfDaysShown) {
         mutableStateOf(purchaseOrders.filter { purchaseOrder -> LocalDate.parse(purchaseOrder.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())})
     }
@@ -55,7 +57,9 @@ fun PurchaseOrderScreen(
     ) {
             paddingValues ->
         if (purchaseOrderViewModel.isLoading.value) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()) {
                 CircularProgressIndicator()
             }
         } else {
@@ -75,14 +79,19 @@ fun PurchaseOrderScreen(
                 }
             }
 
-            LaunchedEffect(key1 = state.result, state.errorMessage) {
-                if (!state.result && state.errorMessage != null) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
+            LaunchedEffect(key1 = state.value) {
+                Log.e("PURCHASE ORDER", state.value.toString())
+                if (!state.value.result && state.value.errorMessage != null) {
+                    scaffoldState.snackbarHostState.showSnackbar(message = state.value.errorMessage!!, duration = SnackbarDuration.Short)
                     purchaseOrderViewModel.resetMessage()
-                } else if (state.result) {
+                } else if (state.value.result) {
                     scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
                     purchaseOrderViewModel.resetMessage()
                 }
+            }
+
+            LaunchedEffect(key1 = purchaseOrders) {
+                scaffoldState.snackbarHostState.showSnackbar(message = "Updating", duration = SnackbarDuration.Short)
             }
         }
     }

@@ -7,17 +7,18 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
@@ -28,6 +29,7 @@ import com.example.capstoneproject.point_of_sales.data.firebase.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -38,6 +40,7 @@ fun POSForm(
     contactViewModel: ContactViewModel,
     branchViewModel: BranchViewModel,
     productViewModel: ProductViewModel,
+    userViewModel: UserViewModel = viewModel(),
     back: () -> Unit
 ) {
     val soldProductsViewModel: SoldProductsViewModel = viewModel()
@@ -228,6 +231,8 @@ fun POSForm(
                         }
                     )
                 )
+
+                userViewModel.log("create_invoice")
                 back.invoke()
             }
         }
@@ -302,6 +307,9 @@ fun AddProductDialog(
         },
         title = {
             Text(text = "Add Product")
+        },
+        icon = {
+            Icon(imageVector = Icons.Outlined.AddCircleOutline, contentDescription = null)
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {

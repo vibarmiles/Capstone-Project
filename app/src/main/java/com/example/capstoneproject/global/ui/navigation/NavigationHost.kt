@@ -1,7 +1,7 @@
 package com.example.capstoneproject.global.ui.navigation
 
 import android.app.Activity
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -9,6 +9,8 @@ import androidx.compose.material.ScaffoldState
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -67,6 +69,7 @@ fun NavigationHost(
     val contactViewModel: ContactViewModel = viewModel()
     val userViewModel: UserViewModel = viewModel()
     val posViewModel: POSViewModel = viewModel()
+    val logs by userViewModel.getLogs().observeAsState(listOf())
     val context = LocalContext.current
 
     val googleAuthUiClient by lazy {
@@ -97,6 +100,7 @@ fun NavigationHost(
                         userViewModel.getUser(viewModel.user.value.data!!.email) {
                             if (it) {
                                 scope.launch {
+                                    userViewModel.log("user_logged_in")
                                     scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully!", duration = SnackbarDuration.Short)
                                 }
 
@@ -111,7 +115,6 @@ fun NavigationHost(
                 }
             ) {
                 /*navController.navigate(Routes.Dashboard.route) {
-                    userViewModel.id = ""
                     popUpTo(0)
                 }
                 viewModel.isLoading.value = false*/
@@ -476,6 +479,12 @@ fun NavigationHost(
                 callback.invoke(R.string.login)
                 scaffoldState.snackbarHostState.showSnackbar(message = "Signed Out Successfully!", duration = SnackbarDuration.Short)
             }
+        }
+    }
+
+    LaunchedEffect(key1 = logs) {
+        if (logs.isNotEmpty()) {
+            Log.e("LOG", logs.last().toString())
         }
     }
 }

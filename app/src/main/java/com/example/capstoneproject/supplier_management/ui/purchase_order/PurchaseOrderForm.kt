@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
@@ -21,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Product
@@ -29,12 +29,14 @@ import com.example.capstoneproject.supplier_management.data.firebase.purchase_or
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import java.time.LocalDate
 
 @Composable
 fun PurchaseOrderForm(
     contactViewModel: ContactViewModel,
     purchaseOrderViewModel: PurchaseOrderViewModel,
+    userViewModel: UserViewModel = viewModel(),
     productViewModel: ProductViewModel,
     back: () -> Unit
 ) {
@@ -65,6 +67,7 @@ fun PurchaseOrderForm(
                                 }
                             )
                         )
+                        userViewModel.log(event = "create_purchase_order")
                         back.invoke()
                     }
                 ) {
@@ -207,6 +210,9 @@ fun AddProductDialog(
         },
         title = {
             Text(text = "Add Product")
+        },
+        icon = {
+            Icon(imageVector = Icons.Outlined.AddCircleOutline, contentDescription = null)
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {

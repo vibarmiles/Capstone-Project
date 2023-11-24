@@ -1,5 +1,6 @@
 package com.example.capstoneproject.supplier_management.ui.transfer_order
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,14 +10,17 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.Document
 import com.example.capstoneproject.supplier_management.ui.DocumentDialog
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 
 @Composable
 fun ViewTransferOrder(
@@ -24,6 +28,7 @@ fun ViewTransferOrder(
     transferOrderViewModel: TransferOrderViewModel,
     productViewModel: ProductViewModel,
     branchViewModel: BranchViewModel,
+    userViewModel: UserViewModel = viewModel(),
     dismissRequest: () -> Unit
 ) {
     val transferOrder = transferOrderViewModel.getDocument(id = transferOrderId)!!
@@ -32,6 +37,8 @@ fun ViewTransferOrder(
     val products = remember { transferOrder.products.map { (productViewModel.getProduct(it.value.id)?.productName ?: "Unknown Item") to it.value } }
     var showDialog by remember { mutableStateOf(false) }
     var action: Status? = null
+    val context = LocalContext.current
+    val state = transferOrderViewModel.result.collectAsState()
 
     Scaffold(
         topBar = {
@@ -89,6 +96,12 @@ fun ViewTransferOrder(
 
             if (showDialog && action != null) {
                 DocumentDialog(action = action!!, type = Document.TO, onCancel = { showDialog = false }) {
+                    transferOrderViewModel.insert(transferOrder = transferOrder.copy(status = action!!))
+                }
+            }
+
+            LaunchedEffect(key1 = state.value) {
+                if (state.value.result) {
                     if (action == Status.COMPLETE) {
                         transferOrder.products.forEach {
                             productViewModel.getProduct(id = it.value.id)?.let {
@@ -103,9 +116,13 @@ fun ViewTransferOrder(
                         }
                     }
 
-                    transferOrderViewModel.insert(transferOrder = transferOrder.copy(status = action!!))
+                    userViewModel.log("create_transfer_order")
                     dismissRequest.invoke()
+                } else if (!state.value.result && state.value.errorMessage != null) {
+                    Toast.makeText(context, state.value.errorMessage, Toast.LENGTH_SHORT).show()
                 }
+
+                transferOrderViewModel.resetMessage()
             }
         }
     }

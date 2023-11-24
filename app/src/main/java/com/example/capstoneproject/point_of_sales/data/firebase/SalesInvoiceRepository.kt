@@ -2,8 +2,10 @@ package com.example.capstoneproject.point_of_sales.data.firebase
 
 import androidx.lifecycle.MutableLiveData
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
+import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
 
@@ -28,16 +30,66 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
 
     override fun insert(invoice: Invoice, result: (FirebaseResult) -> Unit) {
         if (invoice.id.isNotBlank()) {
-            salesInvoiceCollectionReference.document(invoice.id).set(invoice, SetOptions.merge()).addOnSuccessListener {
-                result.invoke(FirebaseResult(result = true))
+            var check = true
+            firestore.runTransaction {
+                val snapshot = it.get(salesInvoiceCollectionReference.document(invoice.id)).toObject<Invoice>()
+                if (snapshot != null) {
+                    for (value in snapshot.products) {
+                        if (!(!value.value.returned && invoice.products.let { products -> if (products.containsKey(value.key)) products[value.key]!!.returned else false })) {
+                            check = false
+                            break
+                        }
+                    }
+
+                    if (check) {
+                        it.set(salesInvoiceCollectionReference.document(invoice.id), invoice, SetOptions.merge())
+                    } else {
+                        result.invoke(FirebaseResult(result = false, errorMessage = "Document waiting to be unlocked..."))
+                        return@runTransaction
+                    }
+                }
+                it.set(salesInvoiceCollectionReference.document(invoice.id), invoice, SetOptions.merge())
+            }.addOnSuccessListener {
+                if (check) {
+                    result.invoke(FirebaseResult(result = true))
+                }
             }.addOnFailureListener {
                 result.invoke(FirebaseResult(result = false, errorMessage = it.message))
             }
         } else {
-            salesInvoiceCollectionReference.add(invoice).addOnSuccessListener {
-                result.invoke(FirebaseResult(result = true))
-            }.addOnFailureListener {
-                result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+            if (invoice.invoiceType == InvoiceType.SALE) {
+                salesInvoiceCollectionReference.add(invoice).addOnSuccessListener {
+                    result.invoke(FirebaseResult(result = true))
+                }.addOnFailureListener {
+                    result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+                }
+            } else {
+                var check = true
+                firestore.runTransaction {
+                    val snapshot = it.get(salesInvoiceCollectionReference.document(invoice.originalInvoiceId)).toObject<Invoice>()
+                    if (snapshot != null) {
+                        for (value in snapshot.products) {
+                            if (!(!value.value.returned && invoice.products.let { products -> if (products.containsKey(value.key)) products[value.key]!!.returned else false })) {
+                                check = false
+                                break
+                            }
+                        }
+
+                        if (check) {
+                            it.set(salesInvoiceCollectionReference.document(invoice.id), invoice, SetOptions.merge())
+                        } else {
+                            result.invoke(FirebaseResult(result = false, errorMessage = "Document waiting to be unlocked..."))
+                            return@runTransaction
+                        }
+                    }
+                    it.set(salesInvoiceCollectionReference.document(invoice.id), invoice, SetOptions.merge())
+                }.addOnSuccessListener {
+                    if (check) {
+                        result.invoke(FirebaseResult(result = true))
+                    }
+                }.addOnFailureListener {
+                    result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+                }
             }
         }
     }

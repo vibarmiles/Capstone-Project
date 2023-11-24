@@ -24,9 +24,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 
 @Composable
-fun ProductQuantityFormScreen(dismissRequest: () -> Unit, productViewModel: ProductViewModel, branchViewModel: BranchViewModel, productId: String) {
+fun ProductQuantityFormScreen(
+    dismissRequest: () -> Unit,
+    productViewModel: ProductViewModel,
+    branchViewModel: BranchViewModel,
+    productId: String,
+    userViewModel: UserViewModel = viewModel()
+) {
     val branches = branchViewModel.getAll().observeAsState(listOf())
     val map = productViewModel.getProduct(productId)?.stock ?: mapOf()
     val viewModel: BranchQuantityViewModel = viewModel()
@@ -68,6 +75,7 @@ fun ProductQuantityFormScreen(dismissRequest: () -> Unit, productViewModel: Prod
                             newMap[pair.key] = pair.value.toInt()
                         }
                         productViewModel.setStock(productId, newMap)
+                        userViewModel.log("adjust_stock")
                         dismissRequest.invoke()
                     }
                 }

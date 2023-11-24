@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -25,6 +26,7 @@ import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.product_management.data.firebase.category.Category
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.ui.theme.Purple500
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
@@ -32,7 +34,8 @@ fun CategoryScreen(
     scope: CoroutineScope,
     scaffoldState: ScaffoldState,
     viewModel: CategoryViewModel,
-    productViewModel: ProductViewModel
+    productViewModel: ProductViewModel,
+    userViewModel: UserViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val categories = viewModel.getAll().observeAsState(listOf())
     val state by viewModel.result.collectAsState()
@@ -88,6 +91,7 @@ fun CategoryScreen(
         if (showDialog) {
             CategoryDialog(category = category, onConfirm = {
                 viewModel.insert(it)
+                userViewModel.log(event = "${if (category.id == "") "add" else "edit"}_product")
                 showDialog = false
             }) {
                 showDialog = false
@@ -115,7 +119,10 @@ fun CategoryScreen(
 }
 
 @Composable
-fun CategoryListItem(category: String = "Category", edit: () -> Unit, delete: () -> Unit) {
+fun CategoryListItem(
+    category: String = "Category",
+    edit: () -> Unit,
+    delete: () -> Unit) {
     androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = { Box(modifier = Modifier
         .size(50.dp)
         .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Icon(imageVector = Icons.Filled.Bookmark, contentDescription = null, tint = Color.White) } }, headlineContent = { Text(text = category, fontWeight = FontWeight.Bold) }, trailingContent = {
@@ -131,13 +138,16 @@ fun CategoryListItem(category: String = "Category", edit: () -> Unit, delete: ()
 }
 
 @Composable
-fun CategoryDialog(category: Category, onConfirm: (Category) -> Unit, onCancel: () -> Unit) {
+fun CategoryDialog(
+    category: Category,
+    onConfirm: (Category) -> Unit,
+    onCancel: () -> Unit) {
     var categoryName by remember { mutableStateOf(category.categoryName) }
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onCancel,
         title = {
-            Text(text = stringResource(id = R.string.category), fontSize = 24.sp)
+            Text(text = stringResource(id = R.string.category))
         },
         text = {
             Column {
@@ -156,6 +166,9 @@ fun CategoryDialog(category: Category, onConfirm: (Category) -> Unit, onCancel: 
             TextButton(colors = ButtonDefaults.buttonColors(contentColor = Color.Black, backgroundColor = Color.Transparent), onClick = onCancel) {
                 Text(text = stringResource(id = R.string.cancel_button))
             }
+        },
+        icon = {
+            Icon(imageVector = Icons.Outlined.AddCircleOutline, contentDescription = null)
         }
     )
 }

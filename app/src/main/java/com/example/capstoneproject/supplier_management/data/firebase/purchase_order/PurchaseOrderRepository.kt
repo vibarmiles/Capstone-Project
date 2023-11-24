@@ -2,8 +2,10 @@ package com.example.capstoneproject.supplier_management.data.firebase.purchase_o
 
 import androidx.lifecycle.MutableLiveData
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
+import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
 
@@ -28,8 +30,22 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
 
     override fun insert(purchaseOrder: PurchaseOrder, result: (FirebaseResult) -> Unit) {
         if (purchaseOrder.id.isNotBlank()) {
-            purchaseOrderCollectionReference.document(purchaseOrder.id).set(purchaseOrder, SetOptions.merge()).addOnSuccessListener {
-                result.invoke(FirebaseResult(result = true))
+            var check = false
+            firestore.runTransaction {
+                val snapshot = it.get(purchaseOrderCollectionReference.document(purchaseOrder.id)).toObject<PurchaseOrder>()
+                if (snapshot != null) {
+                    if (snapshot.status == Status.WAITING) {
+                        check = true
+                        it.set(purchaseOrderCollectionReference.document(purchaseOrder.id), purchaseOrder, SetOptions.merge())
+                    } else {
+                        result.invoke(FirebaseResult(result = false, errorMessage = "Document waiting to be unlocked..."))
+                        return@runTransaction
+                    }
+                }
+            }.addOnSuccessListener {
+                if (check) {
+                    result.invoke(FirebaseResult(result = true))
+                }
             }.addOnFailureListener {
                 result.invoke(FirebaseResult(result = false, errorMessage = it.message))
             }

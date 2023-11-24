@@ -1,6 +1,5 @@
 package com.example.capstoneproject.point_of_sales.ui
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -8,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -32,6 +32,7 @@ import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderViewModel
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnedProductsViewModel
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -43,6 +44,7 @@ fun ReturnAndExchangeForm(
     returnOrderViewModel: ReturnOrderViewModel,
     contactViewModel: ContactViewModel,
     productViewModel: ProductViewModel,
+    userViewModel: UserViewModel = viewModel(),
     back: () -> Unit
 ) {
     val soldProductsViewModel: SoldProductsViewModel = viewModel()
@@ -240,6 +242,8 @@ fun ReturnAndExchangeForm(
                         )
                     )
 
+                    userViewModel.log("${type.name.lowercase()}_invoice")
+
                     if (check) {
                         for (sale in soldProductsViewModel.sales) {
                             returnedProductsViewModel.returns.add(element = com.example.capstoneproject.supplier_management.data.firebase.Product(id = sale.id, quantity = sale.quantity, supplier = sale.supplier))
@@ -252,6 +256,8 @@ fun ReturnAndExchangeForm(
                             branchId = branchId,
                             products = returnedProductsViewModel.returns.associateBy { product -> "Item ${returnedProductsViewModel.returns.indexOf(product)}" }
                         ))
+
+                        userViewModel.log("create_return_order")
                     }
 
                     back.invoke()
@@ -302,6 +308,9 @@ fun AddProductDialogForReturnAndExchange(
         },
         title = {
             Text(text = "Add Product")
+        },
+        icon = {
+            Icon(imageVector = Icons.Outlined.AddCircleOutline, contentDescription = null)
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {

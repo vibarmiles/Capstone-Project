@@ -12,7 +12,7 @@ class CategoryRepository : ICategoryRepository {
     private val categoryCollectionReference = firestore.collection("categories")
 
     override fun getAll(callback: () -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<Category>> {
-        var categories = MutableLiveData<List<Category>>()
+        val categories = MutableLiveData<List<Category>>()
         categoryCollectionReference.addSnapshotListener { value, error ->
             error?.let {
                 result.invoke(FirebaseResult(result = false, errorMessage = error.message))

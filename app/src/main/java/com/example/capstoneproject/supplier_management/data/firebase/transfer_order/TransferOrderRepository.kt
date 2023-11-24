@@ -2,8 +2,10 @@ package com.example.capstoneproject.supplier_management.data.firebase.transfer_o
 
 import androidx.lifecycle.MutableLiveData
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
+import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
 
@@ -29,8 +31,22 @@ class TransferOrderRepository : ITransferOrderRepository {
 
     override fun insert(transferOrder: TransferOrder, result: (FirebaseResult) -> Unit) {
         if (transferOrder.id.isNotBlank()) {
-            transferOrderCollectionReference.document(transferOrder.id).set(transferOrder, SetOptions.merge()).addOnSuccessListener {
-                result.invoke(FirebaseResult(result = true))
+            var check = false
+            firestore.runTransaction {
+                val snapshot = it.get(transferOrderCollectionReference.document(transferOrder.id)).toObject<TransferOrder>()
+                if (snapshot != null) {
+                    if (snapshot.status == Status.WAITING) {
+                        check = true
+                        it.set(transferOrderCollectionReference.document(transferOrder.id), transferOrder, SetOptions.merge())
+                    } else {
+                        result.invoke(FirebaseResult(result = false, errorMessage = "Document waiting to be unlocked..."))
+                        return@runTransaction
+                    }
+                }
+            }.addOnSuccessListener {
+                if (check) {
+                    result.invoke(FirebaseResult(result = true))
+                }
             }.addOnFailureListener {
                 result.invoke(FirebaseResult(result = false, errorMessage = it.message))
             }

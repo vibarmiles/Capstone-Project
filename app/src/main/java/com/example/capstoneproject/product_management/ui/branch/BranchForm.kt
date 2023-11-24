@@ -15,12 +15,14 @@ import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 
 @Composable
 fun BranchFormScreen(
     viewModel: BranchViewModel,
     function: String = "Add",
     id: String? = null,
+    userViewModel: UserViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     back: () -> Unit
 ) {
     val branch = viewModel.getBranch(id) ?: Branch()
@@ -60,6 +62,7 @@ fun BranchFormScreen(
 
                 if (isNameValid && isAddressValid) {
                     viewModel.insert(branch.copy(name = name, address = address))
+                    userViewModel.log(event = "${function.lowercase()}_branch")
                     back.invoke()
                 }
             }

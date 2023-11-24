@@ -18,3 +18,7 @@ data class Transaction(
     val returned: Int = 0,
     val sold: Int = 0
 )
+
+enum class Type {
+    PURCHASE, SELL, RETURN
+}

@@ -41,7 +41,7 @@ fun POSScreen(
     val invoices by posViewModel.getAll().observeAsState(listOf())
     var noOfDaysShown by remember { mutableStateOf(0) }
     val days = listOf(1, 3, 7, 30)
-    val state by posViewModel.result.collectAsState()
+    val state = posViewModel.result.collectAsState()
     val invoicesFilteredByDays = remember(invoices, noOfDaysShown) {
         mutableStateOf(invoices.filter { invoices -> LocalDate.parse(invoices.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())})
     }
@@ -79,14 +79,18 @@ fun POSScreen(
                 }
             }
 
-            LaunchedEffect(key1 = state.result, state.errorMessage) {
-                if (!state.result && state.errorMessage != null) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
+            LaunchedEffect(key1 = state.value.result, state.value.errorMessage) {
+                if (!state.value.result && state.value.errorMessage != null) {
+                    scaffoldState.snackbarHostState.showSnackbar(message = state.value.errorMessage!!, duration = SnackbarDuration.Short)
                     posViewModel.resetMessage()
-                } else if (state.result) {
+                } else if (state.value.result) {
                     scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
                     posViewModel.resetMessage()
                 }
+            }
+
+            LaunchedEffect(key1 = invoices) {
+                scaffoldState.snackbarHostState.showSnackbar(message = "Updating", duration = SnackbarDuration.Short)
             }
         }
     }
