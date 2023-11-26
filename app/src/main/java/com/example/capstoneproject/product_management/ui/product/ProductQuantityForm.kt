@@ -32,7 +32,7 @@ fun ProductQuantityFormScreen(
     productViewModel: ProductViewModel,
     branchViewModel: BranchViewModel,
     productId: String,
-    userViewModel: UserViewModel = viewModel()
+    userViewModel: UserViewModel
 ) {
     val branches = branchViewModel.getAll().observeAsState(listOf())
     val map = productViewModel.getProduct(productId)?.stock ?: mapOf()

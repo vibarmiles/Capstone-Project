@@ -1,22 +1,29 @@
 package com.example.capstoneproject.supplier_management.ui.purchase_order
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
+import com.example.capstoneproject.product_management.data.firebase.product.IProductRepository
+import com.example.capstoneproject.product_management.data.firebase.product.ProductRepository
+import com.example.capstoneproject.supplier_management.data.firebase.Status
+import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.IPurchaseOrderRepository
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrderRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class PurchaseOrderViewModel : ViewModel() {
-    lateinit var purchaseOrders: MutableLiveData<List<PurchaseOrder>>
-    private val purchaseOrderRepository: PurchaseOrderRepository = PurchaseOrderRepository()
+    private lateinit var purchaseOrders: MutableLiveData<List<PurchaseOrder>>
+    private val purchaseOrderRepository: IPurchaseOrderRepository = PurchaseOrderRepository()
+    private val productRepository: IProductRepository = ProductRepository()
     var isLoading: MutableState<Boolean> = mutableStateOf(true)
     private val resultState = MutableStateFlow(FirebaseResult())
     val result = resultState.asStateFlow()
@@ -32,11 +39,12 @@ class PurchaseOrderViewModel : ViewModel() {
         return purchaseOrders
     }
 
-    fun insert(purchaseOrder: PurchaseOrder) {
+    fun insert(purchaseOrder: PurchaseOrder, fail: Boolean = false, returnResult: Boolean = true) {
         viewModelScope.launch(Dispatchers.IO) {
-            purchaseOrderRepository.insert(purchaseOrder = purchaseOrder) {
-                    result ->
-                resultState.update { result }
+            purchaseOrderRepository.insert(purchaseOrder = purchaseOrder, fail = fail) { result ->
+                if (returnResult) {
+                    resultState.update { result }
+                }
             }
         }
     }
@@ -60,5 +68,26 @@ class PurchaseOrderViewModel : ViewModel() {
 
     fun resetMessage() {
         resultState.update { FirebaseResult() }
+    }
+
+    fun transact(document: PurchaseOrder) {
+        viewModelScope.launch(Dispatchers.IO) {
+            insert(purchaseOrder = document, returnResult = false)
+            productRepository.transact(document = document) { result ->
+                viewModelScope.launch {
+                    if (!result.result) {
+                        insert(purchaseOrder = document.copy(status = Status.FAILED), returnResult = false, fail = true)
+                        Log.e("TRANSACTION", "FAILED")
+                    } else {
+                        insert(purchaseOrder = document.copy(status = Status.COMPLETE), returnResult = false, fail = true)
+                        Log.e("TRANSACTION", "FINISHED")
+                    }
+                }.let {
+                    if (it.isCompleted) {
+                        resultState.update { result }
+                    }
+                }
+            }
+        }
     }
 }

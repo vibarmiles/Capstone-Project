@@ -1,5 +1,6 @@
 package com.example.capstoneproject.supplier_management.data.firebase.purchase_order
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.supplier_management.data.firebase.Status
@@ -28,14 +29,15 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
         return po
     }
 
-    override fun insert(purchaseOrder: PurchaseOrder, result: (FirebaseResult) -> Unit) {
+    override fun insert(purchaseOrder: PurchaseOrder, fail: Boolean, result: (FirebaseResult) -> Unit) {
         if (purchaseOrder.id.isNotBlank()) {
             var check = false
             firestore.runTransaction {
                 val snapshot = it.get(purchaseOrderCollectionReference.document(purchaseOrder.id)).toObject<PurchaseOrder>()
                 if (snapshot != null) {
-                    if (snapshot.status == Status.WAITING) {
+                    if (snapshot.status == Status.WAITING || fail) {
                         check = true
+                        Log.e("SETTING", "SETTING")
                         it.set(purchaseOrderCollectionReference.document(purchaseOrder.id), purchaseOrder, SetOptions.merge())
                     } else {
                         result.invoke(FirebaseResult(result = false, errorMessage = "Document waiting to be unlocked..."))

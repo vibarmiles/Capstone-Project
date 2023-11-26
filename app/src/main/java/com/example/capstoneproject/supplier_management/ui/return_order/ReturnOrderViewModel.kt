@@ -1,11 +1,15 @@
 package com.example.capstoneproject.supplier_management.ui.return_order
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
+import com.example.capstoneproject.product_management.data.firebase.product.IProductRepository
+import com.example.capstoneproject.product_management.data.firebase.product.ProductRepository
+import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.data.firebase.return_order.IReturnOrderRepository
 import com.example.capstoneproject.supplier_management.data.firebase.return_order.ReturnOrder
 import com.example.capstoneproject.supplier_management.data.firebase.return_order.ReturnOrderRepository
@@ -18,6 +22,7 @@ import kotlinx.coroutines.launch
 class ReturnOrderViewModel : ViewModel() {
     lateinit var returnOrders: MutableLiveData<List<ReturnOrder>>
     private val returnOrderRepository: IReturnOrderRepository = ReturnOrderRepository()
+    private val productRepository: IProductRepository = ProductRepository()
     var isLoading: MutableState<Boolean> = mutableStateOf(true)
     private val resultState = MutableStateFlow(FirebaseResult())
     val result = resultState.asStateFlow()
@@ -33,11 +38,13 @@ class ReturnOrderViewModel : ViewModel() {
         return returnOrders
     }
 
-    fun insert(returnOrder: ReturnOrder) {
+    fun insert(returnOrder: ReturnOrder, returnResult: Boolean = true, fail: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
-            returnOrderRepository.insert(returnOrder = returnOrder) {
+            returnOrderRepository.insert(returnOrder = returnOrder, fail = fail) {
                     result ->
-                resultState.update { result }
+                if (returnResult) {
+                    resultState.update { result }
+                }
             }
         }
     }
@@ -61,5 +68,26 @@ class ReturnOrderViewModel : ViewModel() {
 
     fun resetMessage() {
         resultState.update { FirebaseResult() }
+    }
+
+    fun transact(document: ReturnOrder) {
+        viewModelScope.launch(Dispatchers.IO) {
+            insert(returnOrder = document, returnResult = false)
+            productRepository.transact(document = document) { result ->
+                viewModelScope.launch {
+                    if (!result.result) {
+                        insert(returnOrder = document.copy(status = Status.FAILED), returnResult = false, fail = true)
+                        Log.e("TRANSACTION", "FAILED")
+                    } else {
+                        insert(returnOrder = document.copy(status = Status.COMPLETE), returnResult = false, fail = true)
+                        Log.e("TRANSACTION", "FINISHED")
+                    }
+                }.let {
+                    if (it.isCompleted) {
+                        resultState.update { result }
+                    }
+                }
+            }
+        }
     }
 }

@@ -5,7 +5,13 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
+import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
+import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
+import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
+import com.example.capstoneproject.supplier_management.data.firebase.return_order.ReturnOrder
+import com.example.capstoneproject.supplier_management.data.firebase.transfer_order.TransferOrder
 import com.google.firebase.database.*
+import com.google.firebase.database.Transaction
 import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
@@ -116,8 +122,8 @@ class ProductRepository : IProductRepository {
                         Log.d("Image", product.image.toString())
                         productCollectionReference.push().setValue(product).addOnSuccessListener {
                             result.invoke(FirebaseResult(result = true))
-                        }.addOnFailureListener {
-                            result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+                        }.addOnFailureListener { exception ->
+                            result.invoke(FirebaseResult(result = false, errorMessage = exception.message))
                         }
                     }
                 }
@@ -171,4 +177,224 @@ class ProductRepository : IProductRepository {
         }
 
     })
+
+    override fun transact(document: Any, result: (FirebaseResult) -> Unit) {
+        productCollectionReference.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(currentData: MutableData): Transaction.Result {
+                val currentProducts = currentData.getValue<Map<String, Product>>() ?: mapOf()
+
+                when (document) {
+                    is PurchaseOrder -> {
+                        Log.e("Document", "Purchase Order")
+
+                        if (!document.products.values.all { it.id in currentProducts.keys }) {
+                            return Transaction.abort()
+                        }
+
+                        return Transaction.success(currentData)
+                    }
+
+                    is ReturnOrder -> {
+                        Log.e("Document", "Return Order")
+
+                        if (!document.products.values.all { it.id in currentProducts.keys }) {
+                            return Transaction.abort()
+                        }
+
+                        for (product in document.products.values) {
+                            if (currentProducts[product.id]!!.stock.getOrDefault(key = document.branchId, defaultValue = 0) - product.quantity < 0) {
+                                return Transaction.abort()
+                            }
+                        }
+
+                        return Transaction.success(currentData)
+                    }
+
+                    is TransferOrder -> {
+                        Log.e("Document", "Transfer Order")
+
+                        if (!document.products.values.all { it.id in currentProducts.keys }) {
+                            return Transaction.abort()
+                        }
+
+                        for (product in document.products.values) {
+                            if (currentProducts[product.id]!!.stock.getOrDefault(key = document.oldBranchId, defaultValue = 0) - product.quantity < 0) {
+                                return Transaction.abort()
+                            }
+                        }
+
+                        return Transaction.success(currentData)
+                    }
+
+                    is Invoice -> {
+                        Log.e("Document", "Sales Invoice")
+
+                        if (!document.products.values.all { it.id in currentProducts.keys }) {
+                            return Transaction.abort()
+                        }
+
+                        if (document.invoiceType != InvoiceType.REFUND) {
+                            for (product in document.products.values) {
+                                if (currentProducts[product.id]!!.stock.getOrDefault(key = document.branchId, defaultValue = 0) - product.quantity < 0) {
+                                    return Transaction.abort()
+                                }
+                            }
+                        }
+
+                        return Transaction.success(currentData)
+                    }
+                }
+
+                return Transaction.abort()
+            }
+
+            override fun onComplete(
+                error: DatabaseError?,
+                committed: Boolean,
+                currentData: DataSnapshot?
+            ) {
+                if (!committed) {
+                    result.invoke(FirebaseResult(errorMessage = "Error has occurred. Please check current document and/or inventory then try again later!"))
+                    return
+                }
+
+                val currentProducts = currentData?.getValue<MutableMap<String, Product>>() ?: mutableMapOf()
+
+                when (document) {
+                    is PurchaseOrder -> {
+                        var successful = true
+
+                        for (product in document.products.values) {
+                            currentProducts[product.id]!!.let { current ->
+                                productCollectionReference.child(product.id).setValue(current.copy(stock = current.stock.toMutableMap().let { stock ->
+                                    stock[document.branchId] = stock.getOrDefault(document.branchId, 0) + product.quantity
+                                    stock
+                                }, transaction = current.transaction.let { it.copy(purchased = it.purchased + product.quantity) })).addOnSuccessListener {
+                                    Log.e("Update Successful", product.id)
+                                }.addOnFailureListener {
+                                    Log.e("Update Failed", product.id)
+                                    successful = false
+                                }
+                            }
+                        }
+
+                        if (successful) {
+                            result.invoke(FirebaseResult(result = true))
+                        } else {
+                            result.invoke(FirebaseResult(errorMessage = "Error Occurred!"))
+                        }
+                    }
+
+                    is ReturnOrder -> {
+                        var successful = true
+
+                        for (product in document.products.values) {
+                            currentProducts[product.id]!!.let { current ->
+                                productCollectionReference.child(product.id).setValue(current.copy(stock = current.stock.toMutableMap().let { stock ->
+                                    stock[document.branchId] = stock.getOrDefault(document.branchId, 0) - product.quantity
+                                    stock
+                                }, transaction = current.transaction.let { it.copy(returned = it.returned + product.quantity) })).addOnSuccessListener {
+                                    Log.e("Update Successful", product.id)
+                                }.addOnFailureListener {
+                                    Log.e("Update Failed", product.id)
+                                    successful = false
+                                }
+                            }
+                        }
+
+                        if (successful) {
+                            result.invoke(FirebaseResult(result = true))
+                        } else {
+                            result.invoke(FirebaseResult(errorMessage = "Error Occurred!"))
+                        }
+                    }
+
+                    is TransferOrder -> {
+                        var successful = true
+
+                        for (product in document.products.values) {
+                            currentProducts[product.id]!!.let { current ->
+                                productCollectionReference.child(product.id).setValue(current.copy(stock = current.stock.toMutableMap().let { stock ->
+                                    stock[document.oldBranchId] = stock.getOrDefault(document.destinationBranchId, 0) - product.quantity
+                                    stock[document.destinationBranchId] = stock.getOrDefault(document.destinationBranchId, 0) + product.quantity
+                                    stock
+                                })).addOnSuccessListener {
+                                    Log.e("Update Successful", product.id)
+                                }.addOnFailureListener {
+                                    Log.e("Update Failed", product.id)
+                                    successful = false
+                                }
+                            }
+                        }
+
+                        if (successful) {
+                            result.invoke(FirebaseResult(result = true))
+                        } else {
+                            result.invoke(FirebaseResult(errorMessage = "Error Occurred!"))
+                        }
+                    }
+
+                    is Invoice -> {
+                        var successful = true
+
+                        when (document.invoiceType) {
+                            InvoiceType.SALE -> {
+                                for (product in document.products.values) {
+                                    currentProducts[product.id]!!.let { current ->
+                                        productCollectionReference.child(product.id).setValue(current.copy(stock = current.stock.toMutableMap().let { stock ->
+                                            stock[document.branchId] = stock.getOrDefault(document.branchId, 0) - product.quantity
+                                            stock
+                                        }, transaction = current.transaction.let { it.copy(sold = it.sold + product.quantity) })).addOnSuccessListener {
+                                            Log.e("Update Successful", product.id)
+                                        }.addOnFailureListener {
+                                            Log.e("Update Failed", product.id)
+                                            successful = false
+                                        }
+                                    }
+                                }
+                            }
+
+                            InvoiceType.REFUND -> {
+                                for (product in document.products.values) {
+                                    currentProducts[product.id]!!.let { current ->
+                                        productCollectionReference.child(product.id).setValue(current.copy(stock = current.stock.toMutableMap().let { stock ->
+                                            stock[document.branchId] = stock.getOrDefault(document.branchId, 0) + product.quantity
+                                            stock
+                                        }, transaction = current.transaction.let { it.copy(sold = (it.sold - product.quantity).let { diff -> if (diff < 0) 0 else diff}) })).addOnSuccessListener {
+                                            Log.e("Update Successful", product.id)
+                                        }.addOnFailureListener {
+                                            Log.e("Update Failed", product.id)
+                                            successful = false
+                                        }
+                                    }
+                                }
+                            }
+
+                            InvoiceType.EXCHANGE -> {
+                                for (product in document.products.values) {
+                                    currentProducts[product.id]!!.let { current ->
+                                        productCollectionReference.child(product.id).setValue(current.copy(stock = current.stock.toMutableMap().let { stock ->
+                                            stock[document.branchId] = stock.getOrDefault(document.branchId, 0) - product.quantity
+                                            stock
+                                        })).addOnSuccessListener {
+                                            Log.e("Update Successful", product.id)
+                                        }.addOnFailureListener {
+                                            Log.e("Update Failed", product.id)
+                                            successful = false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (successful) {
+                            result.invoke(FirebaseResult(result = true))
+                        } else {
+                            result.invoke(FirebaseResult(errorMessage = "Error Occurred!"))
+                        }
+                    }
+                }
+            }
+        })
+    }
 }

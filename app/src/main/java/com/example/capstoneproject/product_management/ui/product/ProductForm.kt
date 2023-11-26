@@ -47,7 +47,7 @@ fun ProductForm(
     productViewModel: ProductViewModel,
     categoryViewModel: CategoryViewModel,
     contactViewModel: ContactViewModel,
-    userViewModel: UserViewModel = viewModel()
+    userViewModel: UserViewModel
 ) {
     val product = productViewModel.getProduct(productId) ?: Product()
     val category = categoryViewModel.getAll().observeAsState(listOf())

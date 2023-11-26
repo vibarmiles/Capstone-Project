@@ -28,7 +28,7 @@ fun ViewTransferOrder(
     transferOrderViewModel: TransferOrderViewModel,
     productViewModel: ProductViewModel,
     branchViewModel: BranchViewModel,
-    userViewModel: UserViewModel = viewModel(),
+    userViewModel: UserViewModel,
     dismissRequest: () -> Unit
 ) {
     val transferOrder = transferOrderViewModel.getDocument(id = transferOrderId)!!
@@ -96,33 +96,18 @@ fun ViewTransferOrder(
 
             if (showDialog && action != null) {
                 DocumentDialog(action = action!!, type = Document.TO, onCancel = { showDialog = false }) {
-                    transferOrderViewModel.insert(transferOrder = transferOrder.copy(status = action!!))
+                    transferOrderViewModel.transact(document = transferOrder.copy(status = action!!))
                 }
             }
 
             LaunchedEffect(key1 = state.value) {
-                if (state.value.result) {
-                    if (action == Status.COMPLETE) {
-                        transferOrder.products.forEach {
-                            productViewModel.getProduct(id = it.value.id)?.let {
-                                    product ->
-                                productViewModel.insert(id = it.value.id, product = run {
-                                    val stock = product.stock.toMutableMap()
-                                    stock[transferOrder.oldBranchId]?.let { quantity -> stock[transferOrder.oldBranchId] = if (quantity > it.value.quantity) quantity - it.value.quantity else 0 }
-                                    stock[transferOrder.destinationBranchId]?.let { quantity -> stock[transferOrder.destinationBranchId] = quantity + it.value.quantity }
-                                    product.copy(stock = stock)
-                                })
-                            }
-                        }
-                    }
-
-                    userViewModel.log("create_transfer_order")
+                if (state.value.result && action != null) {
+                    userViewModel.log("${if (action == Status.COMPLETE) "complete" else "cancel"}_transfer_order")
                     dismissRequest.invoke()
                 } else if (!state.value.result && state.value.errorMessage != null) {
-                    Toast.makeText(context, state.value.errorMessage, Toast.LENGTH_SHORT).show()
+                    userViewModel.log("fail_transfer_order")
+                    dismissRequest.invoke()
                 }
-
-                transferOrderViewModel.resetMessage()
             }
         }
     }

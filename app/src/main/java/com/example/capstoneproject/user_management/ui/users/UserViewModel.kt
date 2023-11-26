@@ -50,6 +50,7 @@ class UserViewModel : ViewModel() {
             userRepository.getUser(email = email) {
                 authorizationCallback.invoke(it != null)
                 getAll()
+                Log.e("User ID", it.toString())
                 id = it ?: ""
             }
         }
@@ -86,10 +87,7 @@ class UserViewModel : ViewModel() {
     }
 
     fun log(event: String) {
-        if (!this::id.isInitialized) {
-            id = "SDFSDF"
-        }
-
+        Log.e("LOG USER", id)
         viewModelScope.launch(Dispatchers.IO) {
             loggingRepository.log(log = com.example.capstoneproject.global.data.firebase.Log(event = event, date = LocalDateTime.now().toString(), userId = id))
         }

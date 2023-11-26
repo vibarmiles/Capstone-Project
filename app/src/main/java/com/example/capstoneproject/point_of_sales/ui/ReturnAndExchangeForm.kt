@@ -1,5 +1,6 @@
 package com.example.capstoneproject.point_of_sales.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -14,6 +15,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,7 +46,7 @@ fun ReturnAndExchangeForm(
     returnOrderViewModel: ReturnOrderViewModel,
     contactViewModel: ContactViewModel,
     productViewModel: ProductViewModel,
-    userViewModel: UserViewModel = viewModel(),
+    userViewModel: UserViewModel,
     back: () -> Unit
 ) {
     val soldProductsViewModel: SoldProductsViewModel = viewModel()
@@ -52,10 +54,13 @@ fun ReturnAndExchangeForm(
     val returnedProductsViewModel: ReturnedProductsViewModel = viewModel()
     val suppliers = contactViewModel.getAll().observeAsState(listOf())
     var showProductDialog by remember { mutableStateOf(false) }
+    val check = remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showConfirmationDialog by remember { mutableStateOf(false) }
     var productToRemove: Product? = null
     val branchId = remember { posViewModel.getDocument(id = invoiceId)!!.branchId }
+    val context = LocalContext.current
+    val state = posViewModel.result.collectAsState()
     val invoice = posViewModel.getDocument(id = invoiceId)!!
     var expanded by remember { mutableStateOf(false) }
     var type by remember { mutableStateOf(InvoiceType.REFUND) }
@@ -186,8 +191,8 @@ fun ReturnAndExchangeForm(
             }
 
             if (showConfirmationDialog) {
-                ConfirmationDialogForReturnAndExchange(onCancel = { showConfirmationDialog = false }) { check ->
-                    posViewModel.insert(
+                ConfirmationDialogForReturnAndExchange(onCancel = { showConfirmationDialog = false }) { checked ->
+                    posViewModel.returnAndExchange(
                         Invoice(
                             date = LocalDate.now().toString(),
                             originalInvoiceId = invoiceId,
@@ -195,32 +200,6 @@ fun ReturnAndExchangeForm(
                             userId = userId,
                             invoiceType = type,
                             products = soldProductsViewModel.sales.let {
-                                it.forEach { sale ->
-                                    productViewModel.getProduct(id = sale.id)?.let {
-                                            product ->
-                                        productViewModel.insert(id = sale.id, product = run {
-                                            val stock = product.stock.toMutableMap()
-                                            if (type == InvoiceType.REFUND) {
-                                                stock[branchId] = (stock[branchId] ?: 0) + sale.quantity
-                                            } else if (type == InvoiceType.EXCHANGE) {
-                                                stock[branchId]?.let { quantity ->
-                                                    if (quantity < sale.quantity) {
-                                                        it.remove(sale)
-                                                    } else {
-                                                        stock[branchId] = quantity - sale.quantity
-                                                    }
-                                                }
-                                            }
-
-                                            product.copy(stock = stock, transaction = product.transaction.let { transaction ->
-                                                if (type == InvoiceType.REFUND) {
-                                                    transaction.copy(sold = transaction.sold - sale.quantity)
-                                                } else { transaction }
-                                            })
-                                        })
-                                    }
-                                }
-
                                 it.associateBy { product ->
                                     "Item ${soldProductsViewModel.sales.indexOf(product)}"
                                 }
@@ -228,23 +207,18 @@ fun ReturnAndExchangeForm(
                         )
                     )
 
-                    posViewModel.insert(
-                        invoice = invoice.copy(
-                            products = invoice.products.mapValues { original ->
-                                val map = soldProductsViewModel.sales.map { it.id }
+                    check.value = checked
+                }
+            }
 
-                                if (original.value.id in map) {
-                                    original.value.copy(returned = true)
-                                } else {
-                                    original.value
-                                }
-                            }
-                        )
-                    )
-
+            LaunchedEffect(key1 = state.value) {
+                if (!state.value.result && state.value.errorMessage != null) {
+                    Toast.makeText(context, state.value.errorMessage!!, Toast.LENGTH_SHORT).show()
+                    posViewModel.resetMessage()
+                } else if (state.value.result) {
                     userViewModel.log("${type.name.lowercase()}_invoice")
 
-                    if (check) {
+                    if (check.value) {
                         for (sale in soldProductsViewModel.sales) {
                             returnedProductsViewModel.returns.add(element = com.example.capstoneproject.supplier_management.data.firebase.Product(id = sale.id, quantity = sale.quantity, supplier = sale.supplier))
                         }

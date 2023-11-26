@@ -1,5 +1,6 @@
 package com.example.capstoneproject.point_of_sales.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -39,8 +40,8 @@ fun POSForm(
     posViewModel: POSViewModel,
     contactViewModel: ContactViewModel,
     branchViewModel: BranchViewModel,
+    userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
-    userViewModel: UserViewModel = viewModel(),
     back: () -> Unit
 ) {
     val soldProductsViewModel: SoldProductsViewModel = viewModel()
@@ -50,6 +51,8 @@ fun POSForm(
     var showProductDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showConfirmationDialog by remember { mutableStateOf(false) }
+    val state = posViewModel.result.collectAsState()
+    val context = LocalContext.current
     var productToRemove: Product? = null
     var branchId by remember { mutableStateOf(branches.value.firstOrNull()?.id) }
     var textFieldValue by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches Found") }
@@ -208,30 +211,26 @@ fun POSForm(
 
         if (showConfirmationDialog) {
             ConfirmationDialog(onCancel = { showConfirmationDialog = false }) {
-                posViewModel.insert(
+                posViewModel.transact(
                     Invoice(
                         date = LocalDate.now().toString(),
                         branchId = branchId!!,
                         userId = userId,
                         products = soldProductsViewModel.sales.let {
-                            it.forEach { sale ->
-                                productViewModel.getProduct(id = sale.id)?.let {
-                                        product ->
-                                    productViewModel.insert(id = sale.id, product = run {
-                                        val stock = product.stock.toMutableMap()
-                                        stock[branchId]?.let { quantity -> stock[branchId!!] = if (quantity > sale.quantity) quantity - sale.quantity else 0 }
-                                        product.copy(stock = stock, transaction = product.transaction.let { transaction -> transaction.copy(sold = transaction.sold + sale.quantity) })
-                                    })
-                                }
-                            }
-
                             it.associateBy { product ->
                                 "Item ${soldProductsViewModel.sales.indexOf(product)}"
                             }
                         }
                     )
                 )
+            }
+        }
 
+        LaunchedEffect(key1 = state.value) {
+            if (!state.value.result && state.value.errorMessage != null) {
+                Toast.makeText(context, state.value.errorMessage!!, Toast.LENGTH_SHORT).show()
+                posViewModel.resetMessage()
+            } else if (state.value.result) {
                 userViewModel.log("create_invoice")
                 back.invoke()
             }

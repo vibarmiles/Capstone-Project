@@ -22,7 +22,7 @@ fun BranchFormScreen(
     viewModel: BranchViewModel,
     function: String = "Add",
     id: String? = null,
-    userViewModel: UserViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    userViewModel: UserViewModel,
     back: () -> Unit
 ) {
     val branch = viewModel.getBranch(id) ?: Branch()

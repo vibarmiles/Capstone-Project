@@ -36,7 +36,7 @@ fun ReturnOrderForm(
     contactViewModel: ContactViewModel,
     returnOrderViewModel: ReturnOrderViewModel,
     branchViewModel: BranchViewModel,
-    userViewModel: UserViewModel = viewModel(),
+    userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
     back: () -> Unit
 ) {

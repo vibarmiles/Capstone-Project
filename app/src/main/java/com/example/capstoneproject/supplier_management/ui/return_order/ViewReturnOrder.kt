@@ -29,7 +29,7 @@ fun ViewReturnOrder(
     returnOrderViewModel: ReturnOrderViewModel,
     productViewModel: ProductViewModel,
     branchViewModel: BranchViewModel,
-    userViewModel: UserViewModel = viewModel(),
+    userViewModel: UserViewModel,
     dismissRequest: () -> Unit
 ) {
     val returnOrder = returnOrderViewModel.getDocument(id = returnOrderId)!!
@@ -97,35 +97,18 @@ fun ViewReturnOrder(
 
             if (showDialog && action != null) {
                 DocumentDialog(action = action!!, type = Document.RO, onCancel = { showDialog = false }) {
-                    returnOrderViewModel.insert(returnOrder = returnOrder.copy(status = action!!))
+                    returnOrderViewModel.transact(document = returnOrder.copy(status = action!!))
                 }
             }
 
             LaunchedEffect(key1 = state.value) {
-                Log.e("STATE", state.value.toString())
-
-                if (state.value.result) {
-                    Log.e("STATE", state.value.toString())
-                    if (action == Status.COMPLETE) {
-                        returnOrder.products.forEach {
-                            productViewModel.getProduct(id = it.value.id)?.let {
-                                    product ->
-                                productViewModel.insert(id = it.value.id, product = run {
-                                    val stock = product.stock.toMutableMap()
-                                    stock[returnOrder.branchId]?.let { quantity -> stock[returnOrder.branchId] = if (quantity > it.value.quantity) quantity - it.value.quantity else 0 }
-                                    product.copy(stock = stock, transaction = product.transaction.let { transaction -> transaction.copy(returned = transaction.returned + it.value.quantity) })
-                                })
-                            }
-                        }
-                    }
-
+                if (state.value.result && action != null) {
                     userViewModel.log(event = "${if (action == Status.COMPLETE) "complete" else "cancel"}_return_order")
                     dismissRequest.invoke()
                 } else if (!state.value.result && state.value.errorMessage != null) {
-                    Toast.makeText(context, state.value.errorMessage, Toast.LENGTH_SHORT).show()
+                    userViewModel.log(event = "fail_return_order")
+                    dismissRequest.invoke()
                 }
-
-                returnOrderViewModel.resetMessage()
             }
         }
     }

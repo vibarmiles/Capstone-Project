@@ -1,5 +1,6 @@
 package com.example.capstoneproject.supplier_management.data.firebase.transfer_order
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.supplier_management.data.firebase.Status
@@ -29,13 +30,13 @@ class TransferOrderRepository : ITransferOrderRepository {
         return to
     }
 
-    override fun insert(transferOrder: TransferOrder, result: (FirebaseResult) -> Unit) {
+    override fun insert(transferOrder: TransferOrder, fail: Boolean, result: (FirebaseResult) -> Unit) {
         if (transferOrder.id.isNotBlank()) {
             var check = false
             firestore.runTransaction {
                 val snapshot = it.get(transferOrderCollectionReference.document(transferOrder.id)).toObject<TransferOrder>()
                 if (snapshot != null) {
-                    if (snapshot.status == Status.WAITING) {
+                    if (snapshot.status == Status.WAITING || fail) {
                         check = true
                         it.set(transferOrderCollectionReference.document(transferOrder.id), transferOrder, SetOptions.merge())
                     } else {

@@ -25,20 +25,6 @@ class LoggingRepository : ILoggingRepository {
             value?.let {
                 logs.value = value.toObjects()
 
-                for (snapshot in value.toObjects<Log>().sortedBy { LocalDateTime.parse(it.date) }.toMutableList()) {
-                    if (LocalDateTime.now().minusWeeks(1).isAfter(LocalDateTime.parse(snapshot.date))) {
-                        android.util.Log.e("LOGGING", "DELETE")
-                        logsCollectionReference.document(snapshot.id).delete()
-                    } else {
-                        if (logs.value!!.size > 100) {
-                            android.util.Log.e("LOGGING", "DELETE")
-                            logsCollectionReference.document(logs.value!!.sortedBy { LocalDateTime.parse(it.date) }.first().id).delete()
-                        } else {
-                            android.util.Log.e("LOGGING", "READ")
-                        }
-                    }
-                }
-
                 callback.invoke()
             }
         }
@@ -49,10 +35,10 @@ class LoggingRepository : ILoggingRepository {
     override fun log(log: Log) {
         logsCollectionReference.count().get(AggregateSource.SERVER).addOnCompleteListener {
             if (it.isSuccessful) {
-                if (it.result.count >= 100) {
-                    firestore.runTransaction { transaction ->
-                        logsCollectionReference.orderBy("name").limit(1).get().addOnSuccessListener { snapshot ->
-                            transaction.delete(logsCollectionReference.document(snapshot.first().toObject<Log>().id))
+                if (it.result.count + 1 > 100) {
+                    logsCollectionReference.orderBy("date").limit(1).get().addOnSuccessListener { snapshot ->
+                        firestore.runBatch { batch ->
+                            batch.delete(logsCollectionReference.document(snapshot.first().toObject<Log>().id))
                         }
                     }
                 }

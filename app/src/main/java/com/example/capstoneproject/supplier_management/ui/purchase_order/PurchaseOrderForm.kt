@@ -36,7 +36,7 @@ import java.time.LocalDate
 fun PurchaseOrderForm(
     contactViewModel: ContactViewModel,
     purchaseOrderViewModel: PurchaseOrderViewModel,
-    userViewModel: UserViewModel = viewModel(),
+    userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
     back: () -> Unit
 ) {

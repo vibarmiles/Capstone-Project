@@ -9,6 +9,7 @@ data class Invoice(
     val date: String = "",
     val branchId: String = "",
     val userId: String = "",
+    val lock: Boolean = false,
     val products: Map<String, Product> = mapOf()
 )
 

@@ -37,7 +37,7 @@ fun TransferOrderForm(
     contactViewModel: ContactViewModel,
     transferOrderViewModel: TransferOrderViewModel,
     branchViewModel: BranchViewModel,
-    userViewModel: UserViewModel = viewModel(),
+    userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
     back: () -> Unit
 ) {
@@ -74,6 +74,7 @@ fun TransferOrderForm(
                                     products = transferredProductsViewModel.transfers.associateBy { product -> "Item ${transferredProductsViewModel.transfers.indexOf(product)}" }
                                 )
                             )
+
                             userViewModel.log(event = "create_transfer_order")
                             back.invoke()
                         }

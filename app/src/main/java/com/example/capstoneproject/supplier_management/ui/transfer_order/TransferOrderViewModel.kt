@@ -1,15 +1,21 @@
 package com.example.capstoneproject.supplier_management.ui.transfer_order
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
+import com.example.capstoneproject.product_management.data.firebase.product.IProductRepository
+import com.example.capstoneproject.product_management.data.firebase.product.ProductRepository
+import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.data.firebase.transfer_order.ITransferOrderRepository
 import com.example.capstoneproject.supplier_management.data.firebase.transfer_order.TransferOrder
 import com.example.capstoneproject.supplier_management.data.firebase.transfer_order.TransferOrderRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,6 +24,7 @@ import kotlinx.coroutines.launch
 class TransferOrderViewModel : ViewModel() {
     lateinit var transferOrders: MutableLiveData<List<TransferOrder>>
     private val transferOrderRepository: ITransferOrderRepository = TransferOrderRepository()
+    private val productRepository: IProductRepository = ProductRepository()
     var isLoading: MutableState<Boolean> = mutableStateOf(true)
     private val resultState = MutableStateFlow(FirebaseResult())
     val result = resultState.asStateFlow()
@@ -33,11 +40,13 @@ class TransferOrderViewModel : ViewModel() {
         return transferOrders
     }
 
-    fun insert(transferOrder: TransferOrder) {
+    fun insert(transferOrder: TransferOrder, returnResult: Boolean = true, fail: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
-            transferOrderRepository.insert(transferOrder = transferOrder) {
+            transferOrderRepository.insert(transferOrder = transferOrder, fail = fail) {
                     result ->
-                resultState.update { result }
+                if (returnResult) {
+                    resultState.update { result }
+                }
             }
         }
     }
@@ -61,5 +70,28 @@ class TransferOrderViewModel : ViewModel() {
 
     fun resetMessage() {
         resultState.update { FirebaseResult() }
+    }
+
+    fun transact(document: TransferOrder) {
+        Log.e("TRANSACTION", "STARTED")
+        viewModelScope.launch(Dispatchers.IO) {
+            insert(transferOrder = document.copy(status = Status.PENDING), returnResult = false)
+            productRepository.transact(document = document) { result ->
+                viewModelScope.launch {
+                    if (!result.result) {
+                        insert(transferOrder = document.copy(status = Status.FAILED), returnResult = false, fail = true)
+                        Log.e("TRANSACTION", "FAILED")
+                    } else {
+                        insert(transferOrder = document.copy(status = Status.COMPLETE), returnResult = false, fail = true)
+                        Log.e("TRANSACTION", "FINISHED")
+                    }
+                    delay(1000)
+                }.let {
+                    if (it.isCompleted) {
+                        resultState.update { result }
+                    }
+                }
+            }
+        }
     }
 }

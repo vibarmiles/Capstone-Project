@@ -100,7 +100,7 @@ fun NavigationHost(
                         userViewModel.getUser(viewModel.user.value.data!!.email) {
                             if (it) {
                                 scope.launch {
-                                    userViewModel.log("user_logged_in")
+                                    //userViewModel.log("user_logged_in")
                                     scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully!", duration = SnackbarDuration.Short)
                                 }
 
@@ -180,7 +180,8 @@ fun NavigationHost(
                 productViewModel = productViewModel,
                 contactViewModel = contactViewModel,
                 categoryViewModel = categoryViewModel,
-                dismissRequest = { navController.popBackStack() }
+                dismissRequest = { navController.popBackStack() },
+                userViewModel = userViewModel
             )
         }
 
@@ -194,7 +195,8 @@ fun NavigationHost(
                 categoryViewModel = categoryViewModel,
                 contactViewModel = contactViewModel,
                 productId = productId,
-                dismissRequest = { navController.popBackStack() }
+                dismissRequest = { navController.popBackStack() },
+                userViewModel = userViewModel
             )
         }
 
@@ -205,7 +207,8 @@ fun NavigationHost(
                 productViewModel = productViewModel,
                 branchViewModel = branchViewModel,
                 productId = productId,
-                dismissRequest = { navController.popBackStack() }
+                dismissRequest = { navController.popBackStack() },
+                userViewModel = userViewModel
             )
         }
 
@@ -223,7 +226,8 @@ fun NavigationHost(
 
         composable(Routes.Branch.Add.route) {
             BranchFormScreen(
-                viewModel = branchViewModel
+                viewModel = branchViewModel,
+                userViewModel = userViewModel
             ) {
                 navController.popBackStack()
             }
@@ -235,7 +239,8 @@ fun NavigationHost(
             BranchFormScreen(
                 viewModel = branchViewModel,
                 function = "Edit",
-                id = id
+                id = id,
+                userViewModel = userViewModel
             ) {
                 navController.popBackStack()
             }
@@ -246,7 +251,8 @@ fun NavigationHost(
                 scope = scope,
                 scaffoldState = scaffoldState,
                 viewModel = categoryViewModel,
-                productViewModel = productViewModel
+                productViewModel = productViewModel,
+                userViewModel = userViewModel
             )
         }
 
@@ -264,7 +270,8 @@ fun NavigationHost(
         composable(Routes.Contact.Add.route) {
             ContactFormScreen(
                 function = "Add",
-                contactViewModel = contactViewModel
+                contactViewModel = contactViewModel,
+                userViewModel = userViewModel
             ) {
                 navController.popBackStack()
             }
@@ -276,6 +283,7 @@ fun NavigationHost(
             ContactFormScreen(
                 function = "Edit",
                 contactViewModel = contactViewModel,
+                userViewModel = userViewModel,
                 id = id
             ) {
                 navController.popBackStack()
@@ -296,7 +304,8 @@ fun NavigationHost(
             PurchaseOrderForm(
                 contactViewModel = contactViewModel,
                 purchaseOrderViewModel = purchaseOrderViewModel,
-                productViewModel = productViewModel
+                productViewModel = productViewModel,
+                userViewModel = userViewModel
             ) {
                 navController.popBackStack()
             }
@@ -309,7 +318,8 @@ fun NavigationHost(
                 purchaseOrderId = id,
                 purchaseOrderViewModel = purchaseOrderViewModel,
                 productViewModel = productViewModel,
-                branchViewModel = branchViewModel
+                branchViewModel = branchViewModel,
+                userViewModel = userViewModel
             ) {
                 navController.popBackStack()
             }
@@ -330,7 +340,8 @@ fun NavigationHost(
                 contactViewModel = contactViewModel,
                 returnOrderViewModel = returnOrderViewModel,
                 branchViewModel = branchViewModel,
-                productViewModel = productViewModel
+                productViewModel = productViewModel,
+                userViewModel = userViewModel
             ) {
                 navController.popBackStack()
             }
@@ -343,7 +354,8 @@ fun NavigationHost(
                 returnOrderId = id,
                 returnOrderViewModel = returnOrderViewModel,
                 productViewModel = productViewModel,
-                branchViewModel = branchViewModel
+                branchViewModel = branchViewModel,
+                userViewModel = userViewModel
             ) {
                 navController.popBackStack()
             }
@@ -365,7 +377,8 @@ fun NavigationHost(
                 contactViewModel = contactViewModel,
                 transferOrderViewModel = transferOrderViewModel,
                 branchViewModel = branchViewModel,
-                productViewModel = productViewModel
+                productViewModel = productViewModel,
+                userViewModel = userViewModel
             ) {
                 navController.popBackStack()
             }
@@ -378,7 +391,8 @@ fun NavigationHost(
                 transferOrderId = id,
                 transferOrderViewModel = transferOrderViewModel,
                 productViewModel = productViewModel,
-                branchViewModel = branchViewModel
+                branchViewModel = branchViewModel,
+                userViewModel = userViewModel
             ) {
                 navController.popBackStack()
             }
@@ -416,7 +430,8 @@ fun NavigationHost(
                 posViewModel = posViewModel,
                 contactViewModel = contactViewModel,
                 branchViewModel = branchViewModel,
-                productViewModel = productViewModel
+                productViewModel = productViewModel,
+                userViewModel = userViewModel
             ) {
                 navController.popBackStack()
             }
@@ -441,6 +456,7 @@ fun NavigationHost(
 
         composable(Routes.POS.RnE.route) {
             val id = it.arguments?.getString("SIID")!!
+            Log.e("SALES INVOICE ID", id)
 
             ReturnAndExchangeForm(
                 userId = userViewModel.id,
@@ -448,15 +464,17 @@ fun NavigationHost(
                 posViewModel = posViewModel,
                 returnOrderViewModel = returnOrderViewModel,
                 contactViewModel = contactViewModel,
-                productViewModel = productViewModel
+                productViewModel = productViewModel,
+                userViewModel = userViewModel
             ) {
-                navController.popBackStack()
+                callback.invoke(R.string.pos)
             }
         }
 
         composable(Routes.User.Add.route) {
             UserForm(
                 userViewModel = userViewModel,
+                branchViewModel = branchViewModel,
                 decision = stringResource(id = R.string.add),
                 back = { navController.popBackStack() }
             )
@@ -465,6 +483,7 @@ fun NavigationHost(
         composable(Routes.User.Edit.route) {
             UserForm(
                 userViewModel = userViewModel,
+                branchViewModel = branchViewModel,
                 decision = stringResource(id = R.string.edit),
                 back = { navController.popBackStack() },
                 userId = it.arguments?.getString("userId")!!

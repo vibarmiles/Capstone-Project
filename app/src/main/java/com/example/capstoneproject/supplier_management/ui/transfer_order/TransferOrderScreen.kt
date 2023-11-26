@@ -1,5 +1,6 @@
 package com.example.capstoneproject.supplier_management.ui.transfer_order
 
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,6 +19,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,6 +45,8 @@ fun TransferOrderScreen(
 ) {
     val transferOrders by transferOrderViewModel.getAll().observeAsState(listOf())
     var noOfDaysShown by remember { mutableStateOf(0) }
+    val firstLaunch = remember { mutableStateOf(true) }
+    val context = LocalContext.current
     val days = listOf(1, 3, 7, 30)
     val state = transferOrderViewModel.result.collectAsState()
     val transferOrdersFilteredByDays = remember(transferOrders, noOfDaysShown) {
@@ -94,7 +98,11 @@ fun TransferOrderScreen(
             }
 
             LaunchedEffect(key1 = transferOrders) {
-                scaffoldState.snackbarHostState.showSnackbar(message = "Updating", duration = SnackbarDuration.Short)
+                if (!firstLaunch.value) {
+                    Toast.makeText(context, "Updating!", Toast.LENGTH_SHORT).show()
+                } else {
+                    firstLaunch.value = false
+                }
             }
         }
     }
@@ -129,10 +137,14 @@ fun TransferOrderItem(
                             Status.WAITING -> "To Transfer"
                             Status.CANCELLED -> "Cancelled"
                             Status.COMPLETE -> "Transferred"
+                            Status.PENDING -> "Updating"
+                            Status.FAILED -> "Failed"
                         }, fontSize = 12.sp, color = when (transferOrder.status) {
                             Status.WAITING -> Color.Red
                             Status.CANCELLED -> Color.Gray
                             Status.COMPLETE -> Color.Green
+                            Status.PENDING -> Color.Black
+                            Status.FAILED -> Color.Red
                         }, fontWeight = FontWeight.Bold
                     )
                 }

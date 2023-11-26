@@ -28,7 +28,7 @@ fun ContactFormScreen(
     function: String,
     contactViewModel: ContactViewModel,
     id: String? = null,
-    userViewModel: UserViewModel = viewModel(),
+    userViewModel: UserViewModel,
     back: () -> Unit
 ) {
     val oldContact = contactViewModel.getContact(id) ?: Contact()

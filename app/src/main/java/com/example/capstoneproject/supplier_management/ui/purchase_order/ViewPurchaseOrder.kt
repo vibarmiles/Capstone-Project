@@ -32,7 +32,7 @@ fun ViewPurchaseOrder(
     purchaseOrderId: String,
     purchaseOrderViewModel: PurchaseOrderViewModel,
     productViewModel: ProductViewModel,
-    userViewModel: UserViewModel = viewModel(),
+    userViewModel: UserViewModel,
     branchViewModel: BranchViewModel,
     dismissRequest: () -> Unit
 ) {
@@ -134,32 +134,18 @@ fun ViewPurchaseOrder(
 
             if (showDialog && action != null) {
                 DocumentDialog(action = action!!, type = Document.PO, onCancel = { showDialog = false }) {
-                    purchaseOrderViewModel.insert(purchaseOrder = purchaseOrder.copy(status = action!!))
+                    purchaseOrderViewModel.transact(document = purchaseOrder.copy(branchId = id, status = action!!))
                 }
             }
             
             LaunchedEffect(key1 = state.value) {
-                if (state.value.result) {
-                    if (action == Status.COMPLETE) {
-                        purchaseOrder.products.forEach {
-                            productViewModel.getProduct(id = it.value.id)?.let {
-                                    product ->
-                                productViewModel.insert(id = it.value.id, product = run {
-                                    val stock = product.stock.toMutableMap()
-                                    stock[id] = (stock[id] ?: 0) + it.value.quantity
-                                    product.copy(stock = stock, transaction = product.transaction.let { transaction -> transaction.copy(purchased = transaction.purchased + it.value.quantity) })
-                                })
-                            }
-                        }
-                    }
-
+                if (state.value.result && action != null) {
                     userViewModel.log(event = "${if (action == Status.COMPLETE) "complete" else "cancel"}_purchase_order")
                     dismissRequest.invoke()
                 } else if (!state.value.result && state.value.errorMessage != null) {
-                    Toast.makeText(context, state.value.errorMessage, Toast.LENGTH_SHORT).show()
+                    userViewModel.log(event = "fail_purchase_order")
+                    dismissRequest.invoke()
                 }
-
-                purchaseOrderViewModel.resetMessage()
             }
         }
     }

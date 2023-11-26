@@ -101,11 +101,11 @@ fun ProductScreen(
 
         LaunchedEffect(key1 = state.result, state.errorMessage) {
             if (!state.result && state.errorMessage != null) {
+                productViewModel.resetMessage()
                 scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
-                productViewModel.resetMessage()
             } else if (state.result) {
-                scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
                 productViewModel.resetMessage()
+                scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
             }
         }
     }

@@ -29,13 +29,13 @@ class ReturnOrderRepository : IReturnOrderRepository {
         return ro
     }
 
-    override fun insert(returnOrder: ReturnOrder, result: (FirebaseResult) -> Unit) {
+    override fun insert(returnOrder: ReturnOrder, fail: Boolean, result: (FirebaseResult) -> Unit) {
         if (returnOrder.id.isNotBlank()) {
             var check = false
             firestore.runTransaction {
                 val snapshot = it.get(returnOrderCollectionReference.document(returnOrder.id)).toObject<ReturnOrder>()
                 if (snapshot != null) {
-                    if (snapshot.status == Status.WAITING) {
+                    if (snapshot.status == Status.WAITING || fail) {
                         check = true
                         it.set(returnOrderCollectionReference.document(returnOrder.id), returnOrder, SetOptions.merge())
                     } else {

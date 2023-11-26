@@ -64,7 +64,7 @@ fun Dashboard(
             val productsSold by remember(productViewModel.update.value) { mutableStateOf(products.values.sumOf { product -> product.transaction.sold }) }
             val productsPurchased by remember(productViewModel.update.value) { mutableStateOf(products.values.sumOf { product -> product.transaction.purchased }) }
             val stockInHand by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.sumOf { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) } }) }
-            val stockToBeReceived by remember(purchaseOrders) { mutableStateOf(purchaseOrders.value.filter { purchaseOrder -> purchaseOrder.status == Status.WAITING }.sumOf { purchaseOrders -> purchaseOrders.products.values.sumOf { product -> product.quantity } }) }
+            val stockToBeReceived by remember(purchaseOrders.value) { mutableStateOf(purchaseOrders.value.filter { purchaseOrder -> purchaseOrder.status == Status.WAITING }.sumOf { purchaseOrders -> purchaseOrders.products.values.sumOf { product -> product.quantity } }) }
 
             Column(modifier = Modifier
                 .verticalScroll(state = rememberScrollState())

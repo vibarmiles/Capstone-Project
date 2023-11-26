@@ -35,7 +35,7 @@ fun CategoryScreen(
     scaffoldState: ScaffoldState,
     viewModel: CategoryViewModel,
     productViewModel: ProductViewModel,
-    userViewModel: UserViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    userViewModel: UserViewModel
 ) {
     val categories = viewModel.getAll().observeAsState(listOf())
     val state by viewModel.result.collectAsState()

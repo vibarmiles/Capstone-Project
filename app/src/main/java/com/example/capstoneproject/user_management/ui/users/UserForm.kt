@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
+import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.user_management.data.firebase.User
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
 
@@ -26,12 +28,14 @@ import com.example.capstoneproject.user_management.data.firebase.UserLevel
 @Composable
 fun UserForm(
     userViewModel: UserViewModel,
+    branchViewModel: BranchViewModel,
     decision: String,
     userId: String? = null,
     back: () -> Unit
 ) {
     val user = userViewModel.getUserDetails(userId = userId) ?: User()
     var expandedUsers by remember { mutableStateOf(false) }
+    var expandedBranches by remember { mutableStateOf(false) }
     var userLevel by remember { mutableStateOf(user.userLevel) }
     var firstName by remember { mutableStateOf(user.firstName) }
     var isFirstNameValid by remember { mutableStateOf(true) }
@@ -39,6 +43,9 @@ fun UserForm(
     var isLastNameValid by remember { mutableStateOf(true) }
     var email by remember { mutableStateOf(user.email) }
     var isEmailValid by remember { mutableStateOf(true) }
+    val branches = branchViewModel.getAll().observeAsState(listOf())
+    var branchId by remember { mutableStateOf(branches.value.firstOrNull()?.id)}
+    var branchName by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches")}
 
     Scaffold(
         topBar = {
@@ -70,6 +77,21 @@ fun UserForm(
                     }
                 }
             }
+
+            if (userLevel == UserLevel.Employee) {
+                ExposedDropdownMenuBox(expanded = expandedBranches, onExpandedChange = { expandedBranches = !expandedBranches }) {
+                    OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedBranches) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = branchName, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.branch)) })
+
+                    DropdownMenu(modifier = Modifier
+                        .exposedDropdownSize()
+                        .fillMaxWidth(), expanded = expandedBranches, onDismissRequest = { expandedBranches = false }) {
+                        branches.value.forEach {
+                            androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.name) }, onClick = { branchId = it.id; branchName = it.name; expandedBranches = false })
+                        }
+                    }
+                }
+            }
+
             OutlinedTextField(value = firstName, colors = GlobalTextFieldColors(), onValueChange = { firstName = it.filter { value -> value.isLetter() || value.isWhitespace() } }, label = { Text(text = "First Name") }, placeholder = { Text(text = "Enter First Name") }, isError = !isFirstNameValid, trailingIcon = { if (!isFirstNameValid) Icon(
                 imageVector = Icons.Filled.Error,
                 contentDescription = null,
@@ -91,9 +113,10 @@ fun UserForm(
                     isFirstNameValid = firstName.isNotBlank()
                     isLastNameValid = lastName.isNotBlank()
                     isEmailValid = email.let { it.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(it).matches() }
+                    val isBranchValid = if (userLevel == UserLevel.Employee) branchId != null else true
 
-                    if (isFirstNameValid && isLastNameValid && isEmailValid) {
-                        userViewModel.insert(id = userId, user = user.copy(lastName = lastName, firstName = firstName, email = email, userLevel = userLevel))
+                    if (isFirstNameValid && isLastNameValid && isEmailValid && isBranchValid) {
+                        userViewModel.insert(id = userId, user = user.copy(lastName = lastName, firstName = firstName, email = email, userLevel = userLevel, branchId = if (userLevel == UserLevel.Employee) branchId else null))
                         userViewModel.log("${decision}_user")
                         back.invoke()
                     }

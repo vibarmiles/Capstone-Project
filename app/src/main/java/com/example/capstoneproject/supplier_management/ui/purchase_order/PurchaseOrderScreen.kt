@@ -1,6 +1,7 @@
 package com.example.capstoneproject.supplier_management.ui.purchase_order
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +16,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,7 +28,6 @@ import com.example.capstoneproject.supplier_management.data.firebase.purchase_or
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.FilterByDate
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import java.time.LocalDate
 
 @Composable
@@ -39,6 +40,8 @@ fun PurchaseOrderScreen(
 ) {
     val purchaseOrders by purchaseOrderViewModel.getAll().observeAsState(listOf())
     var noOfDaysShown by remember { mutableStateOf(0) }
+    val firstLaunch = remember { mutableStateOf(true) }
+    val context = LocalContext.current
     val days = listOf(1, 3, 7, 30)
     val state = purchaseOrderViewModel.result.collectAsState()
     val purchaseOrdersFilteredByDays = remember(purchaseOrders, noOfDaysShown) {
@@ -90,8 +93,13 @@ fun PurchaseOrderScreen(
                 }
             }
 
+
             LaunchedEffect(key1 = purchaseOrders) {
-                scaffoldState.snackbarHostState.showSnackbar(message = "Updating", duration = SnackbarDuration.Short)
+                if (!firstLaunch.value) {
+                    Toast.makeText(context, "Updating!", Toast.LENGTH_SHORT).show()
+                } else {
+                    firstLaunch.value = false
+                }
             }
         }
     }
@@ -114,10 +122,14 @@ fun PurchaseOrderItem(
                     Status.WAITING -> "To Receive"
                     Status.CANCELLED -> "Cancelled"
                     Status.COMPLETE -> "Delivered"
+                    Status.PENDING -> "Updating"
+                    Status.FAILED -> "Failed"
                 }, fontSize = 12.sp, color = when (purchaseOrder.status) {
                     Status.WAITING -> Color.Red
                     Status.CANCELLED -> Color.Gray
                     Status.COMPLETE -> Color.Green
+                    Status.PENDING -> Color.Black
+                    Status.FAILED -> Color.Red
                 }, fontWeight = FontWeight.Bold)
             }
         }
