@@ -47,9 +47,9 @@ class ProductViewModel : ViewModel() {
         }
     }
 
-    fun delete(key: String) {
+    fun delete(key: String, product: Product) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.delete(key = key) {
+            productRepository.delete(key = key, product = product) {
                     result ->
                 resultState.update { result }
             }

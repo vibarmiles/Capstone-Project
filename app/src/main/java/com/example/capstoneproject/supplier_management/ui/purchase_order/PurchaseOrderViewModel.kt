@@ -27,16 +27,25 @@ class PurchaseOrderViewModel : ViewModel() {
     var isLoading: MutableState<Boolean> = mutableStateOf(true)
     private val resultState = MutableStateFlow(FirebaseResult())
     val result = resultState.asStateFlow()
+    val returnSize = mutableStateOf(0)
 
     fun getAll(): MutableLiveData<List<PurchaseOrder>> {
         if (!this::purchaseOrders.isInitialized) {
-            purchaseOrders = purchaseOrderRepository.getAll(callback = { updateLoadingState() }) {
+            purchaseOrders = purchaseOrderRepository.getAll(callback = { updateLoadingState(); returnSize.value = it }) {
                     result ->
                 resultState.update { result }
             }
         }
 
         return purchaseOrders
+    }
+
+    fun load() {
+        viewModelScope.launch(Dispatchers.IO) {
+            purchaseOrders = purchaseOrderRepository.getAll(callback = { returnSize.value = it }) { result ->
+                resultState.update { result }
+            }
+        }
     }
 
     fun insert(purchaseOrder: PurchaseOrder, fail: Boolean = false, returnResult: Boolean = true) {

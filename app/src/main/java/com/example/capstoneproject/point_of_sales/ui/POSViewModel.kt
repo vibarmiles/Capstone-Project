@@ -26,16 +26,24 @@ class POSViewModel : ViewModel() {
     var isLoading: MutableState<Boolean> = mutableStateOf(true)
     private val resultState = MutableStateFlow(FirebaseResult())
     val result = resultState.asStateFlow()
+    val returnSize = mutableStateOf(0)
 
     fun getAll(): MutableLiveData<List<Invoice>> {
         if (!this::salesInvoices.isInitialized) {
-            salesInvoices = salesInvoiceRepository.getAll(callback = { updateLoadingState() }) {
-                    result ->
+            salesInvoices = salesInvoiceRepository.getAll(callback = { updateLoadingState(); returnSize.value = it }) { result ->
                 resultState.update { result }
             }
         }
 
         return salesInvoices
+    }
+
+    fun load() {
+        viewModelScope.launch(Dispatchers.IO) {
+            salesInvoices = salesInvoiceRepository.getAll(callback = { returnSize.value = it }) { result ->
+                resultState.update { result }
+            }
+        }
     }
 
     fun insert(invoice: Invoice, returnResult: Boolean = true, access: Boolean = false, callback: (FirebaseResult) -> Unit = {  }) {
@@ -61,6 +69,7 @@ class POSViewModel : ViewModel() {
 
     private fun updateLoadingState() {
         isLoading.value = false
+        Log.e("LOADING", isLoading.value.toString())
     }
 
     fun getDocument(id: String): Invoice? {

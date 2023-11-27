@@ -94,7 +94,7 @@ fun ProductScreen(
 
         if (showDeleteDialog) {
             MakeInactiveDialog(item = pair!!.second.productName, onCancel = { showDeleteDialog = false }) {
-                productViewModel.delete(key = pair!!.first)
+                productViewModel.delete(key = pair!!.first, product = products[pair!!.first]!!)
                 showDeleteDialog = false
             }
         }

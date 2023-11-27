@@ -26,9 +26,7 @@ import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
 import com.example.capstoneproject.supplier_management.data.firebase.Status
-import com.example.capstoneproject.supplier_management.ui.FilterByDate
 import kotlinx.coroutines.CoroutineScope
-import java.time.LocalDate
 
 @Composable
 fun PurchaseOrderScreen(
@@ -38,15 +36,10 @@ fun PurchaseOrderScreen(
     add: () -> Unit,
     view: (String) -> Unit
 ) {
-    val purchaseOrders by purchaseOrderViewModel.getAll().observeAsState(listOf())
-    var noOfDaysShown by remember { mutableStateOf(0) }
+    val purchaseOrders = purchaseOrderViewModel.getAll().observeAsState(listOf())
     val firstLaunch = remember { mutableStateOf(true) }
     val context = LocalContext.current
-    val days = listOf(1, 3, 7, 30)
     val state = purchaseOrderViewModel.result.collectAsState()
-    val purchaseOrdersFilteredByDays = remember(purchaseOrders, noOfDaysShown) {
-        mutableStateOf(purchaseOrders.filter { purchaseOrder -> LocalDate.parse(purchaseOrder.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())})
-    }
 
     Scaffold(
         topBar = {
@@ -68,16 +61,21 @@ fun PurchaseOrderScreen(
         } else {
             Column(modifier = Modifier
                 .padding(paddingValues)) {
-                FilterByDate(onClick = { noOfDaysShown = it })
 
                 LazyColumn {
-                    itemsIndexed(purchaseOrdersFilteredByDays.value) {
+                    itemsIndexed(purchaseOrders.value) {
                             _, it ->
                         PurchaseOrderItem(purchaseOrder = it, goto = { view.invoke(it) })
                     }
 
                     item {
-                        Spacer(modifier = Modifier.height(50.dp))
+                        if (purchaseOrderViewModel.returnSize.value == 5) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(4.dp)) {
+                                Button(onClick = { purchaseOrderViewModel.load()  }) {
+                                    androidx.compose.material.Text(text = "Load More")
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -94,7 +92,7 @@ fun PurchaseOrderScreen(
             }
 
 
-            LaunchedEffect(key1 = purchaseOrders) {
+            LaunchedEffect(key1 = purchaseOrders.value) {
                 if (!firstLaunch.value) {
                     Toast.makeText(context, "Updating!", Toast.LENGTH_SHORT).show()
                 } else {
@@ -113,7 +111,7 @@ fun PurchaseOrderItem(
     androidx.compose.material3.ListItem(
         colors = ProjectListItemColors(),
         modifier = Modifier.clickable { goto.invoke(purchaseOrder.id) },
-        headlineContent = { Text(text = purchaseOrder.date) },
+        headlineContent = { Text(text = purchaseOrder.date.toString()) },
         supportingContent = { Text(text = "Number of Items: ${purchaseOrder.products.count()}") },
         trailingContent = { 
             Column(modifier = Modifier.height(IntrinsicSize.Max), horizontalAlignment = Alignment.End) {

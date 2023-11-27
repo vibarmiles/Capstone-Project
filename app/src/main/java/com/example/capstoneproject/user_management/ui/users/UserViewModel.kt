@@ -89,7 +89,7 @@ class UserViewModel : ViewModel() {
     fun log(event: String) {
         Log.e("LOG USER", id)
         viewModelScope.launch(Dispatchers.IO) {
-            loggingRepository.log(log = com.example.capstoneproject.global.data.firebase.Log(event = event, date = LocalDateTime.now().toString(), userId = id))
+            loggingRepository.log(log = com.example.capstoneproject.global.data.firebase.Log(event = event, userId = id))
         }
     }
 

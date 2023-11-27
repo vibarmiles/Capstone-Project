@@ -1,9 +1,10 @@
 package com.example.capstoneproject.supplier_management.data.firebase.return_order
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.supplier_management.data.firebase.Status
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
@@ -13,17 +14,45 @@ import com.google.firebase.ktx.Firebase
 class ReturnOrderRepository : IReturnOrderRepository {
     private val firestore = Firebase.firestore
     private val returnOrderCollectionReference = firestore.collection("return_orders")
+    private var query = returnOrderCollectionReference.orderBy("date", Query.Direction.DESCENDING)
+    private lateinit var document: DocumentSnapshot
+    private  var ro = MutableLiveData<List<ReturnOrder>>()
 
-    override fun getAll(callback: () -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<ReturnOrder>> {
-        val ro = MutableLiveData<List<ReturnOrder>>()
-        returnOrderCollectionReference.addSnapshotListener { value, error ->
+    override fun getAll(callback: (Int) -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<ReturnOrder>> {
+        val current = ro.value?.toMutableList()
+
+        if (this::document.isInitialized) {
+            query = query.startAfter(document)
+        }
+
+        returnOrderCollectionReference.limit(10).addSnapshotListener { value, error ->
             error?.let {
                 result.invoke(FirebaseResult(result = false, errorMessage = error.message))
                 return@addSnapshotListener
             }
             value?.let {
-                ro.value = value.toObjects()
-                callback.invoke()
+                if (it.size() > 0) {
+                    document = it.documents[it.size() - 1]
+                }
+
+                if (current.isNullOrEmpty()) {
+                    ro.value = it.toObjects()
+                } else {
+                    for (queryDocumentSnapshot in it) {
+                        val new = queryDocumentSnapshot.toObject<ReturnOrder>()
+                        current.firstOrNull { returnOrder -> returnOrder.id == new.id }.let { found ->
+                            if (found != null) {
+                                current[current.indexOf(found)] = new
+                            } else {
+                                current.add(new)
+                            }
+                        }
+                    }
+
+                    ro.value = current
+                }
+
+                callback.invoke(it.size())
             }
         }
         return ro

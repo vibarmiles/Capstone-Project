@@ -67,7 +67,6 @@ fun TransferOrderForm(
                         onClick = {
                             transferOrderViewModel.insert(
                                 TransferOrder(
-                                    date = LocalDate.now().toString(),
                                     status = Status.WAITING,
                                     oldBranchId = oldBranchId!!,
                                     destinationBranchId = destinationBranchId!!,

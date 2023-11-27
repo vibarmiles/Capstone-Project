@@ -6,16 +6,11 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.ktx.storage
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZonedDateTime
 
 class LoggingRepository : ILoggingRepository {
     private val firestore = Firebase.firestore
     private val logsCollectionReference = firestore.collection("activity_logs")
     private val logs = MutableLiveData<List<Log>>()
-
 
     override fun getAll(callback: () -> Unit): MutableLiveData<List<Log>> {
         logsCollectionReference.addSnapshotListener { value, error ->

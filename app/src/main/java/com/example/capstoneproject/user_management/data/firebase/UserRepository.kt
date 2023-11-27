@@ -79,7 +79,7 @@ class UserRepository : IUserRepository {
     }
 
     override fun delete(key: String, result: (FirebaseResult) -> Unit) {
-        userCollectionReference.child(key).removeValue().addOnSuccessListener {
+        userCollectionReference.child(key).child("isActive").setValue(false).addOnSuccessListener {
             result.invoke(FirebaseResult(result = true))
         }.addOnFailureListener {
             result.invoke(FirebaseResult(result = false, errorMessage = it.message))

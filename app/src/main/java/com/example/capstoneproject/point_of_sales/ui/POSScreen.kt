@@ -12,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -27,9 +26,7 @@ import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
 import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
-import com.example.capstoneproject.supplier_management.ui.FilterByDate
 import kotlinx.coroutines.CoroutineScope
-import java.time.LocalDate
 
 @Composable
 fun POSScreen(
@@ -40,15 +37,10 @@ fun POSScreen(
     add: () -> Unit,
     view: (String) -> Unit
 ) {
-    val invoices by posViewModel.getAll().observeAsState(listOf())
-    var noOfDaysShown by remember { mutableStateOf(0) }
-    val days = listOf(1, 3, 7, 30)
+    val invoices = posViewModel.getAll().observeAsState(listOf())
     val state = posViewModel.result.collectAsState()
     val firstLaunch = remember { mutableStateOf(true) }
     val context = LocalContext.current
-    val invoicesFilteredByDays = remember(invoices, noOfDaysShown) {
-        mutableStateOf(invoices.filter { invoices -> LocalDate.parse(invoices.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())})
-    }
 
     Scaffold(
         topBar = {
@@ -69,16 +61,20 @@ fun POSScreen(
         } else {
             Column(modifier = Modifier
                 .padding(paddingValues)) {
-                FilterByDate(onClick = { noOfDaysShown = it })
-
                 LazyColumn {
-                    itemsIndexed(invoicesFilteredByDays.value) {_, it->
+                    itemsIndexed(invoices.value) {_, it->
                         POSItem(invoice = it, branchViewModel = branchViewModel, goto = { view.invoke(it) })
                         Divider()
                     }
 
                     item {
-                        Spacer(modifier = Modifier.height(50.dp))
+                        if (posViewModel.returnSize.value == 5) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(4.dp)) {
+                                Button(onClick = { posViewModel.load()  }) {
+                                    Text(text = "Load More")
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -93,7 +89,7 @@ fun POSScreen(
                 }
             }
 
-            LaunchedEffect(key1 = invoices) {
+            LaunchedEffect(key1 = invoices.value) {
                 if (!firstLaunch.value) {
                     Toast.makeText(context, "Updating!", Toast.LENGTH_SHORT).show()
                 } else {
@@ -118,7 +114,7 @@ fun POSItem(
         headlineContent = {
             Column {
                 Text(text = branchViewModel.getBranch(invoice.branchId)?.name ?: "Unknown Branch")
-                Text(text = invoice.date)
+                Text(text = invoice.date.toString())
             }
         },
         supportingContent = {

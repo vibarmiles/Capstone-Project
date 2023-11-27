@@ -213,7 +213,6 @@ fun POSForm(
             ConfirmationDialog(onCancel = { showConfirmationDialog = false }) {
                 posViewModel.transact(
                     Invoice(
-                        date = LocalDate.now().toString(),
                         branchId = branchId!!,
                         userId = userId,
                         products = soldProductsViewModel.sales.let {

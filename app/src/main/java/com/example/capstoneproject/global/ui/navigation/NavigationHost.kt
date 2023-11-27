@@ -69,7 +69,6 @@ fun NavigationHost(
     val contactViewModel: ContactViewModel = viewModel()
     val userViewModel: UserViewModel = viewModel()
     val posViewModel: POSViewModel = viewModel()
-    val logs by userViewModel.getLogs().observeAsState(listOf())
     val context = LocalContext.current
 
     val googleAuthUiClient by lazy {
@@ -498,12 +497,6 @@ fun NavigationHost(
                 callback.invoke(R.string.login)
                 scaffoldState.snackbarHostState.showSnackbar(message = "Signed Out Successfully!", duration = SnackbarDuration.Short)
             }
-        }
-    }
-
-    LaunchedEffect(key1 = logs) {
-        if (logs.isNotEmpty()) {
-            Log.e("LOG", logs.last().toString())
         }
     }
 }

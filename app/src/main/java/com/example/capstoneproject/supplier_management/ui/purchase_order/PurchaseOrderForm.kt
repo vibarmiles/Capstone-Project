@@ -60,7 +60,6 @@ fun PurchaseOrderForm(
                     onClick = {
                         purchaseOrderViewModel.insert(
                             PurchaseOrder(
-                                date = LocalDate.now().toString(),
                                 status = Status.WAITING,
                                 products = purchasedProductsViewModel.purchases.associateBy { product ->
                                     "Item ${purchasedProductsViewModel.purchases.indexOf(product)}"

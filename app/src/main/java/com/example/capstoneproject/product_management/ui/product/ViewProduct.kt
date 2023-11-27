@@ -95,7 +95,7 @@ fun ViewProduct(dismissRequest: () -> Unit, productViewModel: ProductViewModel, 
 
             if (showDeleteDialog) {
                 MakeInactiveDialog(item = product.productName, onCancel = { showDeleteDialog = false }) {
-                    productViewModel.delete(key = productId)
+                    productViewModel.delete(key = productId, product = product)
                     showDeleteDialog = false
                     delete.invoke()
                 }

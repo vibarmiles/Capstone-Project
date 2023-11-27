@@ -23,9 +23,7 @@ import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.data.firebase.return_order.ReturnOrder
-import com.example.capstoneproject.supplier_management.ui.FilterByDate
 import kotlinx.coroutines.CoroutineScope
-import java.time.LocalDate
 
 @Composable
 fun ReturnOrderScreen(
@@ -35,15 +33,10 @@ fun ReturnOrderScreen(
     add: () -> Unit,
     view: (String) -> Unit
 ) {
-    val returnOrders by returnOrderViewModel.getAll().observeAsState(listOf())
-    var noOfDaysShown by remember { mutableStateOf(0) }
+    val returnOrders = returnOrderViewModel.getAll().observeAsState(listOf())
     val firstLaunch = remember { mutableStateOf(true) }
-    val days = listOf(1, 3, 7, 30)
     val state = returnOrderViewModel.result.collectAsState()
     val context = LocalContext.current
-    val returnOrdersFilteredByDays = remember(returnOrders, noOfDaysShown) {
-        mutableStateOf(returnOrders.filter { returnOrders -> LocalDate.parse(returnOrders.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())})
-    }
 
     Scaffold(
         topBar = {
@@ -65,16 +58,21 @@ fun ReturnOrderScreen(
         } else {
             Column(modifier = Modifier
                 .padding(paddingValues)) {
-                FilterByDate(onClick = { noOfDaysShown = it })
 
                 LazyColumn {
-                    itemsIndexed(returnOrdersFilteredByDays.value) {
+                    itemsIndexed(returnOrders.value) {
                             _, it ->
                         ReturnOrderItem(returnOrder = it, goto = { view.invoke(it) })
                     }
 
                     item {
-                        Spacer(modifier = Modifier.height(50.dp))
+                        if (returnOrderViewModel.returnSize.value == 5) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(4.dp)) {
+                                Button(onClick = { returnOrderViewModel.load()  }) {
+                                    Text(text = "Load More")
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -89,7 +87,7 @@ fun ReturnOrderScreen(
                 }
             }
 
-            LaunchedEffect(key1 = returnOrders) {
+            LaunchedEffect(key1 = returnOrders.value) {
                 if (!firstLaunch.value) {
                     Toast.makeText(context, "Updating!", Toast.LENGTH_SHORT).show()
                 } else {
@@ -108,7 +106,7 @@ fun ReturnOrderItem(
     androidx.compose.material3.ListItem(
         colors = ProjectListItemColors(),
         modifier = Modifier.clickable { goto.invoke(returnOrder.id) },
-        headlineContent = { Text(text = returnOrder.date) },
+        headlineContent = { Text(text = returnOrder.date.toString()) },
         supportingContent = {
             Column {
                 Text(text = "Number of Items: ${returnOrder.products.count()}")

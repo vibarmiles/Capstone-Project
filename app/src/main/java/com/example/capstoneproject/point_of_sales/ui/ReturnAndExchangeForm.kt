@@ -194,7 +194,6 @@ fun ReturnAndExchangeForm(
                 ConfirmationDialogForReturnAndExchange(onCancel = { showConfirmationDialog = false }) { checked ->
                     posViewModel.returnAndExchange(
                         Invoice(
-                            date = LocalDate.now().toString(),
                             originalInvoiceId = invoiceId,
                             branchId = branchId,
                             userId = userId,
@@ -224,7 +223,6 @@ fun ReturnAndExchangeForm(
                         }
 
                         returnOrderViewModel.insert(returnOrder = ReturnOrder(
-                            date = LocalDate.now().toString(),
                             status = Status.WAITING,
                             reason = "Returned by customer",
                             branchId = branchId,

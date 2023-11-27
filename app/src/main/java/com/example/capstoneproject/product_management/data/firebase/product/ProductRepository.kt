@@ -137,8 +137,8 @@ class ProductRepository : IProductRepository {
         }
     }
 
-    override fun delete(key: String, result: (FirebaseResult) -> Unit) {
-        productCollectionReference.child(key).removeValue().addOnSuccessListener {
+    override fun delete(key: String, product: Product, result: (FirebaseResult) -> Unit) {
+        productCollectionReference.child(key).setValue(product.copy(isActive = false)).addOnSuccessListener {
             result.invoke(FirebaseResult(result = true))
         }.addOnFailureListener {
             result.invoke(FirebaseResult(result = false, errorMessage = it.message))

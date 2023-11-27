@@ -3,7 +3,8 @@ package com.example.capstoneproject.point_of_sales.data.firebase
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
-import com.example.capstoneproject.supplier_management.data.firebase.Status
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
@@ -13,19 +14,49 @@ import com.google.firebase.ktx.Firebase
 class SalesInvoiceRepository : ISalesInvoiceRepository {
     private val firestore = Firebase.firestore
     private val salesInvoiceCollectionReference = firestore.collection("sales_invoices")
+    private var query = salesInvoiceCollectionReference.orderBy("date", Query.Direction.DESCENDING)
+    private lateinit var document: DocumentSnapshot
+    private val si = MutableLiveData<List<Invoice>>()
 
-    override fun getAll(callback: () -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<Invoice>> {
-        val si = MutableLiveData<List<Invoice>>()
-        salesInvoiceCollectionReference.addSnapshotListener { value, error ->
+
+    override fun getAll(callback: (Int) -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<Invoice>> {
+        val current = si.value?.toMutableList()
+
+        if (this::document.isInitialized) {
+            query = query.startAfter(document)
+        }
+
+        query.limit(10).addSnapshotListener { value, error ->
             error?.let {
                 result.invoke(FirebaseResult(result = false, errorMessage = error.message))
                 return@addSnapshotListener
             }
             value?.let {
-                si.value = value.toObjects()
-                callback.invoke()
+                if (it.size() > 0) {
+                    document = it.documents[it.size() - 1]
+                }
+
+                if (current.isNullOrEmpty()) {
+                    si.value = it.toObjects()
+                } else {
+                    for (queryDocumentSnapshot in it) {
+                        val new = queryDocumentSnapshot.toObject<Invoice>()
+                        current.firstOrNull { invoice -> invoice.id == new.id }.let { found ->
+                            if (found != null) {
+                                current[current.indexOf(found)] = new
+                            } else {
+                                current.add(new)
+                            }
+                        }
+                    }
+
+                    si.value = current
+                }
+
+                callback.invoke(it.size())
             }
         }
+
         return si
     }
 

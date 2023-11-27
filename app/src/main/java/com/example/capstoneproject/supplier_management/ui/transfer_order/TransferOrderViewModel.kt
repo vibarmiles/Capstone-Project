@@ -28,16 +28,25 @@ class TransferOrderViewModel : ViewModel() {
     var isLoading: MutableState<Boolean> = mutableStateOf(true)
     private val resultState = MutableStateFlow(FirebaseResult())
     val result = resultState.asStateFlow()
+    val returnSize = mutableStateOf(0)
 
     fun getAll(): MutableLiveData<List<TransferOrder>> {
         if (!this::transferOrders.isInitialized) {
-            transferOrders = transferOrderRepository.getAll(callback = { updateLoadingState() }) {
+            transferOrders = transferOrderRepository.getAll(callback = { updateLoadingState(); returnSize.value = it }) {
                     result ->
                 resultState.update { result }
             }
         }
 
         return transferOrders
+    }
+
+    fun load() {
+        viewModelScope.launch(Dispatchers.IO) {
+            transferOrders = transferOrderRepository.getAll(callback = { returnSize.value = it }) { result ->
+                resultState.update { result }
+            }
+        }
     }
 
     fun insert(transferOrder: TransferOrder, returnResult: Boolean = true, fail: Boolean = false) {

@@ -43,7 +43,7 @@ class BranchRepository : IBranchRepository {
     }
 
     override fun delete(branch: Branch, result: (FirebaseResult) -> Unit) {
-        branchCollectionReference.document(branch.id).delete().addOnSuccessListener {
+        branchCollectionReference.document(branch.id).set(branch.copy(isActive = false)).addOnSuccessListener {
             result.invoke(FirebaseResult(result = true))
         }.addOnFailureListener {
             result.invoke(FirebaseResult(result = false, errorMessage = it.message))

@@ -1,7 +1,6 @@
 package com.example.capstoneproject.supplier_management.ui.transfer_order
 
 import android.widget.Toast
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,15 +9,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,9 +25,7 @@ import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.data.firebase.transfer_order.TransferOrder
-import com.example.capstoneproject.supplier_management.ui.FilterByDate
 import kotlinx.coroutines.CoroutineScope
-import java.time.LocalDate
 
 @Composable
 fun TransferOrderScreen(
@@ -43,15 +36,10 @@ fun TransferOrderScreen(
     add: () -> Unit,
     view: (String) -> Unit
 ) {
-    val transferOrders by transferOrderViewModel.getAll().observeAsState(listOf())
-    var noOfDaysShown by remember { mutableStateOf(0) }
+    val transferOrders = transferOrderViewModel.getAll().observeAsState(listOf())
     val firstLaunch = remember { mutableStateOf(true) }
     val context = LocalContext.current
-    val days = listOf(1, 3, 7, 30)
     val state = transferOrderViewModel.result.collectAsState()
-    val transferOrdersFilteredByDays = remember(transferOrders, noOfDaysShown) {
-        mutableStateOf(transferOrders.filter { returnOrders -> LocalDate.parse(returnOrders.date) >= LocalDate.now().minusDays(days[noOfDaysShown].toLong())})
-    }
 
     Scaffold(
         topBar = {
@@ -73,16 +61,20 @@ fun TransferOrderScreen(
         } else {
             Column(modifier = Modifier
                 .padding(paddingValues)) {
-                FilterByDate(onClick = { noOfDaysShown = it })
-
                 LazyColumn {
-                    itemsIndexed(transferOrdersFilteredByDays.value) {
+                    itemsIndexed(transferOrders.value) {
                             _, it ->
                         TransferOrderItem(transferOrder = it, branchViewModel = branchViewModel, goto = { view.invoke(it) })
                     }
 
                     item {
-                        Spacer(modifier = Modifier.height(50.dp))
+                        if (transferOrderViewModel.returnSize.value == 5) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(4.dp)) {
+                                Button(onClick = { transferOrderViewModel.load()  }) {
+                                    Text(text = "Load More")
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -97,7 +89,7 @@ fun TransferOrderScreen(
                 }
             }
 
-            LaunchedEffect(key1 = transferOrders) {
+            LaunchedEffect(key1 = transferOrders.value) {
                 if (!firstLaunch.value) {
                     Toast.makeText(context, "Updating!", Toast.LENGTH_SHORT).show()
                 } else {
@@ -119,7 +111,7 @@ fun TransferOrderItem(
     ) {
         androidx.compose.material3.ListItem(
             colors = ProjectListItemColors(),
-            headlineContent = { Text(text = transferOrder.date) },
+            headlineContent = { Text(text = transferOrder.date.toString()) },
             supportingContent = {
                 Column {
                     Text(text = "Number of Items: ${transferOrder.products.count()}")

@@ -43,7 +43,7 @@ class CategoryRepository : ICategoryRepository {
     }
 
     override fun delete(category: Category, result: (FirebaseResult) -> Unit) {
-        categoryCollectionReference.document(category.id).delete().addOnSuccessListener {
+        categoryCollectionReference.document(category.id).set(category.copy(isActive = false)).addOnSuccessListener {
             result.invoke(FirebaseResult(result = true))
         }.addOnFailureListener {
             result.invoke(FirebaseResult(result = false, errorMessage = it.message))

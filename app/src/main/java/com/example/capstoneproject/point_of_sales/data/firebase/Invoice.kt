@@ -1,12 +1,14 @@
 package com.example.capstoneproject.point_of_sales.data.firebase
 
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.ServerTimestamp
+import java.util.Date
 
 data class Invoice(
     @DocumentId val id: String = "",
     val originalInvoiceId: String = "",
     val invoiceType: InvoiceType = InvoiceType.SALE,
-    val date: String = "",
+    @ServerTimestamp val date: Date? = null,
     val branchId: String = "",
     val userId: String = "",
     val lock: Boolean = false,

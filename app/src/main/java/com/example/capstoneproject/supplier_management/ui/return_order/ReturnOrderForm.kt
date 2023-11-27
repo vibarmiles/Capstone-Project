@@ -65,7 +65,6 @@ fun ReturnOrderForm(
                         onClick = {
                             returnOrderViewModel.insert(
                                 ReturnOrder(
-                                    date = LocalDate.now().toString(),
                                     status = Status.WAITING,
                                     reason = reason,
                                     branchId = branchId!!,
