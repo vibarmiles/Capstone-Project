@@ -66,7 +66,7 @@ fun ReturnOrderScreen(
                     }
 
                     item {
-                        if (returnOrderViewModel.returnSize.value == 5) {
+                        if (returnOrderViewModel.returnSize.value == 10) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(4.dp)) {
                                 Button(onClick = { returnOrderViewModel.load()  }) {
                                     Text(text = "Load More")

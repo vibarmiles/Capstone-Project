@@ -9,7 +9,6 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
-import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
 
 class PurchaseOrderRepository : IPurchaseOrderRepository {
@@ -17,44 +16,45 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
     private val purchaseOrderCollectionReference = firestore.collection("purchase_orders")
     private lateinit var document: DocumentSnapshot
     private var query = purchaseOrderCollectionReference.orderBy("date", Query.Direction.DESCENDING)
-    private  var po = MutableLiveData<List<PurchaseOrder>>()
+    private  val po = MutableLiveData<List<PurchaseOrder>>()
+    private var currentSize = 10
 
     override fun getAll(callback: (Int) -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<PurchaseOrder>> {
-        val current = po.value?.toMutableList()
-
         if (this::document.isInitialized) {
             query = query.startAfter(document)
         }
 
-        val po = MutableLiveData<List<PurchaseOrder>>()
         purchaseOrderCollectionReference.limit(10).addSnapshotListener { value, error ->
             error?.let {
                 result.invoke(FirebaseResult(result = false, errorMessage = error.message))
                 return@addSnapshotListener
             }
             value?.let {
+                val current = po.value?.toMutableList() ?: mutableListOf()
+
                 if (it.size() > 0) {
                     document = it.documents[it.size() - 1]
+                    currentSize = if (currentSize == 10) it.size() else 0
                 }
 
-                if (current.isNullOrEmpty()) {
-                    po.value = it.toObjects()
-                } else {
-                    for (queryDocumentSnapshot in it) {
-                        val new = queryDocumentSnapshot.toObject<PurchaseOrder>()
-                        current.firstOrNull { purchaseOrder -> purchaseOrder.id == new.id }.let { found ->
-                            if (found != null) {
-                                current[current.indexOf(found)] = new
-                            } else {
-                                current.add(new)
-                            }
+                for (queryDocumentSnapshot in it) {
+                    val new = queryDocumentSnapshot.toObject<PurchaseOrder>()
+                    current.firstOrNull { purchaseOrder -> purchaseOrder.id == new.id }.let { found ->
+                        if (found != null) {
+                            current[current.indexOf(found)] = new
+                        } else {
+                            current.add(new)
                         }
                     }
-
-                    po.value = current
                 }
 
-                callback.invoke(it.size())
+                po.value = current
+
+                if (currentSize > 0) {
+                    callback.invoke(it.size())
+                } else {
+                    callback.invoke(0)
+                }
             }
         }
         return po

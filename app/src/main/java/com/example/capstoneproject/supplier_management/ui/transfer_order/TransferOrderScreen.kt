@@ -68,7 +68,7 @@ fun TransferOrderScreen(
                     }
 
                     item {
-                        if (transferOrderViewModel.returnSize.value == 5) {
+                        if (transferOrderViewModel.returnSize.value == 10) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(4.dp)) {
                                 Button(onClick = { transferOrderViewModel.load()  }) {
                                     Text(text = "Load More")

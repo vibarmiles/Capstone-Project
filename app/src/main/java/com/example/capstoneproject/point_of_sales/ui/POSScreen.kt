@@ -68,7 +68,7 @@ fun POSScreen(
                     }
 
                     item {
-                        if (posViewModel.returnSize.value == 5) {
+                        if (posViewModel.returnSize.value == 3) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(4.dp)) {
                                 Button(onClick = { posViewModel.load()  }) {
                                     Text(text = "Load More")

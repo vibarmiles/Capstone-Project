@@ -8,7 +8,6 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
-import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
 
 class SalesInvoiceRepository : ISalesInvoiceRepository {
@@ -17,11 +16,10 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
     private var query = salesInvoiceCollectionReference.orderBy("date", Query.Direction.DESCENDING)
     private lateinit var document: DocumentSnapshot
     private val si = MutableLiveData<List<Invoice>>()
+    private var currentSize = 10
 
 
     override fun getAll(callback: (Int) -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<Invoice>> {
-        val current = si.value?.toMutableList()
-
         if (this::document.isInitialized) {
             query = query.startAfter(document)
         }
@@ -32,28 +30,31 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
                 return@addSnapshotListener
             }
             value?.let {
+                val current = si.value?.toMutableList() ?: mutableListOf()
+
                 if (it.size() > 0) {
                     document = it.documents[it.size() - 1]
+                    currentSize = if (currentSize == 10) it.size() else 0
                 }
 
-                if (current.isNullOrEmpty()) {
-                    si.value = it.toObjects()
-                } else {
-                    for (queryDocumentSnapshot in it) {
-                        val new = queryDocumentSnapshot.toObject<Invoice>()
-                        current.firstOrNull { invoice -> invoice.id == new.id }.let { found ->
-                            if (found != null) {
-                                current[current.indexOf(found)] = new
-                            } else {
-                                current.add(new)
-                            }
+                for (queryDocumentSnapshot in it) {
+                    val new = queryDocumentSnapshot.toObject<Invoice>()
+                    current.firstOrNull { invoice -> invoice.id == new.id }.let { found ->
+                        if (found != null) {
+                            current[current.indexOf(found)] = new
+                        } else {
+                            current.add(new)
                         }
                     }
-
-                    si.value = current
                 }
 
-                callback.invoke(it.size())
+                si.value = current
+
+                if (currentSize > 0) {
+                    callback.invoke(it.size())
+                } else {
+                    callback.invoke(0)
+                }
             }
         }
 

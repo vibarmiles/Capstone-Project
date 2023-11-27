@@ -8,7 +8,6 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
-import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
 
 class ReturnOrderRepository : IReturnOrderRepository {
@@ -16,11 +15,10 @@ class ReturnOrderRepository : IReturnOrderRepository {
     private val returnOrderCollectionReference = firestore.collection("return_orders")
     private var query = returnOrderCollectionReference.orderBy("date", Query.Direction.DESCENDING)
     private lateinit var document: DocumentSnapshot
-    private  var ro = MutableLiveData<List<ReturnOrder>>()
+    private val ro = MutableLiveData<List<ReturnOrder>>()
+    private var currentSize = 10
 
     override fun getAll(callback: (Int) -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<ReturnOrder>> {
-        val current = ro.value?.toMutableList()
-
         if (this::document.isInitialized) {
             query = query.startAfter(document)
         }
@@ -31,28 +29,31 @@ class ReturnOrderRepository : IReturnOrderRepository {
                 return@addSnapshotListener
             }
             value?.let {
+                val current = ro.value?.toMutableList() ?: mutableListOf()
+
                 if (it.size() > 0) {
                     document = it.documents[it.size() - 1]
+                    currentSize = if (currentSize == 10) it.size() else 0
                 }
 
-                if (current.isNullOrEmpty()) {
-                    ro.value = it.toObjects()
-                } else {
-                    for (queryDocumentSnapshot in it) {
-                        val new = queryDocumentSnapshot.toObject<ReturnOrder>()
-                        current.firstOrNull { returnOrder -> returnOrder.id == new.id }.let { found ->
-                            if (found != null) {
-                                current[current.indexOf(found)] = new
-                            } else {
-                                current.add(new)
-                            }
+                for (queryDocumentSnapshot in it) {
+                    val new = queryDocumentSnapshot.toObject<ReturnOrder>()
+                    current.firstOrNull { returnOrder -> returnOrder.id == new.id }.let { found ->
+                        if (found != null) {
+                            current[current.indexOf(found)] = new
+                        } else {
+                            current.add(new)
                         }
                     }
-
-                    ro.value = current
                 }
 
-                callback.invoke(it.size())
+                ro.value = current
+
+                if (currentSize > 0) {
+                    callback.invoke(it.size())
+                } else {
+                    callback.invoke(0)
+                }
             }
         }
         return ro

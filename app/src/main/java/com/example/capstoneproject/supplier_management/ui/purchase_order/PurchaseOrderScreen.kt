@@ -69,7 +69,7 @@ fun PurchaseOrderScreen(
                     }
 
                     item {
-                        if (purchaseOrderViewModel.returnSize.value == 5) {
+                        if (purchaseOrderViewModel.returnSize.value == 10) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(4.dp)) {
                                 Button(onClick = { purchaseOrderViewModel.load()  }) {
                                     androidx.compose.material.Text(text = "Load More")
