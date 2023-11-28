@@ -26,6 +26,7 @@ import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
 import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
+import com.example.capstoneproject.point_of_sales.data.firebase.Payment
 import com.example.capstoneproject.point_of_sales.data.firebase.Product
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.Status
@@ -35,7 +36,6 @@ import com.example.capstoneproject.supplier_management.ui.contact.ContactViewMod
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderViewModel
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnedProductsViewModel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
-import java.time.LocalDate
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -64,6 +64,8 @@ fun ReturnAndExchangeForm(
     val invoice = posViewModel.getDocument(id = invoiceId)!!
     var expanded by remember { mutableStateOf(false) }
     var type by remember { mutableStateOf(InvoiceType.REFUND) }
+    var payment by remember { mutableStateOf(Payment.CASH) }
+    var paymentTextFieldValue by remember { mutableStateOf(Payment.CASH.name) }
 
     Scaffold(
         topBar = {
@@ -96,6 +98,8 @@ fun ReturnAndExchangeForm(
         ) {
             Column(modifier = Modifier
                 .padding(16.dp)) {
+                var expandedPayment by remember { mutableStateOf(false) }
+
                 if (soldProductsViewModel.sales.isEmpty()) {
                     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                         OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, colors = GlobalTextFieldColors(), label = {
@@ -119,6 +123,42 @@ fun ReturnAndExchangeForm(
                     OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, colors = GlobalTextFieldColors(), label = {
                         Text(text = "Type")
                     }, modifier = Modifier.fillMaxWidth(), enabled = false, value = type.toString(), readOnly = true, onValueChange = {  })
+                }
+
+                ExposedDropdownMenuBox(
+                    expanded = expandedPayment,
+                    onExpandedChange = { expandedPayment = !expandedPayment }) {
+                    OutlinedTextField(
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = expandedPayment
+                            )
+                        },
+                        colors = GlobalTextFieldColors(),
+                        label = {
+                            androidx.compose.material3.Text(text = "Sell Item from this branch")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        value = paymentTextFieldValue,
+                        readOnly = true,
+                        onValueChange = { })
+                    DropdownMenu(modifier = Modifier
+                        .exposedDropdownSize()
+                        .fillMaxWidth(),
+                        expanded = expandedPayment,
+                        onDismissRequest = { expandedPayment = false }) {
+
+                        enumValues<Payment>().forEach { method ->
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(text = method.name) },
+                                onClick = {
+                                    payment = method
+                                    paymentTextFieldValue = method.name
+                                    expandedPayment = false
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -198,6 +238,7 @@ fun ReturnAndExchangeForm(
                             branchId = branchId,
                             userId = userId,
                             invoiceType = type,
+                            payment = payment,
                             products = soldProductsViewModel.sales.let {
                                 it.associateBy { product ->
                                     "Item ${soldProductsViewModel.sales.indexOf(product)}"

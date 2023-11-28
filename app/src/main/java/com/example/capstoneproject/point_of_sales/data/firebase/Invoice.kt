@@ -12,6 +12,7 @@ data class Invoice(
     val branchId: String = "",
     val userId: String = "",
     val lock: Boolean = false,
+    val payment: Payment = Payment.CASH,
     val products: Map<String, Product> = mapOf()
 )
 
@@ -25,4 +26,8 @@ data class Product(
 
 enum class InvoiceType {
     SALE, EXCHANGE, REFUND
+}
+
+enum class Payment {
+    CASH, BANK, GCASH
 }

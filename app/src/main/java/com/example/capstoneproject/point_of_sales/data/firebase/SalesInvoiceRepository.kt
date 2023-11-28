@@ -50,6 +50,8 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
 
                 si.value = current
 
+                Log.e("CURRENT SIZE", currentSize.toString())
+
                 if (currentSize > 0) {
                     callback.invoke(it.size())
                 } else {

@@ -25,13 +25,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
+import com.example.capstoneproject.point_of_sales.data.firebase.Payment
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.point_of_sales.data.firebase.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
-import java.time.LocalDate
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -56,6 +56,8 @@ fun POSForm(
     var productToRemove: Product? = null
     var branchId by remember { mutableStateOf(branches.value.firstOrNull()?.id) }
     var textFieldValue by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches Found") }
+    var payment by remember { mutableStateOf(Payment.CASH) }
+    var paymentTextFieldValue by remember { mutableStateOf(Payment.CASH.name) }
 
     Scaffold(
         topBar = {
@@ -90,6 +92,8 @@ fun POSForm(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    var expandedPayment by remember { mutableStateOf(false) }
+
                     if (soldProductsViewModel.sales.isEmpty()) {
                         var expanded by remember { mutableStateOf(false) }
                         ExposedDropdownMenuBox(
@@ -138,6 +142,42 @@ fun POSForm(
                             enabled = false,
                             readOnly = true,
                             onValueChange = { })
+                    }
+
+                    ExposedDropdownMenuBox(
+                        expanded = expandedPayment,
+                        onExpandedChange = { expandedPayment = !expandedPayment }) {
+                        OutlinedTextField(
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = expandedPayment
+                                )
+                            },
+                            colors = GlobalTextFieldColors(),
+                            label = {
+                                androidx.compose.material3.Text(text = "Sell Item from this branch")
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            value = paymentTextFieldValue,
+                            readOnly = true,
+                            onValueChange = { })
+                        DropdownMenu(modifier = Modifier
+                            .exposedDropdownSize()
+                            .fillMaxWidth(),
+                            expanded = expandedPayment,
+                            onDismissRequest = { expandedPayment = false }) {
+
+                            enumValues<Payment>().forEach { method ->
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = { Text(text = method.name) },
+                                    onClick = {
+                                        payment = method
+                                        paymentTextFieldValue = method.name
+                                        expandedPayment = false
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -215,6 +255,7 @@ fun POSForm(
                     Invoice(
                         branchId = branchId!!,
                         userId = userId,
+                        payment = payment,
                         products = soldProductsViewModel.sales.let {
                             it.associateBy { product ->
                                 "Item ${soldProductsViewModel.sales.indexOf(product)}"
