@@ -9,8 +9,6 @@ import androidx.compose.material.ScaffoldState
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -152,11 +150,10 @@ fun NavigationHost(
                 scope = scope,
                 scaffoldState = scaffoldState,
                 branchViewModel = branchViewModel,
+                contactViewModel = contactViewModel,
                 productViewModel = productViewModel,
                 categoryViewModel = categoryViewModel,
-                set = { id -> navController.navigate(Routes.Product.Set.createRoute(id)) },
                 add = { navController.navigate(Routes.Product.Add.route) },
-                edit = { id -> navController.navigate(Routes.Product.Edit.createRoute(id)) },
                 view = { id -> navController.navigate(Routes.Product.View.createRoute(id)) }
             )
         }

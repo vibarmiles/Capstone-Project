@@ -1,10 +1,11 @@
 package com.example.capstoneproject.supplier_management.ui.return_order
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -16,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
@@ -24,7 +26,11 @@ import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.data.firebase.return_order.ReturnOrder
 import kotlinx.coroutines.CoroutineScope
+import java.time.*
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ReturnOrderScreen(
     scope: CoroutineScope,
@@ -60,9 +66,36 @@ fun ReturnOrderScreen(
                 .padding(paddingValues)) {
 
                 LazyColumn {
-                    itemsIndexed(returnOrders.value) {
-                            _, it ->
-                        ReturnOrderItem(returnOrder = it, goto = { view.invoke(it) })
+                    var currentDate = LocalDate.now().plusDays(1)
+
+                    returnOrders.value.sortedByDescending { document -> document.date }.forEach { ro ->
+                        val localDateTime = if (ro.date != null) Instant.ofEpochMilli(ro.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
+                        val date = localDateTime.toLocalDate()
+                        val time = localDateTime.toLocalTime()
+
+                        if (currentDate != date) {
+                            currentDate = date
+
+                            stickyHeader {
+                                Column(modifier = Modifier
+                                    .background(color = MaterialTheme.colors.surface)
+                                    .fillMaxWidth()
+                                    .padding(16.dp)) {
+                                    Text(
+                                        text = DateTimeFormatter.ofLocalizedDate(
+                                            FormatStyle.FULL
+                                        ).format(date),
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colors.secondary
+                                    )
+                                }
+                                Divider()
+                            }
+                        }
+
+                        item {
+                            ReturnOrderItem(time = time, returnOrder = ro, goto = { view.invoke(it) })
+                        }
                     }
 
                     item {
@@ -100,26 +133,32 @@ fun ReturnOrderScreen(
 
 @Composable
 fun ReturnOrderItem(
+    time: LocalTime,
     returnOrder: ReturnOrder,
     goto: (String) -> Unit
 ) {
     androidx.compose.material3.ListItem(
         colors = ProjectListItemColors(),
         modifier = Modifier.clickable { goto.invoke(returnOrder.id) },
-        headlineContent = { Text(text = returnOrder.date.toString()) },
+        headlineContent = {
+            Column {
+                Text(
+                    text = "${returnOrder.products.values.sumOf { it.quantity }} Units",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm:ss a")))
+            }
+        },
         supportingContent = {
             Column {
-                Text(text = "Number of Items: ${returnOrder.products.count()}")
                 Text(text = "Reason: ${returnOrder.reason}")
             }
         },
         trailingContent = {
             Column(modifier = Modifier.height(IntrinsicSize.Max), horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "${returnOrder.products.values.sumOf { it.quantity }} Units",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
                 Text(
                     text = when (returnOrder.status) {
                         Status.WAITING -> "To Return"

@@ -57,7 +57,7 @@ fun ContactScreen(
                 CircularProgressIndicator()
             }
         } else {
-            ContactScreenContent(paddingValues = paddingValues, contacts = contacts.value, edit = { edit.invoke(it) }) {
+            ContactScreenContent(paddingValues = paddingValues, contacts = contacts.value.sortedBy { it.name.uppercase() }, edit = { edit.invoke(it) }) {
                 contact = it
                 showDeleteDialog = true
             }

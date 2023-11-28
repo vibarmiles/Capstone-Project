@@ -1,6 +1,8 @@
 package com.example.capstoneproject.point_of_sales.ui
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,8 +29,13 @@ import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
 import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
+import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderItem
 import kotlinx.coroutines.CoroutineScope
+import java.time.*
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun POSScreen(
     scope: CoroutineScope,
@@ -62,14 +70,44 @@ fun POSScreen(
             Column(modifier = Modifier
                 .padding(paddingValues)) {
                 LazyColumn {
-                    itemsIndexed(invoices.value) {_, it->
-                        POSItem(invoice = it, branchViewModel = branchViewModel, goto = { view.invoke(it) })
-                        Divider()
+                    var currentDate = LocalDate.now().plusDays(1)
+
+                    invoices.value.sortedByDescending { document -> document.date }.forEach { invoice ->
+                        val localDateTime = if (invoice.date != null) Instant.ofEpochMilli(invoice.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
+                        val date = localDateTime.toLocalDate()
+                        val time = localDateTime.toLocalTime()
+
+                        if (currentDate != date) {
+                            currentDate = date
+
+                            stickyHeader {
+                                Column(modifier = Modifier
+                                    .background(color = MaterialTheme.colors.surface)
+                                    .fillMaxWidth()
+                                    .padding(16.dp)) {
+                                    Text(
+                                        text = DateTimeFormatter.ofLocalizedDate(
+                                            FormatStyle.FULL
+                                        ).format(date),
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colors.secondary
+                                    )
+                                }
+                                Divider()
+                            }
+                        }
+
+                        item {
+                            POSItem(time = time, invoice = invoice, branchViewModel = branchViewModel, goto = { view.invoke(it) })
+                        }
                     }
 
                     item {
                         if (posViewModel.returnSize.value == 10) {
-                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(4.dp)) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 50.dp)
+                                .padding(4.dp)) {
                                 Button(onClick = { posViewModel.load()  }) {
                                     Text(text = "Load More")
                                 }
@@ -102,42 +140,35 @@ fun POSScreen(
 
 @Composable
 fun POSItem(
+    time: LocalTime,
     invoice: Invoice,
     branchViewModel: BranchViewModel,
     goto: (String) -> Unit
 ) {
-    androidx.compose.material3.ListItem(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { goto.invoke(invoice.id) },
-        colors = ProjectListItemColors(),
-        headlineContent = {
-            Column {
-                Text(text = branchViewModel.getBranch(invoice.branchId)?.name ?: "Unknown Branch")
-                Text(text = invoice.date.toString())
-            }
-        },
-        supportingContent = {
-            Column {
-                Text(text = "Number of Items: ${invoice.products.count()}")
-            }
-        },
-        trailingContent = {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    buildAnnotatedString {
+    Column {
+        androidx.compose.material3.ListItem(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { goto.invoke(invoice.id) },
+            colors = ProjectListItemColors(),
+            headlineContent = {
+                Column {
+                    Text(text = buildAnnotatedString {
                         if (invoice.invoiceType == InvoiceType.SALE) {
-                            withStyle(style = SpanStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)) {
-                                append("${invoice.products.values.sumOf { it.quantity * it.price }} PHP")
-                            }
+                            append("₱${String.format("%.2f", invoice.products.values.sumOf { it.quantity * it.price })}")
                         } else {
-                            withStyle(style = SpanStyle(color = MaterialTheme.colors.error, fontSize = 16.sp, fontWeight = FontWeight.Bold)) {
-                                append("(${invoice.products.values.sumOf { it.quantity * it.price }} PHP)")
+                            withStyle(
+                                style = SpanStyle(color = MaterialTheme.colors.error,)
+                            ) {
+                                append("₱${String.format("%.2f", invoice.products.values.sumOf { it.quantity * it.price })}")
                             }
                         }
-                    }
-                )
+                    }, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm:ss a")))
+                    Text(text = branchViewModel.getBranch(invoice.branchId)?.name ?: "Unknown Branch")
+                }
             }
-        },
-    )
+        )
+        Divider()
+    }
 }

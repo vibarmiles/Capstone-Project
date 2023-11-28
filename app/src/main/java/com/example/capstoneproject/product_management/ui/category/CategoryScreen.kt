@@ -71,7 +71,7 @@ fun CategoryScreen(
                     Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered categories"; 1 -> "1 category is entered"; else -> "$size categories are entered"})
                 }
 
-                itemsIndexed(categories.value) {
+                itemsIndexed(categories.value.sortedBy { it.categoryName.uppercase() }) {
                         _, item ->
                     CategoryListItem(item.categoryName, edit = {
                         showDialog = true

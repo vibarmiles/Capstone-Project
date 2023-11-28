@@ -5,28 +5,29 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.StackedBarChart
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.ImageNotAvailable
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -35,6 +36,8 @@ import com.example.capstoneproject.product_management.data.firebase.category.Cat
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
+import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
+import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
@@ -42,29 +45,23 @@ fun ProductScreen(
     scope: CoroutineScope,
     scaffoldState: ScaffoldState,
     branchViewModel: BranchViewModel,
+    contactViewModel: ContactViewModel,
     productViewModel: ProductViewModel,
     categoryViewModel: CategoryViewModel,
     add: () -> Unit,
-    set: (String) -> Unit,
-    edit: (String) -> Unit,
     view: (String) -> Unit
 ) {
     val branch = branchViewModel.getAll().observeAsState(listOf())
     val categories = categoryViewModel.getAll().observeAsState(listOf())
     val products = productViewModel.getAll()
+    val suppliers = contactViewModel.getAll().observeAsState(listOf())
     val state by productViewModel.result.collectAsState()
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var pair: Pair<String, Product>? = null
     var page by rememberSaveable { mutableStateOf(0) }
     val loading = productViewModel.isLoading.value || branchViewModel.isLoading.value || categoryViewModel.isLoading.value
 
     Scaffold(
         topBar = {
-            BaseTopAppBar(title = stringResource(id = R.string.product), scope = scope, scaffoldState = scaffoldState) {
-                IconButton(onClick = {  }) {
-                    Icon(imageVector = Icons.Filled.Search, contentDescription = null)
-                }
-            }
+            BaseTopAppBar(title = stringResource(id = R.string.product), scope = scope, scaffoldState = scaffoldState)
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { add.invoke() }) {
@@ -83,19 +80,8 @@ fun ProductScreen(
             Column(modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)) {
-                TabLayout(tabs = branch.value, selectedTab = page, products = products.values.toList(), productUpdate = productViewModel.update.value) { page = it }
-
-                ProductScreenContent(branchId = if (page == 0) "Default" else branch.value[page - 1].id, categories = categories.value, products = products, productUpdate = productViewModel.update.value, edit = { edit.invoke(it) }, set = { set.invoke(it) }, view = { view.invoke(it) }, delete = {
-                    pair = it
-                    showDeleteDialog = true
-                })
-            }
-        }
-
-        if (showDeleteDialog) {
-            MakeInactiveDialog(item = pair!!.second.productName, onCancel = { showDeleteDialog = false }) {
-                productViewModel.delete(key = pair!!.first, product = products[pair!!.first]!!)
-                showDeleteDialog = false
+                TabLayout(tabs = branch.value.sortedBy { it.name.uppercase() }, selectedTab = page, products = products.values.toList(), productUpdate = productViewModel.update.value) { page = it }
+                ProductScreenContent(suppliers = suppliers.value, branchId = if (page == 0) "Default" else branch.value[page - 1].id, categories = categories.value.sortedBy { it.categoryName.uppercase() }, products = products.toList().sortedBy { it.second.productName.uppercase() }.toMap(), productUpdate = productViewModel.update.value, view = { view.invoke(it) })
             }
         }
 
@@ -157,20 +143,44 @@ fun TabLayout(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProductScreenContent(
     branchId: String,
     categories: List<Category>,
     products: Map<String, Product>,
+    suppliers: List<Contact>,
     productUpdate: Boolean,
-    edit: (String) -> Unit,
-    set: (String) -> Unit,
-    delete: (Pair<String, Product>) -> Unit,
     view: (String) -> Unit
 ) {
+    val textFieldValue = remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    val listState = rememberLazyListState()
+    val isFocused = remember { mutableStateOf(false) }
+    val firstVisible by remember { derivedStateOf { listState.firstVisibleItemIndex != 0 } }
+
+    if (firstVisible && isFocused.value) {
+        focusManager.clearFocus()
+        isFocused.value = false
+    }
+
+    val productsFiltered = remember(textFieldValue.value) {
+        derivedStateOf {
+            products.filter { product ->
+                textFieldValue.value.let {
+                    val supplier = suppliers.firstOrNull { contact -> contact.id == product.value.supplier }?.name?.contains(it, true) ?: false
+                    val name = product.value.productName.contains(it, true)
+                    Log.e("SEARCH", "$name & $supplier & ${name || supplier}: ${product.value.productName}")
+                    name || supplier
+                }
+            }
+        }
+    }
+
     val critical = remember(branchId, productUpdate) {
         derivedStateOf {
-            products.filterValues {
+            productsFiltered.value.filterValues {
                 it.criticalLevel >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
             }.toList()
         }
@@ -178,77 +188,119 @@ fun ProductScreenContent(
 
     val default = remember(branchId, productUpdate) {
         derivedStateOf {
-            products.filterValues {
+            productsFiltered.value.filterValues {
                 it.category !in categories.map { category -> category.id } && it.criticalLevel < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
             }.toList()
         }
     }
 
     val productsInCategories = remember(branchId, productUpdate) {
-        val map = mutableMapOf<Category, List<Pair<String, Product>>>()
-        for (category in categories) {
-            val list = products.filterValues {
-                it.category == category.id && it.criticalLevel < (if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
-            }.toList()
+        derivedStateOf {
+            val map = mutableMapOf<Category, List<Pair<String, Product>>>()
+            for (category in categories) {
+                val list = productsFiltered.value.filterValues {
+                    it.category == category.id && it.criticalLevel < (if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
+                }.toList()
 
-            if (list.isEmpty()) {
-                continue
+                if (list.isEmpty()) {
+                    continue
+                }
+
+                map[category] = list
             }
 
-            map[category] = list
-        }
-
-        derivedStateOf {
-            Log.d("Map", map.values.toString())
             map
         }
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
         if (products.isEmpty()) {
             item {
                 Text(modifier = Modifier.padding(16.dp), text = "There are no entered products")
             }
         } else {
+            item {
+                Column(modifier = Modifier
+                    .background(color = MaterialTheme.colors.surface)
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .onFocusChanged {
+                        isFocused.value = it.isFocused
+                    }
+                    .padding(start = 16.dp, top = 16.dp, end = 16.dp)) {
+                    OutlinedTextField(trailingIcon = {
+                        if (isFocused.value) {
+                            IconButton(onClick = {
+                                textFieldValue.value = ""
+                                focusManager.clearFocus()
+                            }) {
+                                Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                            }
+                        }
+                    }, label = { Text(text = "Enter product or supplier name", color = MaterialTheme.colors.onSurface) }, maxLines = 1, modifier = Modifier.fillMaxWidth(), leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) }, value = textFieldValue.value, onValueChange = { textFieldValue.value = it })
+                }
+            }
+
             if (critical.value.isNotEmpty()) {
-                item {
-                    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), headlineContent = {
-                        Text(text = "Under Critical Level", fontWeight = FontWeight.Bold)
-                    })
+                stickyHeader {
+                    Column(modifier = Modifier
+                        .background(color = MaterialTheme.colors.surface)
+                        .fillMaxWidth()
+                        .padding(16.dp)) {
+                        Text(text = "Under Critical Level", fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
+                    }
+                    Divider()
                 }
 
                 itemsIndexed(critical.value) {
                         _, it ->
                     Log.d("id", products.toString())
-                    Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it.first) }, set = { set.invoke(it.first) }, delete = { delete.invoke(it) }, view = { view.invoke(it.first) })
+                    Column {
+                        Products(product = it.second, supplier = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier", quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, view = { view.invoke(it.first) })
+                        Divider()
+                    }
                 }
             }
 
             if (default.value.isNotEmpty()) {
-                item {
-                    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), headlineContent = {
-                        Text(text = "No Category")
-                    })
+                stickyHeader {
+                    Column(modifier = Modifier
+                        .background(color = MaterialTheme.colors.surface)
+                        .fillMaxWidth()
+                        .padding(16.dp)) {
+                        Text(text = "No Category", fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
+                    }
+                    Divider()
                 }
 
                 itemsIndexed(default.value) {
                         _, it ->
                     Log.d("id", products.toString())
-                    Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it.first) }, set = { set.invoke(it.first) }, delete = { delete.invoke(it) }, view = { view.invoke(it.first) })
+                    Column {
+                        Products(product = it.second, supplier = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier", quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, view = { view.invoke(it.first) })
+                        Divider()
+                    }
                 }
             }
 
             for (category in productsInCategories.value) {
-                item {
-                    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), headlineContent = {
-                        Text(text = category.key.categoryName)
-                    })
+                stickyHeader {
+                    Column(modifier = Modifier
+                        .background(color = MaterialTheme.colors.surface)
+                        .fillMaxWidth()
+                        .padding(16.dp)) {
+                        Text(text = category.key.categoryName, fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
+                    }
+                    Divider()
                 }
 
                 itemsIndexed(category.value) {
                         _, it ->
                     Log.d("id", products.toString())
-                    Products(product = it.second, quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, edit = { edit.invoke(it.first) }, set = { set.invoke(it.first) }, delete = { delete.invoke(it) }, view = { view.invoke(it.first) })
+                    Column {
+                        Products(product = it.second, supplier = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier", quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, view = { view.invoke(it.first) })
+                        Divider()
+                    }
                 }
             }
 
@@ -260,16 +312,10 @@ fun ProductScreenContent(
 }
 
 @Composable
-fun Products(product: Product, quantity: Int, edit: () -> Unit, set: () -> Unit, delete: () -> Unit, view: () -> Unit) {
-    var expanded: Boolean by remember { mutableStateOf(false) }
+fun Products(product: Product, quantity: Int, supplier: String, view: () -> Unit) {
     androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = { SubcomposeAsyncImage(error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) },  model = product.image, contentScale = ContentScale.Crop, modifier = Modifier
         .clip(RoundedCornerShape(5.dp))
-        .size(50.dp), loading = { CircularProgressIndicator() }, contentDescription = null) }, headlineContent = { Text(text = "Qty: $quantity", fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = product.productName, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
-        IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Product") }, onClick = { expanded = false; edit.invoke() })
-            androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.StackedBarChart, contentDescription = null) }, text = { Text(text = "Adjust Quantity") }, onClick = { expanded = false; set.invoke() })
-            androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Product") }, onClick = { expanded = false; delete.invoke() })
-        }
+        .size(50.dp), loading = { CircularProgressIndicator() }, contentDescription = null) }, headlineContent = { Text(text = product.productName, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = supplier, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
+            Text(text =  "$quantity Units", fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }, modifier = Modifier.clickable { view.invoke() })
 }

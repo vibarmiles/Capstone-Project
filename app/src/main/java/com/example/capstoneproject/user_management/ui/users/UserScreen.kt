@@ -69,7 +69,7 @@ fun UserScreen(
                     Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered users"; 1 -> "1 user is entered"; else -> "$size users are entered"})
                 }
 
-                itemsIndexed(listOfUsers.value) {
+                itemsIndexed(listOfUsers.value.sortedBy { it.second.lastName.uppercase() }) {
                         _, it ->
                     UserListItem(user = it.second, edit = { edit.invoke(it.first) }) {
                         user = it

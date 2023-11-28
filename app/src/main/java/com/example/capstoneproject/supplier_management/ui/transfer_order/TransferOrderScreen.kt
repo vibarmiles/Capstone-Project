@@ -1,11 +1,11 @@
 package com.example.capstoneproject.supplier_management.ui.transfer_order
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
@@ -26,7 +27,11 @@ import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.data.firebase.transfer_order.TransferOrder
 import kotlinx.coroutines.CoroutineScope
+import java.time.*
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TransferOrderScreen(
     scope: CoroutineScope,
@@ -62,14 +67,50 @@ fun TransferOrderScreen(
             Column(modifier = Modifier
                 .padding(paddingValues)) {
                 LazyColumn {
-                    itemsIndexed(transferOrders.value) {
-                            _, it ->
-                        TransferOrderItem(transferOrder = it, branchViewModel = branchViewModel, goto = { view.invoke(it) })
+                    var currentDate = LocalDate.now().plusDays(1)
+
+                    transferOrders.value.sortedByDescending { document -> document.date }.forEach { to ->
+                        val localDateTime = if (to.date != null) Instant.ofEpochMilli(to.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
+                        val date = localDateTime.toLocalDate()
+                        val time = localDateTime.toLocalTime()
+
+                        if (currentDate != date) {
+                            currentDate = date
+
+                            stickyHeader {
+                                Column(
+                                    modifier = Modifier
+                                        .background(color = MaterialTheme.colors.surface)
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                ) {
+                                    Text(
+                                        text = DateTimeFormatter.ofLocalizedDate(
+                                            FormatStyle.FULL
+                                        ).format(date),
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colors.secondary
+                                    )
+                                }
+                                Divider()
+                            }
+                        }
+
+                        item {
+                            TransferOrderItem(
+                                time = time,
+                                transferOrder = to,
+                                branchViewModel = branchViewModel,
+                                goto = { view.invoke(it) })
+                        }
                     }
 
                     item {
                         if (transferOrderViewModel.returnSize.value == 10) {
-                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(4.dp)) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 50.dp)
+                                .padding(4.dp)) {
                                 Button(onClick = { transferOrderViewModel.load()  }) {
                                     Text(text = "Load More")
                                 }
@@ -102,6 +143,7 @@ fun TransferOrderScreen(
 
 @Composable
 fun TransferOrderItem(
+    time: LocalTime,
     transferOrder: TransferOrder,
     branchViewModel: BranchViewModel,
     goto: (String) -> Unit
@@ -111,7 +153,18 @@ fun TransferOrderItem(
     ) {
         androidx.compose.material3.ListItem(
             colors = ProjectListItemColors(),
-            headlineContent = { Text(text = transferOrder.date.toString()) },
+            headlineContent = {
+                Column {
+                    Text(
+                        text = "${transferOrder.products.values.sumOf { it.quantity }} Units",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm:ss a")))
+                }
+            },
             supportingContent = {
                 Column {
                     Text(text = "Number of Items: ${transferOrder.products.count()}")
@@ -119,11 +172,6 @@ fun TransferOrderItem(
             },
             trailingContent = {
                 Column(modifier = Modifier.height(IntrinsicSize.Max), horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "${transferOrder.products.values.sumOf { it.quantity }} Units",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
                     Text(
                         text = when (transferOrder.status) {
                             Status.WAITING -> "To Transfer"

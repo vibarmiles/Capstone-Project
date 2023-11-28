@@ -67,7 +67,7 @@ fun BranchScreen(
                     Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered branches"; 1 -> "1 branch is entered"; else -> "$size branches are entered"})
                 }
 
-                itemsIndexed(branches) {
+                itemsIndexed(branches.sortedBy { it.name.uppercase() }) {
                         _, item ->
                     BranchListItem(branch = item, edit = {
                         edit.invoke(item)

@@ -2,10 +2,11 @@ package com.example.capstoneproject.supplier_management.ui.purchase_order
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
@@ -27,7 +29,11 @@ import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import kotlinx.coroutines.CoroutineScope
+import java.time.*
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PurchaseOrderScreen(
     scope: CoroutineScope,
@@ -63,14 +69,38 @@ fun PurchaseOrderScreen(
                 .padding(paddingValues)) {
 
                 LazyColumn {
-                    itemsIndexed(purchaseOrders.value) {
-                            _, it ->
-                        PurchaseOrderItem(purchaseOrder = it, goto = { view.invoke(it) })
+                    var currentDate = LocalDate.now().plusDays(1)
+
+                    purchaseOrders.value.sortedByDescending { document -> document.date }.forEach { po ->
+                        val localDateTime = if (po.date != null) Instant.ofEpochMilli(po.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
+                        val date = localDateTime.toLocalDate()
+                        val time = localDateTime.toLocalTime()
+
+                        if (currentDate != date) {
+                            currentDate = date
+
+                            stickyHeader {
+                                Column(modifier = Modifier
+                                    .background(color = MaterialTheme.colors.surface)
+                                    .fillMaxWidth()
+                                    .padding(16.dp)) {
+                                    Text(text = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).format(date), fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
+                                }
+                                Divider()
+                            }
+                        }
+
+                        item {
+                            PurchaseOrderItem(time = time, purchaseOrder = po, goto = { view.invoke(it) })
+                        }
                     }
 
                     item {
                         if (purchaseOrderViewModel.returnSize.value == 10) {
-                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(4.dp)) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 50.dp)
+                                .padding(4.dp)) {
                                 Button(onClick = { purchaseOrderViewModel.load()  }) {
                                     androidx.compose.material.Text(text = "Load More")
                                 }
@@ -105,17 +135,21 @@ fun PurchaseOrderScreen(
 
 @Composable
 fun PurchaseOrderItem(
+    time: LocalTime,
     purchaseOrder: PurchaseOrder,
     goto: (String) -> Unit
 ) {
     androidx.compose.material3.ListItem(
         colors = ProjectListItemColors(),
         modifier = Modifier.clickable { goto.invoke(purchaseOrder.id) },
-        headlineContent = { Text(text = purchaseOrder.date.toString()) },
-        supportingContent = { Text(text = "Number of Items: ${purchaseOrder.products.count()}") },
-        trailingContent = { 
+        headlineContent = {
+            Column {
+                Text(text = "₱${String.format("%.2f", purchaseOrder.products.values.sumOf { (it.price * it.quantity) })}", fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm:ss a")))
+            }
+        },
+        trailingContent = {
             Column(modifier = Modifier.height(IntrinsicSize.Max), horizontalAlignment = Alignment.End) {
-                Text(text = "${purchaseOrder.products.values.sumOf { (it.price * it.quantity) }} PHP", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 Text(text = when (purchaseOrder.status) {
                     Status.WAITING -> "To Receive"
                     Status.CANCELLED -> "Cancelled"
