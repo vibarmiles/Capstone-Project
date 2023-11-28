@@ -40,6 +40,7 @@ fun CategoryScreen(
     val categories = viewModel.getAll().observeAsState(listOf())
     val state by viewModel.result.collectAsState()
     var category = Category()
+    val size = categories.value.size
     var showDialog by remember {
         mutableStateOf(false)
     }
@@ -65,25 +66,27 @@ fun CategoryScreen(
                 CircularProgressIndicator()
             }
         } else {
-            LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                item {
-                    val size = categories.value.size
-                    Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered categories"; 1 -> "1 category is entered"; else -> "$size categories are entered"})
-                }
-
-                itemsIndexed(categories.value.sortedBy { it.categoryName.uppercase() }) {
-                        _, item ->
-                    CategoryListItem(item.categoryName, edit = {
-                        showDialog = true
-                        category = item
-                    }) {
-                        showDeleteDialog = true
-                        category = item
+            Column {
+                Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered categories"; 1 -> "1 category is entered"; else -> "$size categories are entered"})
+                Divider()
+                LazyColumn(modifier = Modifier.padding(paddingValues)) {
+                    itemsIndexed(categories.value.sortedBy { it.categoryName.uppercase() }) {
+                            _, item ->
+                        Column {
+                            CategoryListItem(item.categoryName, edit = {
+                                showDialog = true
+                                category = item
+                            }) {
+                                showDeleteDialog = true
+                                category = item
+                            }
+                            Divider()
+                        }
                     }
-                }
 
-                item {
-                    Spacer(modifier = Modifier.height(50.dp))
+                    item {
+                        Spacer(modifier = Modifier.height(50.dp))
+                    }
                 }
             }
         }

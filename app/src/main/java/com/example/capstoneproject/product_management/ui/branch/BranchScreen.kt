@@ -42,6 +42,7 @@ fun BranchScreen(
     lateinit var branch: Branch
     var showDeleteDialog by remember { mutableStateOf(false) }
     val state by viewModel.result.collectAsState()
+    val size = branches.size
 
     Scaffold(
         topBar = {
@@ -61,24 +62,26 @@ fun BranchScreen(
                 CircularProgressIndicator()
             }
         } else {
-            LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                item {
-                    val size = branches.size
-                    Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered branches"; 1 -> "1 branch is entered"; else -> "$size branches are entered"})
-                }
-
-                itemsIndexed(branches.sortedBy { it.name.uppercase() }) {
-                        _, item ->
-                    BranchListItem(branch = item, edit = {
-                        edit.invoke(item)
-                    }) {
-                        branch = item
-                        showDeleteDialog = true
+            Column {
+                Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered branches"; 1 -> "1 branch is entered"; else -> "$size branches are entered"})
+                Divider()
+                LazyColumn(modifier = Modifier.padding(paddingValues)) {
+                    itemsIndexed(branches.sortedBy { it.name.uppercase() }) {
+                            _, item ->
+                        Column {
+                            BranchListItem(branch = item, edit = {
+                                edit.invoke(item)
+                            }) {
+                                branch = item
+                                showDeleteDialog = true
+                            }
+                            Divider()
+                        }
                     }
-                }
 
-                item {
-                    Spacer(modifier = Modifier.height(50.dp))
+                    item {
+                        Spacer(modifier = Modifier.height(50.dp))
+                    }
                 }
             }
         }

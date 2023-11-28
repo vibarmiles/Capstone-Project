@@ -38,6 +38,12 @@ fun UserScreen(
     val users = userViewModel.getAll()
     val state by userViewModel.result.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val size = users.size
+    val listOfUsers = remember(userViewModel.update) {
+        derivedStateOf {
+            users.toList().sortedBy { pair -> pair.second.userLevel }
+        }
+    }
     lateinit var user: Pair<String, User>
 
     Scaffold(
@@ -57,23 +63,19 @@ fun UserScreen(
                 CircularProgressIndicator()
             }
         } else {
-            val listOfUsers = remember(userViewModel.update) {
-                derivedStateOf {
-                    users.toList().sortedBy { pair -> pair.second.userLevel }
-                }
-            }
-
-            LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                item {
-                    val size = users.size
-                    Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered users"; 1 -> "1 user is entered"; else -> "$size users are entered"})
-                }
-
-                itemsIndexed(listOfUsers.value.sortedBy { it.second.lastName.uppercase() }) {
-                        _, it ->
-                    UserListItem(user = it.second, edit = { edit.invoke(it.first) }) {
-                        user = it
-                        showDeleteDialog = true
+            Column {
+                Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered users"; 1 -> "1 user is entered"; else -> "$size users are entered"})
+                Divider()
+                LazyColumn(modifier = Modifier.padding(paddingValues)) {
+                    itemsIndexed(listOfUsers.value.sortedBy { it.second.lastName.uppercase() }) {
+                            _, it ->
+                        Column {
+                            UserListItem(user = it.second, edit = { edit.invoke(it.first) }) {
+                                user = it
+                                showDeleteDialog = true
+                            }
+                            Divider()
+                        }
                     }
                 }
             }

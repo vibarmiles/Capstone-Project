@@ -89,26 +89,29 @@ fun ContactScreenContent(
     edit: (Contact) -> Unit,
     delete: (Contact) -> Unit
 ) {
-    LazyColumn(modifier = Modifier.padding(paddingValues), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        item {
-            val size = contacts.count()
-            Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered suppliers"; 1 -> "1 supplier is entered"; else -> "$size suppliers are entered"})
-        }
-
-        itemsIndexed(contacts.toList()) {
-            _, it ->
-            var expanded: Boolean by remember { mutableStateOf(false) }
-            ListItem(colors = ProjectListItemColors(), leadingContent = { Icon(modifier = Modifier.size(50.dp), imageVector = Icons.Filled.ContactPhone, contentDescription = null) }, headlineContent = { Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = it.contact, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
-                IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Contact") }, onClick = { expanded = false; edit.invoke(it) })
-                    androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Contact") }, onClick = { expanded = false; delete.invoke(it) })
+    val size = contacts.count()
+    Column {
+        Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered suppliers"; 1 -> "1 supplier is entered"; else -> "$size suppliers are entered"})
+        Divider()
+        LazyColumn(modifier = Modifier.padding(paddingValues)) {
+            itemsIndexed(contacts.toList()) {
+                    _, it ->
+                var expanded: Boolean by remember { mutableStateOf(false) }
+                Column {
+                    ListItem(colors = ProjectListItemColors(), leadingContent = { Icon(modifier = Modifier.size(50.dp), imageVector = Icons.Filled.ContactPhone, contentDescription = null) }, headlineContent = { Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = it.contact, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
+                        IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
+                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                            androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Contact") }, onClick = { expanded = false; edit.invoke(it) })
+                            androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Contact") }, onClick = { expanded = false; delete.invoke(it) })
+                        }
+                    })
+                    Divider()
                 }
-            })
-        }
+            }
 
-        item {
-            Spacer(modifier = Modifier.height(50.dp))
+            item {
+                Spacer(modifier = Modifier.height(50.dp))
+            }
         }
     }
 }
