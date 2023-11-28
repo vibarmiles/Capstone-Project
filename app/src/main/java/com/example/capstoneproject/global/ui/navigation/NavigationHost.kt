@@ -99,7 +99,7 @@ fun NavigationHost(
                         userViewModel.getUser(viewModel.user.value.data!!.email) {
                             if (it) {
                                 scope.launch {
-                                    //userViewModel.log("user_logged_in")
+                                    userViewModel.log("user_logged_in")
                                     scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully!", duration = SnackbarDuration.Short)
                                 }
 
@@ -108,6 +108,10 @@ fun NavigationHost(
                                 }
 
                                 viewModel.isLoading.value = false
+                            } else {
+                                scope.launch {
+                                    scaffoldState.snackbarHostState.showSnackbar("Invalid User!", duration = SnackbarDuration.Short)
+                                }
                             }
                         }
                     }
@@ -134,6 +138,7 @@ fun NavigationHost(
                 scaffoldState = scaffoldState,
                 branchViewModel = branchViewModel,
                 productViewModel = productViewModel,
+                userViewModel = userViewModel,
                 purchaseOrderViewModel = purchaseOrderViewModel,
                 goToBranches = { callback.invoke(R.string.branch) },
                 goToProducts = { callback.invoke(R.string.product) },

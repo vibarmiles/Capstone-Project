@@ -6,6 +6,7 @@ import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
@@ -58,7 +59,12 @@ class UserRepository : IUserRepository {
 
     override fun getUser(email: String, user: (String?) -> Unit) {
         userCollectionReference.get().addOnSuccessListener {
-            user.invoke(it.getValue<Map<String, User>>()?.entries?.firstOrNull { foundUser -> foundUser.value.email == email }?.key)
+            val found = it.getValue<Map<String, User>>()?.entries?.firstOrNull { foundUser -> foundUser.value.email == email }
+            if (found != null) {
+                userCollectionReference.child(found.key).setValue(found.value.copy(lastLogin = ServerValue.TIMESTAMP)).addOnSuccessListener {
+                    user.invoke(found.key)
+                }
+            }
         }
     }
 
