@@ -16,6 +16,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.capstoneproject.R
+import com.example.capstoneproject.activity_logs.ui.ActivityLogsScreen
+import com.example.capstoneproject.activity_logs.ui.ActivityLogsViewModel
 import com.example.capstoneproject.dashboard.ui.Dashboard
 import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
 import com.example.capstoneproject.login.data.login.GoogleLoginRepository
@@ -67,6 +69,7 @@ fun NavigationHost(
     val contactViewModel: ContactViewModel = viewModel()
     val userViewModel: UserViewModel = viewModel()
     val posViewModel: POSViewModel = viewModel()
+    val activityLogsRepository: ActivityLogsViewModel = viewModel()
     val context = LocalContext.current
 
     val googleAuthUiClient by lazy {
@@ -408,6 +411,15 @@ fun NavigationHost(
             ) {
                 navController.navigate(Routes.User.Edit.createRoute(userId = it))
             }
+        }
+
+        composable(Routes.ActivityLogs.route) {
+            ActivityLogsScreen(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                activityLogsViewModel = activityLogsRepository,
+                userViewModel = userViewModel
+            )
         }
 
         composable(Routes.Report.route) {

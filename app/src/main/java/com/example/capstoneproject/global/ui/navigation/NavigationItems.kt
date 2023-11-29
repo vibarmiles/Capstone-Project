@@ -24,6 +24,7 @@ sealed class NavigationItems(
         object TransferOrder : NavigationItems(icon = Icons.Filled.SyncAlt, title = R.string.transfer_order, parentItem = title)
     }
     object Users : NavigationItems(icon = Icons.Filled.People, title = R.string.user)
+    object ActivityLogs : NavigationItems(icon = Icons.Filled.ContentPasteSearch, title = R.string.activity_logs)
     object Report : NavigationItems(icon = Icons.Filled.Report, title = R.string.report)
     object POS : NavigationItems(icon = Icons.Filled.PointOfSale, title = R.string.pos)
 }

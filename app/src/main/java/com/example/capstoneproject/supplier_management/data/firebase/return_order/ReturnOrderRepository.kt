@@ -33,7 +33,9 @@ class ReturnOrderRepository : IReturnOrderRepository {
 
                 if (it.size() > 0) {
                     document = it.documents[it.size() - 1]
-                    currentSize = if (currentSize == 10) it.size() else 0
+                    currentSize = it.size()
+                } else {
+                    currentSize = 0
                 }
 
                 for (queryDocumentSnapshot in it) {

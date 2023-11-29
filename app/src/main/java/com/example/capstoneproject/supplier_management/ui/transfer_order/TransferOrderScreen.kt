@@ -14,12 +14,15 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.ColorUtils
+import androidx.core.graphics.toColor
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -45,6 +48,7 @@ fun TransferOrderScreen(
     val firstLaunch = remember { mutableStateOf(true) }
     val context = LocalContext.current
     val state = transferOrderViewModel.result.collectAsState()
+    var currentDate = LocalDate.now().plusDays(1)
 
     Scaffold(
         topBar = {
@@ -67,8 +71,6 @@ fun TransferOrderScreen(
             Column(modifier = Modifier
                 .padding(paddingValues)) {
                 LazyColumn {
-                    var currentDate = LocalDate.now().plusDays(1)
-
                     transferOrders.value.sortedByDescending { document -> document.date }.forEach { to ->
                         val localDateTime = if (to.date != null) Instant.ofEpochMilli(to.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
                         val date = localDateTime.toLocalDate()
@@ -162,7 +164,7 @@ fun TransferOrderItem(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm:ss a")))
+                    Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm a")))
                 }
             },
             supportingContent = {
@@ -182,7 +184,7 @@ fun TransferOrderItem(
                         }, fontSize = 12.sp, color = when (transferOrder.status) {
                             Status.WAITING -> Color.Red
                             Status.CANCELLED -> Color.Gray
-                            Status.COMPLETE -> Color.Green
+                            Status.COMPLETE -> Color(ColorUtils.blendARGB(Color.Green.toArgb(), Color.Black.toArgb(), 0.2f))
                             Status.PENDING -> Color.Black
                             Status.FAILED -> Color.Red
                         }, fontWeight = FontWeight.Bold

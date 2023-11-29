@@ -54,6 +54,7 @@ sealed class Routes(val route: String) {
             fun createRoute(userId: String) = User.route + "/Edit/$userId"
         }
     }
+    object ActivityLogs : Routes((R.string.activity_logs).toString())
     object Report : Routes((R.string.report).toString())
     object POS : Routes((R.string.pos).toString()) {
         object Add : Routes(this.route + "/Add")

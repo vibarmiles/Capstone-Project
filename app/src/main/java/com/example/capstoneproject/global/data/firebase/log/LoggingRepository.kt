@@ -11,22 +11,6 @@ import java.util.*
 class LoggingRepository : ILoggingRepository {
     private val firestore = Firebase.firestore
     private val logsCollectionReference = firestore.collection("activity_logs")
-    private val logs = MutableLiveData<List<Log>>()
-
-    override fun getAll(callback: () -> Unit): MutableLiveData<List<Log>> {
-        logsCollectionReference.addSnapshotListener { value, error ->
-            error?.let {
-                return@addSnapshotListener
-            }
-            value?.let {
-                logs.value = value.toObjects()
-
-                callback.invoke()
-            }
-        }
-
-        return logs
-    }
 
     override fun log(log: Log) {
         logsCollectionReference.count().get(AggregateSource.SERVER).addOnCompleteListener {

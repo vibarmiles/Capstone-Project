@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -29,7 +28,6 @@ import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
 import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
-import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderItem
 import kotlinx.coroutines.CoroutineScope
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -49,6 +47,7 @@ fun POSScreen(
     val state = posViewModel.result.collectAsState()
     val firstLaunch = remember { mutableStateOf(true) }
     val context = LocalContext.current
+    var currentDate = LocalDate.now().plusDays(1)
 
     Scaffold(
         topBar = {
@@ -70,8 +69,6 @@ fun POSScreen(
             Column(modifier = Modifier
                 .padding(paddingValues)) {
                 LazyColumn {
-                    var currentDate = LocalDate.now().plusDays(1)
-
                     invoices.value.sortedByDescending { document -> document.date }.forEach { invoice ->
                         val localDateTime = if (invoice.date != null) Instant.ofEpochMilli(invoice.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
                         val date = localDateTime.toLocalDate()
@@ -164,7 +161,7 @@ fun POSItem(
                             }
                         }
                     }, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm:ss a")))
+                    Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm a")))
                     Text(text = branchViewModel.getBranch(invoice.branchId)?.name ?: "Unknown Branch")
                 }
             }

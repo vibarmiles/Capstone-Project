@@ -109,7 +109,7 @@ fun UserListItem(
     androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = {
         Box(modifier = Modifier
             .size(50.dp)
-            .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Text(text = user.email.substring(startIndex = 0, endIndex = 1).uppercase(), fontSize = 16.sp, color = Color.White, textAlign = TextAlign.Center)
+            .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Text(text = user.email.first().uppercase(), fontSize = 16.sp, color = Color.White, textAlign = TextAlign.Center)
         }
     }, headlineContent = { Text(text = "${user.lastName}, ${user.firstName}") }, supportingContent = { Text(text = user.email, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
         Row {

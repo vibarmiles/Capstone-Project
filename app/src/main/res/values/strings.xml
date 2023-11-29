@@ -17,6 +17,7 @@
     <string name="pos">POS</string>
     <string name="inventory">Inventory</string>
     <string name="contact">Contact</string>
+    <string name="activity_logs">Activity Logs</string>
     <string name="logout">Logout</string>
     <string name="add">Add</string>
     <string name="edit">Edit</string>

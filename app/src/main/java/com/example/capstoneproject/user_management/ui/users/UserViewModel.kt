@@ -3,7 +3,6 @@ package com.example.capstoneproject.user_management.ui.users
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
@@ -12,7 +11,6 @@ import com.example.capstoneproject.global.data.firebase.log.LoggingRepository
 import com.example.capstoneproject.global.data.firebase.report.IReportRepository
 import com.example.capstoneproject.global.data.firebase.report.Report
 import com.example.capstoneproject.global.data.firebase.report.ReportRepository
-import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
 import com.example.capstoneproject.user_management.data.firebase.IUserRepository
 import com.example.capstoneproject.user_management.data.firebase.User
 import com.example.capstoneproject.user_management.data.firebase.UserRepository
@@ -21,11 +19,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.*
 
 class UserViewModel : ViewModel() {
     private lateinit var users: SnapshotStateMap<String, User>
-    private lateinit var logs: MutableLiveData<List<com.example.capstoneproject.global.data.firebase.log.Log>>
     lateinit var id: String
     private val userRepository: IUserRepository = UserRepository()
     private val reportRepository: IReportRepository = ReportRepository()
@@ -34,7 +30,6 @@ class UserViewModel : ViewModel() {
     val update = mutableStateOf(true)
     private val resultState = MutableStateFlow(FirebaseResult())
     val result = resultState.asStateFlow()
-
 
     fun getAll(): SnapshotStateMap<String, User> {
         if (!this::users.isInitialized) {
@@ -102,16 +97,6 @@ class UserViewModel : ViewModel() {
                 userId = id
             ))
         }
-    }
-
-    fun getLogs(): MutableLiveData<List<com.example.capstoneproject.global.data.firebase.log.Log>> {
-        if (!this::logs.isInitialized) {
-            logs = loggingRepository.getAll {
-                updateLoadingState()
-            }
-        }
-
-        return logs
     }
 
     fun getLoginTimeStamp(report: Report) {

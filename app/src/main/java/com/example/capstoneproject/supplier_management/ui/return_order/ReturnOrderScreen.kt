@@ -14,12 +14,14 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.ColorUtils
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -43,6 +45,7 @@ fun ReturnOrderScreen(
     val firstLaunch = remember { mutableStateOf(true) }
     val state = returnOrderViewModel.result.collectAsState()
     val context = LocalContext.current
+    var currentDate = LocalDate.now().plusDays(1)
 
     Scaffold(
         topBar = {
@@ -66,8 +69,6 @@ fun ReturnOrderScreen(
                 .padding(paddingValues)) {
 
                 LazyColumn {
-                    var currentDate = LocalDate.now().plusDays(1)
-
                     returnOrders.value.sortedByDescending { document -> document.date }.forEach { ro ->
                         val localDateTime = if (ro.date != null) Instant.ofEpochMilli(ro.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
                         val date = localDateTime.toLocalDate()
@@ -149,7 +150,7 @@ fun ReturnOrderItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm:ss a")))
+                Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm a")))
             }
         },
         supportingContent = {
@@ -169,7 +170,7 @@ fun ReturnOrderItem(
                     }, fontSize = 12.sp, color = when (returnOrder.status) {
                         Status.WAITING -> Color.Red
                         Status.CANCELLED -> Color.Gray
-                        Status.COMPLETE -> Color.Green
+                        Status.COMPLETE -> Color(ColorUtils.blendARGB(Color.Green.toArgb(), Color.Black.toArgb(), 0.2f))
                         Status.PENDING -> Color.Black
                         Status.FAILED -> Color.Red
                     }, fontWeight = FontWeight.Bold
