@@ -15,8 +15,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.capstoneproject.global.ui.navigation.Drawer
 import com.example.capstoneproject.global.ui.navigation.NavigationHost
+import com.example.capstoneproject.global.ui.navigation.Routes
 import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
 import com.example.capstoneproject.ui.theme.CapstoneProjectTheme
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
@@ -44,20 +47,22 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun GlobalContent(
-    appViewModel: AppViewModel = viewModel()
+    appViewModel: AppViewModel = viewModel(),
+    userViewModel: UserViewModel = viewModel()
 ) {
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
     var selectedItem by remember { mutableStateOf(R.string.dashboard) }
     var canExit by remember { mutableStateOf(false) }
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val context = LocalContext.current
 
     Scaffold(
         scaffoldState = scaffoldState,
         drawerScrimColor = Color.Black.copy(0.7f),
         drawerGesturesEnabled = !appViewModel.isLoading.value,
-        drawerContent = { Drawer(user = appViewModel.user.value, currentItem = selectedItem) {
+        drawerContent = { Drawer(user = appViewModel.user.value, currentItem = selectedItem, userViewModel = userViewModel) {
             selectedItem = it
             navController.navigate(selectedItem.toString()) {
                 popUpTo(0)
@@ -68,7 +73,7 @@ fun GlobalContent(
             }
         }}
     ) { paddingValues -> paddingValues
-        NavigationHost(navController = navController, scope = scope, scaffoldState = scaffoldState, viewModel = appViewModel) {
+        NavigationHost(navController = navController, scope = scope, scaffoldState = scaffoldState, viewModel = appViewModel, userViewModel = userViewModel) {
             selectedItem = it
             navController.navigate(selectedItem.toString()) {
                 popUpTo(0)
@@ -82,15 +87,30 @@ fun GlobalContent(
         }
 
         BackHandler(!canExit) {
-            if (selectedItem == R.string.dashboard || selectedItem == R.string.login) {
-                canExit = true
-            } else {
-                if (navController.backQueue.size > 2) {
-                    navController.popBackStack()
+            if (userAccountDetails.value.userLevel != UserLevel.Admin) {
+                if (selectedItem == R.string.dashboard || selectedItem == R.string.login) {
+                    canExit = true
                 } else {
-                    selectedItem = R.string.dashboard
-                    navController.navigate(selectedItem.toString()) {
-                        popUpTo(0)
+                    if (navController.backQueue.size > 2) {
+                        navController.popBackStack()
+                    } else {
+                        selectedItem = R.string.dashboard
+                        navController.navigate(selectedItem.toString()) {
+                            popUpTo(0)
+                        }
+                    }
+                }
+            } else {
+                if (selectedItem == R.string.activity_logs || selectedItem == R.string.login) {
+                    canExit = true
+                } else {
+                    if (navController.backQueue.size > 2) {
+                        navController.popBackStack()
+                    } else {
+                        selectedItem = R.string.activity_logs
+                        navController.navigate(selectedItem.toString()) {
+                            popUpTo(0)
+                        }
                     }
                 }
             }
@@ -101,6 +121,33 @@ fun GlobalContent(
                 Toast.makeText(context, "Press again to exit!", Toast.LENGTH_SHORT).show()
                 delay(2000)
                 canExit = false
+            }
+        }
+
+        LaunchedEffect(key1 = userAccountDetails.value) {
+            userAccountDetails.value.let {
+                if (it.id.isNotBlank() && it.isActive && it.errorMessage == null) {
+                    scope.launch {
+                        userViewModel.log("user_logged_in")
+                        scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully!", duration = SnackbarDuration.Short)
+                    }
+
+                    navController.navigate(if (userAccountDetails.value.userLevel == UserLevel.Admin) Routes.ActivityLogs.route else Routes.Dashboard.route) {
+                        popUpTo(0)
+                    }
+
+                    appViewModel.isLoading.value = false
+                } else if (it.id.isNotBlank() && !it.isActive && it.errorMessage == null) {
+                    scaffoldState.snackbarHostState.showSnackbar("Account Inactive!", duration = SnackbarDuration.Short)
+                } else if (it.errorMessage != null) {
+                    scaffoldState.snackbarHostState.showSnackbar(it.errorMessage, duration = SnackbarDuration.Short)
+                }
+            }
+        }
+
+        LaunchedEffect(key1 = appViewModel.user.value) {
+            if (appViewModel.user.value.data != null) {
+                userViewModel.getUser(appViewModel.user.value.data!!.email)
             }
         }
     }

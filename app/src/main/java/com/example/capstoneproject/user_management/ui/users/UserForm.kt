@@ -46,6 +46,8 @@ fun UserForm(
     val branches = branchViewModel.getAll().observeAsState(listOf())
     var branchId by remember { mutableStateOf(branches.value.firstOrNull()?.id)}
     var branchName by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches")}
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
+    val userLevels = if (userAccountDetails.value.userLevel == UserLevel.Admin) enumValues<UserLevel>().filter { it != UserLevel.Employee } else enumValues<UserLevel>().filter { it != UserLevel.Admin }
 
     Scaffold(
         topBar = {
@@ -72,7 +74,7 @@ fun UserForm(
                 DropdownMenu(modifier = Modifier
                     .exposedDropdownSize()
                     .fillMaxWidth(), expanded = expandedUsers, onDismissRequest = { expandedUsers = false }) {
-                    enumValues<UserLevel>().forEach {
+                    userLevels.forEach {
                         androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.name) }, onClick = { userLevel = it; expandedUsers = false })
                     }
                 }

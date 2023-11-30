@@ -114,7 +114,7 @@ fun POSScreen(
                 }
             }
 
-            LaunchedEffect(key1 = state.value.result, state.value.errorMessage) {
+            LaunchedEffect(key1 = state.value) {
                 if (!state.value.result && state.value.errorMessage != null) {
                     scaffoldState.snackbarHostState.showSnackbar(message = state.value.errorMessage!!, duration = SnackbarDuration.Short)
                     posViewModel.resetMessage()

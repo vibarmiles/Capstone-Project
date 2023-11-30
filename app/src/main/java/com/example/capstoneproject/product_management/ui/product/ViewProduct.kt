@@ -34,6 +34,7 @@ import com.example.capstoneproject.product_management.data.firebase.product.Prod
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import kotlinx.coroutines.launch
 
 
@@ -45,6 +46,7 @@ fun ViewProduct(
     contactViewModel: ContactViewModel,
     categoryViewModel: CategoryViewModel,
     branchViewModel: BranchViewModel,
+    userLevel: UserLevel,
     productId: String,
     edit: () -> Unit,
     set: () -> Unit,
@@ -69,12 +71,14 @@ fun ViewProduct(
                     }
                 },
                 actions = {
-                    var expanded: Boolean by remember { mutableStateOf(false) }
-                    IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
-                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                        DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Product") }, onClick = { expanded = false; edit.invoke() })
-                        DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.StackedBarChart, contentDescription = null) }, text = { Text(text = "Adjust Quantity") }, onClick = { expanded = false; set.invoke() })
-                        DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Product") }, onClick = { expanded = false; showDeleteDialog = true })
+                    if (userLevel != UserLevel.Employee) {
+                        var expanded: Boolean by remember { mutableStateOf(false) }
+                        IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
+                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                            DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Product") }, onClick = { expanded = false; edit.invoke() })
+                            DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.StackedBarChart, contentDescription = null) }, text = { Text(text = "Adjust Quantity") }, onClick = { expanded = false; set.invoke() })
+                            DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Product") }, onClick = { expanded = false; showDeleteDialog = true })
+                        }
                     }
                 }
             )

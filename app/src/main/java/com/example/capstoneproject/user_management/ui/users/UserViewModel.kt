@@ -10,6 +10,7 @@ import com.example.capstoneproject.global.data.firebase.log.ILoggingRepository
 import com.example.capstoneproject.global.data.firebase.log.LoggingRepository
 import com.example.capstoneproject.user_management.data.firebase.IUserRepository
 import com.example.capstoneproject.user_management.data.firebase.User
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.data.firebase.UserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,14 +18,23 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+data class UserAccountDetails(
+    val id: String = "",
+    val branchId: String? = null,
+    val lastLogin: Any = 0,
+    val userLevel: UserLevel = UserLevel.Employee,
+    val isActive: Boolean = false,
+    val errorMessage: String? = null
+)
+
 class UserViewModel : ViewModel() {
     private lateinit var users: SnapshotStateMap<String, User>
-    lateinit var id: String
-    lateinit var lastLogin: Any
     private val userRepository: IUserRepository = UserRepository()
     private val loggingRepository: ILoggingRepository = LoggingRepository()
     val isLoading = mutableStateOf(true)
     val update = mutableStateOf(true)
+    private val userAccountDetailsState = MutableStateFlow(UserAccountDetails())
+    val userAccountDetails = userAccountDetailsState.asStateFlow()
     private val resultState = MutableStateFlow(FirebaseResult())
     val result = resultState.asStateFlow()
 
@@ -34,8 +44,7 @@ class UserViewModel : ViewModel() {
             users = userRepository.getAll(callback = { updateLoadingState() }, update = {
                 update.value = update.value.not()
                 Log.d("Update", "Finished")
-            }) {
-                    result ->
+            }) { result ->
                 resultState.update { result }
             }
         }
@@ -43,16 +52,11 @@ class UserViewModel : ViewModel() {
         return users
     }
 
-    fun getUser(email: String, authorizationCallback: (Boolean) -> Unit) {
+    fun getUser(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            userRepository.getUser(email = email) { userId, userLong ->
-                authorizationCallback.invoke(userId != null)
+            userRepository.getUser(email = email) { user ->
                 getAll()
-                Log.e("User ID", userId.toString())
-                if (userId != null) {
-                    id = userId
-                    lastLogin = userLong
-                }
+                userAccountDetailsState.update { user }
             }
         }
     }
@@ -88,12 +92,15 @@ class UserViewModel : ViewModel() {
     }
 
     fun log(event: String) {
-        Log.e("LOG USER", id)
         viewModelScope.launch(Dispatchers.IO) {
             loggingRepository.log(log = com.example.capstoneproject.global.data.firebase.log.Log(
                 event = event,
-                userId = id
+                userId = userAccountDetails.value.id
             ))
         }
+    }
+
+    fun logout() {
+        userAccountDetailsState.update { UserAccountDetails() }
     }
 }

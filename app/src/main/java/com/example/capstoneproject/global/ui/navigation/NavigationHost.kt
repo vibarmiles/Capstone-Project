@@ -9,6 +9,7 @@ import androidx.compose.material.ScaffoldState
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -58,6 +59,7 @@ fun NavigationHost(
     scope: CoroutineScope,
     scaffoldState: ScaffoldState,
     viewModel: AppViewModel,
+    userViewModel: UserViewModel,
     callback: (Int) -> Unit
 ) {
     val branchViewModel: BranchViewModel = viewModel()
@@ -67,10 +69,10 @@ fun NavigationHost(
     val returnOrderViewModel: ReturnOrderViewModel = viewModel()
     val transferOrderViewModel: TransferOrderViewModel = viewModel()
     val contactViewModel: ContactViewModel = viewModel()
-    val userViewModel: UserViewModel = viewModel()
     val posViewModel: POSViewModel = viewModel()
     val activityLogsRepository: ActivityLogsViewModel = viewModel()
     val context = LocalContext.current
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
 
     val googleAuthUiClient by lazy {
         GoogleLoginRepository(context = context, oneTapClient = Identity.getSignInClient(context))
@@ -93,31 +95,7 @@ fun NavigationHost(
                 }
             })
 
-            LoginScreen(
-                signedIn = viewModel.user.value.data != null,
-                signIn = {
-                    if (viewModel.user.value.data != null) {
-                        userViewModel.getUser(viewModel.user.value.data!!.email) {
-                            if (it) {
-                                scope.launch {
-                                    userViewModel.log("user_logged_in")
-                                    scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully!", duration = SnackbarDuration.Short)
-                                }
-
-                                navController.navigate(Routes.Dashboard.route) {
-                                    popUpTo(0)
-                                }
-
-                                viewModel.isLoading.value = false
-                            } else {
-                                scope.launch {
-                                    scaffoldState.snackbarHostState.showSnackbar("Invalid User!", duration = SnackbarDuration.Short)
-                                }
-                            }
-                        }
-                    }
-                }
-            ) {
+            LoginScreen {
                 /*navController.navigate(Routes.Dashboard.route) {
                     popUpTo(0)
                 }
@@ -156,6 +134,7 @@ fun NavigationHost(
                 contactViewModel = contactViewModel,
                 productViewModel = productViewModel,
                 categoryViewModel = categoryViewModel,
+                userViewModel = userViewModel,
                 add = { navController.navigate(Routes.Product.Add.route) },
                 view = { id -> navController.navigate(Routes.Product.View.createRoute(id)) }
             )
@@ -170,6 +149,7 @@ fun NavigationHost(
                 contactViewModel = contactViewModel,
                 categoryViewModel = categoryViewModel,
                 branchViewModel = branchViewModel,
+                userLevel = userAccountDetails.value.userLevel,
                 productId = productId,
                 edit = { navController.navigate(Routes.Product.Edit.createRoute(productId)) },
                 set = { navController.navigate(Routes.Product.Set.createRoute(productId)) },
@@ -439,7 +419,7 @@ fun NavigationHost(
 
         composable(Routes.POS.Add.route) {
             POSForm(
-                userId = userViewModel.id,
+                userId = userAccountDetails.value.id,
                 posViewModel = posViewModel,
                 contactViewModel = contactViewModel,
                 branchViewModel = branchViewModel,
@@ -472,7 +452,7 @@ fun NavigationHost(
             Log.e("SALES INVOICE ID", id)
 
             ReturnAndExchangeForm(
-                userId = userViewModel.id,
+                userId = userAccountDetails.value.id,
                 invoiceId = id,
                 posViewModel = posViewModel,
                 returnOrderViewModel = returnOrderViewModel,
@@ -505,10 +485,11 @@ fun NavigationHost(
 
         composable(Routes.Logout.route) {
             LaunchedEffect(key1 = Unit) {
+                callback.invoke(R.string.login)
                 viewModel.user.value = SignInResult(data = null, errorMessage = null)
+                userViewModel.logout()
                 viewModel.isLoading.value = true
                 googleAuthUiClient.signOut()
-                callback.invoke(R.string.login)
                 scaffoldState.snackbarHostState.showSnackbar(message = "Signed Out Successfully!", duration = SnackbarDuration.Short)
             }
         }

@@ -3,6 +3,7 @@ package com.example.capstoneproject.user_management.data.firebase
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
+import com.example.capstoneproject.user_management.ui.users.UserAccountDetails
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -57,13 +58,17 @@ class UserRepository : IUserRepository {
         return users
     }
 
-    override fun getUser(email: String, user: (String?, Long) -> Unit) {
+    override fun getUser(email: String, user: (UserAccountDetails) -> Unit) {
         userCollectionReference.get().addOnSuccessListener {
             val found = it.getValue<Map<String, User>>()?.entries?.firstOrNull { foundUser -> foundUser.value.email == email }
             if (found != null) {
                 userCollectionReference.child(found.key).setValue(found.value.copy(lastLogin = ServerValue.TIMESTAMP)).addOnSuccessListener {
                     userCollectionReference.child(found.key).get().addOnSuccessListener { u ->
-                        user.invoke(found.key, u.getValue<User>()?.lastLogin as Long)
+                        u.getValue<User>()!!.let { thisUser ->
+                            user.invoke(UserAccountDetails(id = found.key, branchId = thisUser.branchId, lastLogin = thisUser.lastLogin, userLevel = thisUser.userLevel, isActive = thisUser.isActive))
+                        }
+                    }.addOnFailureListener { exception ->
+                        user.invoke(UserAccountDetails(errorMessage = exception.message))
                     }
                 }
             }

@@ -38,6 +38,8 @@ import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import java.time.Instant
 import java.time.ZoneId
@@ -50,6 +52,7 @@ fun ProductScreen(
     contactViewModel: ContactViewModel,
     productViewModel: ProductViewModel,
     categoryViewModel: CategoryViewModel,
+    userViewModel: UserViewModel,
     add: () -> Unit,
     view: (String) -> Unit
 ) {
@@ -60,14 +63,17 @@ fun ProductScreen(
     val state by productViewModel.result.collectAsState()
     var page by rememberSaveable { mutableStateOf(0) }
     val loading = productViewModel.isLoading.value || branchViewModel.isLoading.value || categoryViewModel.isLoading.value
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
 
     Scaffold(
         topBar = {
             BaseTopAppBar(title = stringResource(id = R.string.product), scope = scope, scaffoldState = scaffoldState)
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { add.invoke() }) {
-                Icon(Icons.Filled.Add, null)
+            if (userAccountDetails.value.userLevel != UserLevel.Employee) {
+                FloatingActionButton(onClick = { add.invoke() }) {
+                    Icon(Icons.Filled.Add, null)
+                }
             }
         }
     ) {
@@ -82,8 +88,15 @@ fun ProductScreen(
             Column(modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)) {
-                TabLayout(tabs = branch.value.sortedBy { it.name.uppercase() }, selectedTab = page, products = products.values.toList(), productUpdate = productViewModel.update.value) { page = it }
-                ProductScreenContent(suppliers = suppliers.value, branchId = if (page == 0) "Default" else branch.value.sortedBy { it.name.uppercase() }[page - 1].id, categories = categories.value.sortedBy { it.categoryName.uppercase() }, products = products.toList().sortedBy { it.second.productName.uppercase() }.toMap(), productUpdate = productViewModel.update.value, view = { view.invoke(it) }, numberOfBranches = branch.value.size.let { if (it == 0) 1 else it })
+                if (userAccountDetails.value.userLevel != UserLevel.Employee) {
+                    TabLayout(tabs = branch.value.sortedBy { it.name.uppercase() }, selectedTab = page, products = products.values.toList(), productUpdate = productViewModel.update.value) { page = it }
+                }
+
+                ProductScreenContent(suppliers = suppliers.value, branchId = if (userAccountDetails.value.userLevel == UserLevel.Employee) {
+                    userAccountDetails.value.branchId ?: ""
+                } else {
+                    if (page == 0) "Default" else branch.value.sortedBy { it.name.uppercase() }[page - 1].id
+                }, categories = categories.value.sortedBy { it.categoryName.uppercase() }, products = products.toList().sortedBy { it.second.productName.uppercase() }.toMap(), productUpdate = productViewModel.update.value, view = { view.invoke(it) }, numberOfBranches = branch.value.size.let { if (it == 0) 1 else it })
             }
         }
 

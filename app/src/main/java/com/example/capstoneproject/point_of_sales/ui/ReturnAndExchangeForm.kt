@@ -61,6 +61,7 @@ fun ReturnAndExchangeForm(
     val branchId = remember { posViewModel.getDocument(id = invoiceId)!!.branchId }
     val context = LocalContext.current
     val state = posViewModel.result.collectAsState()
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val invoice = posViewModel.getDocument(id = invoiceId)!!
     var expanded by remember { mutableStateOf(false) }
     var type by remember { mutableStateOf(InvoiceType.REFUND) }
@@ -245,7 +246,7 @@ fun ReturnAndExchangeForm(
                                 }
                             }
                         ),
-                        date = userViewModel.lastLogin as Long
+                        date = userAccountDetails.value.lastLogin as Long
                     )
 
                     check.value = checked

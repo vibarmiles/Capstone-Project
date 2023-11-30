@@ -31,6 +31,7 @@ import com.example.capstoneproject.point_of_sales.data.firebase.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -52,10 +53,11 @@ fun POSForm(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showConfirmationDialog by remember { mutableStateOf(false) }
     val state = posViewModel.result.collectAsState()
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val context = LocalContext.current
     var productToRemove: Product? = null
-    var branchId by remember { mutableStateOf(branches.value.firstOrNull()?.id) }
-    var textFieldValue by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches Found") }
+    var branchId by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Employee) userAccountDetails.value.branchId else branches.value.firstOrNull()?.id) }
+    var textFieldValue by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Employee) branchViewModel.getBranch(userAccountDetails.value.branchId)?.name ?: "Unknown Branch" else branches.value.firstOrNull()?.name ?: "No Branches Found") }
     var payment by remember { mutableStateOf(Payment.CASH) }
     var paymentTextFieldValue by remember { mutableStateOf(Payment.CASH.name) }
 
@@ -94,7 +96,7 @@ fun POSForm(
                 ) {
                     var expandedPayment by remember { mutableStateOf(false) }
 
-                    if (soldProductsViewModel.sales.isEmpty()) {
+                    if (soldProductsViewModel.sales.isEmpty() && userAccountDetails.value.userLevel != UserLevel.Employee) {
                         var expanded by remember { mutableStateOf(false) }
                         ExposedDropdownMenuBox(
                             expanded = expanded,
@@ -134,7 +136,7 @@ fun POSForm(
                         OutlinedTextField(
                             modifier = Modifier.fillMaxWidth(),
                             label = {
-                                androidx.compose.material3.Text(
+                                Text(
                                     text = "Sell Item from this branch"
                                 )
                             },
@@ -262,7 +264,7 @@ fun POSForm(
                             }
                         }
                     ),
-                    date = userViewModel.lastLogin as Long
+                    date = userAccountDetails.value.lastLogin as Long
                 )
             }
         }
