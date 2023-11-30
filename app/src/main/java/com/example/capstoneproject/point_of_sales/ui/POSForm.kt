@@ -261,7 +261,8 @@ fun POSForm(
                                 "Item ${soldProductsViewModel.sales.indexOf(product)}"
                             }
                         }
-                    )
+                    ),
+                    date = userViewModel.lastLogin as Long
                 )
             }
         }

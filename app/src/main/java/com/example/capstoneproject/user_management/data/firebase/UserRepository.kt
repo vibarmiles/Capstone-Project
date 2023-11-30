@@ -57,12 +57,14 @@ class UserRepository : IUserRepository {
         return users
     }
 
-    override fun getUser(email: String, user: (String?) -> Unit) {
+    override fun getUser(email: String, user: (String?, Long) -> Unit) {
         userCollectionReference.get().addOnSuccessListener {
             val found = it.getValue<Map<String, User>>()?.entries?.firstOrNull { foundUser -> foundUser.value.email == email }
             if (found != null) {
                 userCollectionReference.child(found.key).setValue(found.value.copy(lastLogin = ServerValue.TIMESTAMP)).addOnSuccessListener {
-                    user.invoke(found.key)
+                    userCollectionReference.child(found.key).get().addOnSuccessListener { u ->
+                        user.invoke(found.key, u.getValue<User>()?.lastLogin as Long)
+                    }
                 }
             }
         }

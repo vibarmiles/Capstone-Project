@@ -80,13 +80,13 @@ class POSViewModel : ViewModel() {
         resultState.update { FirebaseResult() }
     }
 
-    fun transact(document: Invoice) {
+    fun transact(document: Invoice, date: Long) {
         if (document.invoiceType != InvoiceType.SALE) {
             return
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.transact(document = document) { result ->
+            productRepository.transact(document = document, newDate = date) { result ->
                 viewModelScope.launch {
                     if (!result.result) {
                         Log.e("TRANSACTION", "FAILED")
@@ -103,7 +103,7 @@ class POSViewModel : ViewModel() {
         }
     }
 
-    fun returnAndExchange(document: Invoice) {
+    fun returnAndExchange(document: Invoice, date: Long) {
         if (document.invoiceType == InvoiceType.SALE) {
             return
         }
@@ -113,7 +113,7 @@ class POSViewModel : ViewModel() {
             insert(invoice = document, returnResult = false) { current ->
                 Log.e("TRANSACTION", "ORIGINAL INVOICE ${current.result.toString().uppercase()}")
                 if (current.result) {
-                    productRepository.transact(document = document) { result ->
+                    productRepository.transact(document = document, newDate = date) { result ->
                         Log.e("TRANSACTION", "PRODUCTS ${result.result.toString().uppercase()}")
                         viewModelScope.launch {
                             if (result.result) {

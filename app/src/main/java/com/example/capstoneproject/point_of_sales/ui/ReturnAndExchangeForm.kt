@@ -233,7 +233,7 @@ fun ReturnAndExchangeForm(
             if (showConfirmationDialog) {
                 ConfirmationDialogForReturnAndExchange(onCancel = { showConfirmationDialog = false }) { checked ->
                     posViewModel.returnAndExchange(
-                        Invoice(
+                        document = Invoice(
                             originalInvoiceId = invoiceId,
                             branchId = branchId,
                             userId = userId,
@@ -244,7 +244,8 @@ fun ReturnAndExchangeForm(
                                     "Item ${soldProductsViewModel.sales.indexOf(product)}"
                                 }
                             }
-                        )
+                        ),
+                        date = userViewModel.lastLogin as Long
                     )
 
                     check.value = checked

@@ -12,5 +12,5 @@ interface IProductRepository {
     fun delete(key: String, product: Product, result: (FirebaseResult) -> Unit)
     fun removeCategory(categoryId: String, result: (FirebaseResult) -> Unit)
     fun removeBranchStock(branchId: String, result: (FirebaseResult) -> Unit)
-    fun transact(document: Any, result: (FirebaseResult) -> Unit)
+    fun transact(document: Any, newDate: Long = 0, result: (FirebaseResult) -> Unit)
 }

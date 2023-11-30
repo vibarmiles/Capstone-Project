@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 class UserViewModel : ViewModel() {
     private lateinit var users: SnapshotStateMap<String, User>
     lateinit var id: String
+    lateinit var lastLogin: Any
     private val userRepository: IUserRepository = UserRepository()
     private val loggingRepository: ILoggingRepository = LoggingRepository()
     val isLoading = mutableStateOf(true)
@@ -44,12 +45,13 @@ class UserViewModel : ViewModel() {
 
     fun getUser(email: String, authorizationCallback: (Boolean) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            userRepository.getUser(email = email) {
-                authorizationCallback.invoke(it != null)
+            userRepository.getUser(email = email) { userId, userLong ->
+                authorizationCallback.invoke(userId != null)
                 getAll()
-                Log.e("User ID", it.toString())
-                if (it != null) {
-                    id = it
+                Log.e("User ID", userId.toString())
+                if (userId != null) {
+                    id = userId
+                    lastLogin = userLong
                 }
             }
         }

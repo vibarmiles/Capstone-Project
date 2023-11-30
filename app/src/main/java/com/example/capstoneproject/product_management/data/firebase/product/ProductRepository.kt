@@ -181,7 +181,7 @@ class ProductRepository : IProductRepository {
 
     })
 
-    override fun transact(document: Any, result: (FirebaseResult) -> Unit) {
+    override fun transact(document: Any, newDate: Long, result: (FirebaseResult) -> Unit) {
         productCollectionReference.runTransaction(object : Transaction.Handler {
             override fun doTransaction(currentData: MutableData): Transaction.Result {
                 val currentProducts = currentData.getValue<Map<String, Product>>() ?: mapOf()
@@ -275,65 +275,61 @@ class ProductRepository : IProductRepository {
                             }
                         }
 
-                        firebase.child("users").child(document.userId).get().addOnSuccessListener { snapshot ->
-                            val date = Instant.ofEpochMilli(snapshot.getValue<User>()!!.lastLogin as Long).atZone(ZoneId.systemDefault()).toLocalDate()
-                            val lastEditDate = Instant.ofEpochMilli((if (currentData.getValue<Product>()?.lastEdit is Long) currentData.getValue<Product>()?.lastEdit else date.toEpochDay()) as Long).atZone(ZoneId.systemDefault()).toLocalDate()
+                        val date = Instant.ofEpochMilli(newDate).atZone(ZoneId.systemDefault()).toLocalDate()
+                        val lastEditDate = Instant.ofEpochMilli((if (currentData.getValue<Product>()?.lastEdit is Long) currentData.getValue<Product>()?.lastEdit else date.toEpochDay()) as Long).atZone(ZoneId.systemDefault()).toLocalDate()
 
-                            for (product in document.products.values) {
-                                if (lastEditDate.month != date.month) {
+                        for (product in document.products.values) {
+                            if (lastEditDate.month != date.month) {
+                                currentProducts[product.id]!!.let { current ->
+                                    currentData.child(product.id).value = current.copy(lastEdit = ServerValue.TIMESTAMP, changeLeastSold = false, transaction = current.transaction.let {
+                                        val didYearChange = lastEditDate.year != date.year
+                                        it.copy(
+                                            soldThisMonth = 0,
+                                            purchased = if (didYearChange) 0 else it.purchased,
+                                            soldThisYear = if (didYearChange) 0 else it.soldThisYear,
+                                            highestMonth = if (it.highestMonth < it.soldThisMonth) it.soldThisMonth else it.highestMonth,
+                                            lowestMonth = if (it.lowestMonth > it.soldThisMonth || it.lowestMonth == 0) it.soldThisMonth else it.lowestMonth,
+                                            soldLastYear = if (didYearChange || current.changeLeastSold) it.soldThisYear else it.soldLastYear
+                                        )
+                                    })
+                                }
+                            }
+                        }
+
+                        when (document.invoiceType) {
+                            InvoiceType.SALE -> {
+                                for (product in document.products.values) {
                                     currentProducts[product.id]!!.let { current ->
-                                        currentData.child(product.id).value = current.copy(lastEdit = ServerValue.TIMESTAMP, changeLeastSold = false, transaction = current.transaction.let {
-                                            val didYearChange = lastEditDate.year != date.year
-                                            it.copy(
-                                                soldThisMonth = 0,
-                                                purchased = if (didYearChange) 0 else it.purchased,
-                                                soldThisYear = if (didYearChange) 0 else it.soldThisYear,
-                                                highestMonth = if (it.highestMonth < it.soldThisMonth) it.soldThisMonth else it.highestMonth,
-                                                lowestMonth = if (it.lowestMonth > it.soldThisMonth || it.lowestMonth == 0) it.soldThisMonth else it.lowestMonth,
-                                                soldLastYear = if (didYearChange || current.changeLeastSold) it.soldThisYear else it.soldLastYear
+                                        currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
+                                            stock[document.branchId] = stock.getOrDefault(document.branchId, 0) - product.quantity
+                                            stock
+                                        }, transaction = current.transaction.let { transaction ->
+                                            transaction.copy(
+                                                soldThisYear = transaction.soldThisYear + product.quantity,
+                                                soldThisMonth = transaction.soldThisMonth + product.quantity
                                             )
                                         })
                                     }
                                 }
                             }
 
-                            when (document.invoiceType) {
-                                InvoiceType.SALE -> {
-                                    for (product in document.products.values) {
-                                        currentProducts[product.id]!!.let { current ->
-                                            currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
-                                                stock[document.branchId] = stock.getOrDefault(document.branchId, 0) - product.quantity
-                                                stock
-                                            }, transaction = current.transaction.let { transaction ->
-                                                val soldThisMonth = transaction.soldThisMonth + product.quantity
-
-                                                transaction.copy(
-                                                    soldThisYear = transaction.soldThisYear + product.quantity,
-                                                    soldThisMonth = soldThisMonth
-                                                )
-                                            })
-                                        }
-                                    }
-                                }
-
-                                InvoiceType.REFUND -> {
-                                    for (product in document.products.values) {
-                                        currentProducts[product.id]!!.let { current ->
-                                            currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
-                                                stock[document.branchId] = stock.getOrDefault(document.branchId, 0) + product.quantity
-                                                stock
-                                            }, transaction = current.transaction.let { it.copy(soldThisYear = (it.soldThisYear - product.quantity).let { diff -> if (diff < 0) 0 else diff}) })
-                                        }
-                                    }
-                                }
-
-                                InvoiceType.EXCHANGE -> {
-                                    for (product in document.products.values) {
-                                        currentProducts[product.id]!!.let { current -> currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
-                                            stock[document.branchId] = stock.getOrDefault(document.branchId, 0) - product.quantity
+                            InvoiceType.REFUND -> {
+                                for (product in document.products.values) {
+                                    currentProducts[product.id]!!.let { current ->
+                                        currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
+                                            stock[document.branchId] = stock.getOrDefault(document.branchId, 0) + product.quantity
                                             stock
-                                        }) }
+                                        }, transaction = current.transaction.let { it.copy(soldThisYear = (it.soldThisYear - product.quantity).let { diff -> if (diff < 0) 0 else diff}) })
                                     }
+                                }
+                            }
+
+                            InvoiceType.EXCHANGE -> {
+                                for (product in document.products.values) {
+                                    currentProducts[product.id]!!.let { current -> currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
+                                        stock[document.branchId] = stock.getOrDefault(document.branchId, 0) - product.quantity
+                                        stock
+                                    }) }
                                 }
                             }
                         }
