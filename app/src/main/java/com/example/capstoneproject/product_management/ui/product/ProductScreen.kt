@@ -96,7 +96,7 @@ fun ProductScreen(
                     userAccountDetails.value.branchId ?: ""
                 } else {
                     if (page == 0) "Default" else branch.value.sortedBy { it.name.uppercase() }[page - 1].id
-                }, categories = categories.value.sortedBy { it.categoryName.uppercase() }, products = products.toList().sortedBy { it.second.productName.uppercase() }.toMap(), productUpdate = productViewModel.update.value, view = { view.invoke(it) }, numberOfBranches = branch.value.size.let { if (it == 0) 1 else it })
+                }, categories = categories.value.sortedBy { it.categoryName.uppercase() }, products = products.filterValues { if (userAccountDetails.value.userLevel != UserLevel.Employee) true else it.isActive }.toList().sortedBy { it.second.productName.uppercase() }.toMap(), productUpdate = productViewModel.update.value, view = { view.invoke(it) }, numberOfBranches = branch.value.size.let { if (it == 0) 1 else it })
             }
         }
 

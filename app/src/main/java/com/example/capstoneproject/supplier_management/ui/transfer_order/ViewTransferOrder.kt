@@ -89,7 +89,7 @@ fun ViewTransferOrder(
                     action = Status.CANCELLED
                     showDialog = true
                 }) {
-                    action = Status.COMPLETE
+                    action = Status.PENDING
                     showDialog = true
                 }
             }

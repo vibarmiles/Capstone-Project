@@ -42,7 +42,7 @@ fun ViewPurchaseOrder(
     var id by remember { mutableStateOf("") }
     var action: Status? = null
     val state = purchaseOrderViewModel.result.collectAsState()
-    val context = LocalContext.current
+    LocalContext.current
 
     Scaffold(
         topBar = {
@@ -126,7 +126,7 @@ fun ViewPurchaseOrder(
                         action = Status.CANCELLED
                         showDialog = true
                     }) {
-                        action = Status.COMPLETE
+                        action = Status.PENDING
                         showDialog = true
                     }
                 }

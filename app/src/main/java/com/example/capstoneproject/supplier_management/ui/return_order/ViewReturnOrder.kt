@@ -37,7 +37,6 @@ fun ViewReturnOrder(
     val products = remember { returnOrder.products.map { (productViewModel.getProduct(it.value.id)?.productName ?: "Unknown Item") to it.value } }
     var showDialog by remember { mutableStateOf(false) }
     var action: Status? = null
-    val context = LocalContext.current
     val state = returnOrderViewModel.result.collectAsState()
 
     Scaffold(
@@ -90,7 +89,7 @@ fun ViewReturnOrder(
                     action = Status.CANCELLED
                     showDialog = true
                 }) {
-                    action = Status.COMPLETE
+                    action = Status.PENDING
                     showDialog = true
                 }
             }

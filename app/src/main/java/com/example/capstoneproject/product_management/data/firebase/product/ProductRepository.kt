@@ -191,8 +191,11 @@ class ProductRepository : IProductRepository {
                         Log.e("Document", "Purchase Order")
 
                         if (!document.products.values.all { it.id in currentProducts.keys }) {
+                            Log.e("MISSING", "KEY")
                             return Transaction.abort()
                         }
+
+                        Log.e("KEY", "ALL IN")
 
                         for (product in document.products.values) {
                             currentProducts[product.id]!!.let { current ->
@@ -203,7 +206,7 @@ class ProductRepository : IProductRepository {
                             }
                         }
 
-                        Transaction.success(currentData)
+                        return Transaction.success(currentData)
                     }
 
                     is ReturnOrder -> {
@@ -338,6 +341,7 @@ class ProductRepository : IProductRepository {
                     }
                 }
 
+                Log.e("LAST ERROR", "LAST ERROR")
                 return Transaction.abort()
             }
 
