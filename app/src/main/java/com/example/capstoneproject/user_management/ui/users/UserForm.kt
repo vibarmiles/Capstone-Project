@@ -36,7 +36,6 @@ fun UserForm(
     val user = userViewModel.getUserDetails(userId = userId) ?: User()
     var expandedUsers by remember { mutableStateOf(false) }
     var expandedBranches by remember { mutableStateOf(false) }
-    var userLevel by remember { mutableStateOf(user.userLevel) }
     var firstName by remember { mutableStateOf(user.firstName) }
     var isFirstNameValid by remember { mutableStateOf(true) }
     var lastName by remember { mutableStateOf(user.lastName) }
@@ -47,6 +46,7 @@ fun UserForm(
     var branchId by remember { mutableStateOf(branches.value.firstOrNull()?.id)}
     var branchName by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches")}
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
+    var userLevel by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Admin && user.userLevel == UserLevel.Employee) UserLevel.Owner else user.userLevel) }
     val userLevels = if (userAccountDetails.value.userLevel == UserLevel.Admin) enumValues<UserLevel>().filter { it != UserLevel.Employee } else enumValues<UserLevel>().filter { it != UserLevel.Admin }
 
     Scaffold(

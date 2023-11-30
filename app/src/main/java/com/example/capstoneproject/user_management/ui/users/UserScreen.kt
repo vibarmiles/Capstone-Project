@@ -25,6 +25,7 @@ import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.ui.theme.Purple500
 import com.example.capstoneproject.user_management.data.firebase.User
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
@@ -37,6 +38,7 @@ fun UserScreen(
 ) {
     val users = userViewModel.getAll()
     val state by userViewModel.result.collectAsState()
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
     val size = users.size
     val listOfUsers = remember(userViewModel.update) {
@@ -67,7 +69,7 @@ fun UserScreen(
                 Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered users"; 1 -> "1 user is entered"; else -> "$size users are entered"})
                 Divider()
                 LazyColumn(modifier = Modifier.padding(paddingValues)) {
-                    itemsIndexed(listOfUsers.value.sortedBy { it.second.lastName.uppercase() }) {
+                    itemsIndexed(listOfUsers.value.filterNot { it.second.userLevel == if (userAccountDetails.value.userLevel == UserLevel.Admin) UserLevel.Employee else UserLevel.Admin }.sortedBy { it.second.lastName.uppercase() }) {
                             _, it ->
                         Column {
                             UserListItem(user = it.second, edit = { edit.invoke(it.first) }) {
