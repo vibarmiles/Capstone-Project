@@ -15,7 +15,10 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.global.ui.misc.FormButtons
@@ -53,8 +56,8 @@ fun ContactFormScreen(
             .padding(paddingValues)
             .padding(16.dp)
             .verticalScroll(state = rememberScrollState())) {
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = name, onValueChange = { value -> name = value }, placeholder = { Text(text = "Enter Contact's Name") }, label = { Text(text = "Contact's Name") }, isError = !isNameValid, trailingIcon = { if (!isNameValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) })
-            OutlinedTextField(leadingIcon = { Text(text = "+63") }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = contact, onValueChange = { value -> if (value.length <= 10) contact = value.filter { it.isDigit() } }, placeholder = { Text(text = "Enter Contact's Phone Number") }, label = { Text(text = "Contact's Number") }, isError = !isContactValid, trailingIcon = { if (!isContactValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone))
+            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = name, onValueChange = { value -> name = value }, placeholder = { Text(text = "Enter Contact's Name") }, label = { Text(text = buildAnnotatedString { append("Contact's Name"); withStyle( style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, isError = !isNameValid, trailingIcon = { if (!isNameValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) })
+            OutlinedTextField(leadingIcon = { Text(text = "+63") }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = contact, onValueChange = { value -> if (value.length <= 10) contact = value.filter { it.isDigit() } }, placeholder = { Text(text = "Enter Contact's Phone Number") }, label = { Text(text = buildAnnotatedString { append("Contact's Number"); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, isError = !isContactValid, trailingIcon = { if (!isContactValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone))
             FormButtons(cancel = back) {
                 isNameValid = name.isNotBlank()
                 isContactValid = contact.let { it.isNotBlank() && Patterns.PHONE.matcher(it).matches() && it.length == 10 }

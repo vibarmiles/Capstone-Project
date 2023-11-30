@@ -15,7 +15,10 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.FormButtons
@@ -69,7 +72,7 @@ fun UserForm(
             .padding(16.dp)
             .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             ExposedDropdownMenuBox(expanded = expandedUsers, onExpandedChange = { expandedUsers = !expandedUsers }) {
-                OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedUsers) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = userLevel.name, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.user_level)) })
+                OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedUsers) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = userLevel.name, onValueChange = {  }, readOnly = true, label = { Text(text = buildAnnotatedString { append(text = stringResource(id = R.string.user_level)); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) })
 
                 DropdownMenu(modifier = Modifier
                     .exposedDropdownSize()
@@ -82,7 +85,7 @@ fun UserForm(
 
             if (userLevel == UserLevel.Employee) {
                 ExposedDropdownMenuBox(expanded = expandedBranches, onExpandedChange = { expandedBranches = !expandedBranches }) {
-                    OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedBranches) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = branchName, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.branch)) })
+                    OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedBranches) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = branchName, onValueChange = {  }, readOnly = true, label = { Text(text = buildAnnotatedString { append(text = stringResource(id = R.string.branch)); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) })
 
                     DropdownMenu(modifier = Modifier
                         .exposedDropdownSize()
@@ -94,17 +97,17 @@ fun UserForm(
                 }
             }
 
-            OutlinedTextField(value = firstName, colors = GlobalTextFieldColors(), onValueChange = { firstName = it.filter { value -> value.isLetter() || value.isWhitespace() } }, label = { Text(text = "First Name") }, placeholder = { Text(text = "Enter First Name") }, isError = !isFirstNameValid, trailingIcon = { if (!isFirstNameValid) Icon(
+            OutlinedTextField(value = firstName, colors = GlobalTextFieldColors(), onValueChange = { firstName = it.filter { value -> value.isLetter() || value.isWhitespace() } }, label = { Text(text = buildAnnotatedString { append(text = "First Name"); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, placeholder = { Text(text = "Enter First Name") }, isError = !isFirstNameValid, trailingIcon = { if (!isFirstNameValid) Icon(
                 imageVector = Icons.Filled.Error,
                 contentDescription = null,
                 tint = Color.Red
             )}, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = lastName, colors = GlobalTextFieldColors(), onValueChange = { lastName = it.filter { value -> value.isLetter() || value.isWhitespace() } }, label = { Text(text = "Last Name") }, placeholder = { Text(text = "Enter Last Name") }, isError = !isLastNameValid, trailingIcon = { if (!isLastNameValid) Icon(
+            OutlinedTextField(value = lastName, colors = GlobalTextFieldColors(), onValueChange = { lastName = it.filter { value -> value.isLetter() || value.isWhitespace() } }, label = { Text(text = buildAnnotatedString { append(text = "Last Name"); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, placeholder = { Text(text = "Enter Last Name") }, isError = !isLastNameValid, trailingIcon = { if (!isLastNameValid) Icon(
                 imageVector = Icons.Filled.Error,
                 contentDescription = null,
                 tint = Color.Red
             )}, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = email, colors = GlobalTextFieldColors(), onValueChange = { email = it }, label = { Text(text = "Email") }, placeholder = { Text(text = "Enter Email") }, isError = !isEmailValid, trailingIcon = { if (!isEmailValid) Icon(
+            OutlinedTextField(value = email, colors = GlobalTextFieldColors(), onValueChange = { email = it }, label = { Text(text = buildAnnotatedString { append(text = "Email"); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, placeholder = { Text(text = "Enter Email") }, isError = !isEmailValid, trailingIcon = { if (!isEmailValid) Icon(
                 imageVector = Icons.Filled.Error,
                 contentDescription = null,
                 tint = Color.Red

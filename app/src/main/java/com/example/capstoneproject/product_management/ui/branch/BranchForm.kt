@@ -11,6 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
@@ -46,12 +49,12 @@ fun BranchFormScreen(
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(value = name, colors = GlobalTextFieldColors(), onValueChange = { name = it }, label = { Text(text = "Branch Name") }, placeholder = { Text(text = "Enter Branch Name") }, isError = !isNameValid, modifier = Modifier.fillMaxWidth(), trailingIcon = { if (!isNameValid) Icon(
+            OutlinedTextField(value = name, colors = GlobalTextFieldColors(), onValueChange = { name = it }, label = { Text(text = buildAnnotatedString { append("Branch Name"); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, placeholder = { Text(text = "Enter Branch Name") }, isError = !isNameValid, modifier = Modifier.fillMaxWidth(), trailingIcon = { if (!isNameValid) Icon(
                 imageVector = Icons.Filled.Error,
                 contentDescription = null,
                 tint = Color.Red
             )})
-            OutlinedTextField(value = address, colors = GlobalTextFieldColors(), onValueChange = { address = it }, label = { Text(text = "Branch Address") }, placeholder = { Text(text = "Enter Branch Address") }, isError = !isAddressValid, modifier = Modifier.fillMaxWidth(), trailingIcon = { if (!isAddressValid) Icon(
+            OutlinedTextField(value = address, colors = GlobalTextFieldColors(), onValueChange = { address = it }, label = { Text(text = buildAnnotatedString { append(text = "Branch Address"); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, placeholder = { Text(text = "Enter Branch Address") }, isError = !isAddressValid, modifier = Modifier.fillMaxWidth(), trailingIcon = { if (!isAddressValid) Icon(
                 imageVector = Icons.Filled.Error,
                 contentDescription = null,
                 tint = Color.Red
