@@ -28,7 +28,7 @@ class ProductViewModel : ViewModel() {
         if (!this::products.isInitialized) {
             products = productRepository.getAll(callback = { updateLoadingState() }, update = {
                 update.value = update.value.not()
-                Log.d("Update", "Finished")
+                Log.e("Update", "Finished ${update.value}")
             }) {
                     result ->
                 resultState.update { result }

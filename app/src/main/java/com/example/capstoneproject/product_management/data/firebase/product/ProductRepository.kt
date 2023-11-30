@@ -10,17 +10,19 @@ import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
 import com.example.capstoneproject.supplier_management.data.firebase.return_order.ReturnOrder
 import com.example.capstoneproject.supplier_management.data.firebase.transfer_order.TransferOrder
+import com.example.capstoneproject.user_management.data.firebase.User
 import com.google.firebase.database.*
 import com.google.firebase.database.Transaction
 import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
+import java.time.Instant
+import java.time.ZoneId
 
 class ProductRepository : IProductRepository {
     private val firebase = Firebase.database.reference
     private val productCollectionReference = firebase.child("products")
-    private val reportReference = firebase.child("report")
     private val firestorage = Firebase.storage.reference
     private val productImageReference = firestorage.child("images")
 
@@ -223,7 +225,9 @@ class ProductRepository : IProductRepository {
                                 currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
                                     stock[document.branchId] = stock.getOrDefault(document.branchId, 0) - product.quantity
                                     stock
-                                }, transaction = current.transaction.let { it.copy(returned = it.returned + product.quantity) })
+                                }, transaction = current.transaction.let { transaction ->
+                                    transaction.copy(purchased = (transaction.purchased - product.quantity).let { if (it > 0) it else 0 })
+                                })
                             }
                         }
 
@@ -271,35 +275,65 @@ class ProductRepository : IProductRepository {
                             }
                         }
 
-                        when (document.invoiceType) {
-                            InvoiceType.SALE -> {
-                                for (product in document.products.values) {
+                        firebase.child("users").child(document.userId).get().addOnSuccessListener { snapshot ->
+                            val date = Instant.ofEpochMilli(snapshot.getValue<User>()!!.lastLogin as Long).atZone(ZoneId.systemDefault()).toLocalDate()
+                            val lastEditDate = Instant.ofEpochMilli((if (currentData.getValue<Product>()?.lastEdit is Long) currentData.getValue<Product>()?.lastEdit else date.toEpochDay()) as Long).atZone(ZoneId.systemDefault()).toLocalDate()
+
+                            for (product in document.products.values) {
+                                if (lastEditDate.month != date.month) {
                                     currentProducts[product.id]!!.let { current ->
-                                        currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
+                                        currentData.child(product.id).value = current.copy(lastEdit = ServerValue.TIMESTAMP, changeLeastSold = false, transaction = current.transaction.let {
+                                            val didYearChange = lastEditDate.year != date.year
+                                            it.copy(
+                                                soldThisMonth = 0,
+                                                purchased = if (didYearChange) 0 else it.purchased,
+                                                soldThisYear = if (didYearChange) 0 else it.soldThisYear,
+                                                highestMonth = if (it.highestMonth < it.soldThisMonth) it.soldThisMonth else it.highestMonth,
+                                                lowestMonth = if (it.lowestMonth > it.soldThisMonth || it.lowestMonth == 0) it.soldThisMonth else it.lowestMonth,
+                                                soldLastYear = if (didYearChange || current.changeLeastSold) it.soldThisYear else it.soldLastYear
+                                            )
+                                        })
+                                    }
+                                }
+                            }
+
+                            when (document.invoiceType) {
+                                InvoiceType.SALE -> {
+                                    for (product in document.products.values) {
+                                        currentProducts[product.id]!!.let { current ->
+                                            currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
+                                                stock[document.branchId] = stock.getOrDefault(document.branchId, 0) - product.quantity
+                                                stock
+                                            }, transaction = current.transaction.let { transaction ->
+                                                val soldThisMonth = transaction.soldThisMonth + product.quantity
+
+                                                transaction.copy(
+                                                    soldThisYear = transaction.soldThisYear + product.quantity,
+                                                    soldThisMonth = soldThisMonth
+                                                )
+                                            })
+                                        }
+                                    }
+                                }
+
+                                InvoiceType.REFUND -> {
+                                    for (product in document.products.values) {
+                                        currentProducts[product.id]!!.let { current ->
+                                            currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
+                                                stock[document.branchId] = stock.getOrDefault(document.branchId, 0) + product.quantity
+                                                stock
+                                            }, transaction = current.transaction.let { it.copy(soldThisYear = (it.soldThisYear - product.quantity).let { diff -> if (diff < 0) 0 else diff}) })
+                                        }
+                                    }
+                                }
+
+                                InvoiceType.EXCHANGE -> {
+                                    for (product in document.products.values) {
+                                        currentProducts[product.id]!!.let { current -> currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
                                             stock[document.branchId] = stock.getOrDefault(document.branchId, 0) - product.quantity
                                             stock
-                                        }, transaction = current.transaction.let { it.copy(sold = it.sold + product.quantity) })
+                                        }) }
                                     }
-                                }
-                            }
-
-                            InvoiceType.REFUND -> {
-                                for (product in document.products.values) {
-                                    currentProducts[product.id]!!.let { current ->
-                                        currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
-                                            stock[document.branchId] = stock.getOrDefault(document.branchId, 0) + product.quantity
-                                            stock
-                                        }, transaction = current.transaction.let { it.copy(sold = (it.sold - product.quantity).let { diff -> if (diff < 0) 0 else diff}) })
-                                    }
-                                }
-                            }
-
-                            InvoiceType.EXCHANGE -> {
-                                for (product in document.products.values) {
-                                    currentProducts[product.id]!!.let { current -> currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
-                                        stock[document.branchId] = stock.getOrDefault(document.branchId, 0) - product.quantity
-                                        stock
-                                    }) }
                                 }
                             }
                         }

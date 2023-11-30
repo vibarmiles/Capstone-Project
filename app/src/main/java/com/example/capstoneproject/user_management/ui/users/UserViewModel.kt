@@ -8,9 +8,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.global.data.firebase.log.ILoggingRepository
 import com.example.capstoneproject.global.data.firebase.log.LoggingRepository
-import com.example.capstoneproject.global.data.firebase.report.IReportRepository
-import com.example.capstoneproject.global.data.firebase.report.Report
-import com.example.capstoneproject.global.data.firebase.report.ReportRepository
 import com.example.capstoneproject.user_management.data.firebase.IUserRepository
 import com.example.capstoneproject.user_management.data.firebase.User
 import com.example.capstoneproject.user_management.data.firebase.UserRepository
@@ -24,7 +21,6 @@ class UserViewModel : ViewModel() {
     private lateinit var users: SnapshotStateMap<String, User>
     lateinit var id: String
     private val userRepository: IUserRepository = UserRepository()
-    private val reportRepository: IReportRepository = ReportRepository()
     private val loggingRepository: ILoggingRepository = LoggingRepository()
     val isLoading = mutableStateOf(true)
     val update = mutableStateOf(true)
@@ -96,13 +92,6 @@ class UserViewModel : ViewModel() {
                 event = event,
                 userId = id
             ))
-        }
-    }
-
-    fun getLoginTimeStamp(report: Report) {
-        Log.e("TIMESTAMP", "CALLED")
-        viewModelScope.launch(Dispatchers.IO) {
-            reportRepository.setMonthReport(id = id, report = report)
         }
     }
 }

@@ -55,7 +55,7 @@ fun ProductQuantityFormScreen(
             itemsIndexed(branches.value) {
                     _, it ->
                 var text by rememberSaveable { mutableStateOf(if (map.containsKey(it.id)) map[it.id].toString() else "")}
-                var isValid by remember { mutableStateOf(true) }
+                val isValid by remember { mutableStateOf(true) }
                 if (text.isNotBlank()) {
                     viewModel.stockPerBranch[it.id] = text
                 } else {

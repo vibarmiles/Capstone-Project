@@ -24,7 +24,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.SubcomposeAsyncImage
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.FormButtons
@@ -65,9 +64,18 @@ fun ProductForm(
     var categoryId: String? by remember { mutableStateOf(product.category) }
     var selectedCategory by remember { mutableStateOf(if (categoryId == null) "None" else category.value.firstOrNull { category -> categoryId == category.id }?.categoryName ?: "None") }
     var imageUri by remember { mutableStateOf(if (product.image == null) null else Uri.parse(product.image)) }
-    var criticalLevel by remember { mutableStateOf(product.criticalLevel) }
-    var criticalLevelText by remember { mutableStateOf(if (criticalLevel != 0) criticalLevel.toString() else "") }
-    var isCriticalLevelValid by remember { mutableStateOf(true) }
+    var leadTime by remember { mutableStateOf(product.leadTime) }
+    var leadTimeText by remember { mutableStateOf(if (leadTime != 0) leadTime.toString() else "") }
+    var isLeadTimeValid by remember { mutableStateOf(true) }
+    var soldLastYear by remember { mutableStateOf(product.transaction.soldLastYear) }
+    var soldLastYearText by remember { mutableStateOf(if (soldLastYear != 0) soldLastYear.toString() else "") }
+    var isSoldLastYearValid by remember { mutableStateOf(true) }
+    var highestSoldMonth by remember { mutableStateOf(product.transaction.highestMonth) }
+    var highestSoldMonthText by remember { mutableStateOf(if (highestSoldMonth != 0) highestSoldMonth.toString() else "") }
+    var isHighestSoldMonthValid by remember { mutableStateOf(true) }
+    var lowestSoldMonth by remember { mutableStateOf(product.transaction.lowestMonth) }
+    var lowestSoldMonthText by remember { mutableStateOf(if (lowestSoldMonth != 0) lowestSoldMonth.toString() else "") }
+    var isLowestSoldMonthValid by remember { mutableStateOf(true) }
     val imageUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument(), onResult = { imageUri = it })
     var showDialog by remember { mutableStateOf(false) }
     var newCategory = Category()
@@ -135,7 +143,10 @@ fun ProductForm(
 
             OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = purchasePrice, onValueChange = { value -> value.toDoubleOrNull()?.let { num -> if (num >= 0) purchasePrice = value } ?: run { if (value.isBlank()) purchasePrice = "" } }, placeholder = { Text(text = "Enter Purchase Price") }, label = { Text(text = "Purchase Price") }, isError = !isPurchasePriceValid, trailingIcon = { if (!isPurchasePriceValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
             OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = sellingPrice, onValueChange = { value -> value.toDoubleOrNull()?.let { num -> if (num >= 0) sellingPrice = value } ?: run { if (value.isBlank()) sellingPrice = "" } }, placeholder = { Text(text = "Enter Selling Price") }, label = { Text(text = "Selling Price") }, isError = !isSellingPriceValid, trailingIcon = { if (!isSellingPriceValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = criticalLevelText, onValueChange = { value -> value.toIntOrNull()?.let { num -> if (num >= 0) criticalLevelText = value } ?: run { if (value.isBlank()) criticalLevelText = "" } }, placeholder = { Text(text = "Enter Product's Critical Level") }, label = { Text(text = "Critical Level") }, isError = !isCriticalLevelValid, trailingIcon = { if (!isCriticalLevelValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = leadTimeText, onValueChange = { value -> value.toIntOrNull()?.let { num -> if (num >= 0) leadTimeText = value } ?: run { if (value.isBlank()) leadTimeText = "" } }, placeholder = { Text(text = "Enter Product's Lead Time (in days)") }, label = { Text(text = "Lead Time") }, isError = !isLeadTimeValid, trailingIcon = { if (!isLeadTimeValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = soldLastYearText, onValueChange = { value -> value.toIntOrNull()?.let { num -> if (num >= 0) soldLastYearText = value } ?: run { if (value.isBlank()) soldLastYearText = "" } }, placeholder = { Text(text = "Enter how many units were sold last year (If Applicable)") }, label = { Text(text = "Units Sold Last Year") }, isError = !isSoldLastYearValid, trailingIcon = { if (!isSoldLastYearValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = highestSoldMonthText, onValueChange = { value -> value.toIntOrNull()?.let { num -> if (num >= 0) highestSoldMonthText = value } ?: run { if (value.isBlank()) highestSoldMonthText = "" } }, placeholder = { Text(text = "Enter how many units were sold in the month it got sold the most (If Applicable)") }, label = { Text(text = "Units Sold Last Year") }, isError = !isSoldLastYearValid, trailingIcon = { if (!isSoldLastYearValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = lowestSoldMonthText, onValueChange = { value -> value.toIntOrNull()?.let { num -> if (num >= 0) lowestSoldMonthText = value } ?: run { if (value.isBlank()) lowestSoldMonthText = "" } }, placeholder = { Text(text = "Enter how many units were sold in the month it got sold the least (If Applicable)") }, label = { Text(text = "Units Sold Last Year") }, isError = !isSoldLastYearValid, trailingIcon = { if (!isSoldLastYearValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
 
             ExposedDropdownMenuBox(expanded = expandedCategories, onExpandedChange = { expandedCategories = !expandedCategories }) {
                 OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategories) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = selectedCategory, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.category)) })
@@ -168,10 +179,50 @@ fun ProductForm(
                 if (sellingPrice.toDouble() <= purchasePrice.toDouble()) {
                     isSellingPriceValid = false
                 }
-                criticalLevelText.toIntOrNull()?.let { isCriticalLevelValid = it >= 0; criticalLevel = it } ?: run { isCriticalLevelValid = false }
+                leadTimeText.toIntOrNull()?.let { isLeadTimeValid = it >= 0; leadTime = it } ?: run {
+                    if (leadTimeText.isBlank()) {
+                        leadTime = 0
+                    } else {
+                        isLeadTimeValid = false
+                    }
+                }
+                soldLastYearText.toIntOrNull()?.let { isSoldLastYearValid = it >= 0; soldLastYear = it } ?: run {
+                    if (soldLastYearText.isBlank()) {
+                        soldLastYear = 0
+                    } else {
+                        isSoldLastYearValid = false
+                    }
+                }
+                highestSoldMonthText.toIntOrNull()?.let { isHighestSoldMonthValid = it >= 0; highestSoldMonth = it } ?: run {
+                    if (highestSoldMonthText.isBlank()) {
+                        highestSoldMonth = 0
+                    } else {
+                        isHighestSoldMonthValid = false
+                    }
+                }
+                lowestSoldMonthText.toIntOrNull()?.let { isLowestSoldMonthValid = it >= 0; lowestSoldMonth = it } ?: run {
+                    if (lowestSoldMonthText.isBlank()) {
+                        lowestSoldMonth = 0
+                    } else {
+                        isLowestSoldMonthValid = false
+                    }
+                }
+
                 Log.d("PATH",imageUri.toString())
-                if (isNameValid && isPurchasePriceValid && contactId != null && isSellingPriceValid && isCriticalLevelValid) {
-                    productViewModel.insert(id = productId, product = product.copy(image = if (imageUri != null) imageUri.toString() else null, productName = name, purchasePrice = purchasePrice.toDouble(), sellingPrice = sellingPrice.toDouble(), category = categoryId, supplier = contactId!!, criticalLevel = criticalLevel))
+                if (isNameValid && isPurchasePriceValid && contactId != null && isSellingPriceValid && isLeadTimeValid && isSoldLastYearValid && isHighestSoldMonthValid && isLowestSoldMonthValid) {
+                    productViewModel.insert(id = productId, product = product.copy(
+                        image = if (imageUri != null) imageUri.toString() else null,
+                        productName = name,
+                        purchasePrice = purchasePrice.toDouble(),
+                        sellingPrice = sellingPrice.toDouble(),
+                        category = categoryId,
+                        supplier = contactId!!,
+                        changeLeastSold = lowestSoldMonthText.isBlank(),
+                        leadTime = leadTime,
+                        transaction = product.transaction.copy(
+                            soldLastYear = soldLastYear
+                        )
+                    ))
                     userViewModel.log(event = "${function.lowercase()}_product")
                     dismissRequest.invoke()
                 }

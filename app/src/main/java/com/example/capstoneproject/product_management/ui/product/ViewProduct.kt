@@ -39,11 +39,23 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ViewProduct(dismissRequest: () -> Unit, productViewModel: ProductViewModel, contactViewModel: ContactViewModel, categoryViewModel: CategoryViewModel, branchViewModel: BranchViewModel, productId: String, edit: () -> Unit, set: () -> Unit, delete: () -> Unit) {
+fun ViewProduct(
+    dismissRequest: () -> Unit,
+    productViewModel: ProductViewModel,
+    contactViewModel: ContactViewModel,
+    categoryViewModel: CategoryViewModel,
+    branchViewModel: BranchViewModel,
+    productId: String,
+    edit: () -> Unit,
+    set: () -> Unit,
+    delete: () -> Unit
+) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val product = productViewModel.getProduct(productId)!!
     val pagerState = rememberPagerState(initialPage = 0)
     val coroutineScope = rememberCoroutineScope()
+    val branches = branchViewModel.getAll().observeAsState(listOf())
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -88,8 +100,8 @@ fun ViewProduct(dismissRequest: () -> Unit, productViewModel: ProductViewModel, 
 
             HorizontalPager(state = pagerState, pageCount = 2) {
                 when (it) {
-                    0 -> ViewProductDetails(productId = productId, product = product, supplier = contactViewModel.getAll().observeAsState(listOf()).value.firstOrNull { contact -> contact.id == product.supplier }?.name ?: "Unknown Supplier", category = categoryViewModel.getAll().observeAsState(listOf()).value.firstOrNull { category -> category.id == product.category }?.categoryName ?: "No Category")
-                    1 -> ViewProductStock(stock = product.stock, branch = branchViewModel.getAll().observeAsState(listOf()).value)
+                    0 -> ViewProductDetails(productId = productId, product = product, supplier = contactViewModel.getAll().observeAsState(listOf()).value.firstOrNull { contact -> contact.id == product.supplier }?.name ?: "Unknown Supplier", category = categoryViewModel.getAll().observeAsState(listOf()).value.firstOrNull { category -> category.id == product.category }?.categoryName ?: "No Category", numberOfBranches = branches.value.size)
+                    1 -> ViewProductStock(stock = product.stock, branch = branches.value)
                 }
             }
 
@@ -122,7 +134,13 @@ fun ViewProductTabs(selectedTabIndex: Int, onClick: (Int) -> Unit) {
 }
 
 @Composable
-fun ViewProductDetails(productId: String, product: Product, supplier: String, category: String) {
+fun ViewProductDetails(
+    productId: String,
+    product: Product,
+    supplier: String,
+    category: String,
+    numberOfBranches: Int,
+) {
     Column(modifier = Modifier
         .fillMaxSize()
         .padding(16.dp)) {
@@ -131,9 +149,12 @@ fun ViewProductDetails(productId: String, product: Product, supplier: String, ca
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = "Category: $category", maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(text = "Supplier: $supplier", maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "Purchase Price: ${product.purchasePrice}", maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "Selling Price: ${product.sellingPrice} (${String.format("%.99f", ((product.sellingPrice/product.purchasePrice) - 1) * 100).trimEnd('0').trimEnd('.')}%)", maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "Critical Level: ${product.criticalLevel}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Purchase Price: ${String.format("%.2f", product.purchasePrice)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Selling Price: ${String.format("%.2f", product.sellingPrice)} (${String.format("%.2f", ((product.sellingPrice/product.purchasePrice) - 1) * 100).trimEnd('0').trimEnd('.')}%)", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Reorder Point: ${String.format("%.2f", getReorderPoint(product = product))}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Reorder Point per Branch: ${String.format("%.2f", getReorderPoint(product = product) / if (numberOfBranches == 0) 1 else numberOfBranches)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Critical Level: ${String.format("%.2f", getCriticalLevel(product = product))}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Critical Level per Branch: ${String.format("%.2f", getCriticalLevel(product = product) / if (numberOfBranches == 0) 1 else numberOfBranches)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

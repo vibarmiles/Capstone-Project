@@ -252,7 +252,7 @@ fun POSForm(
         if (showConfirmationDialog) {
             ConfirmationDialog(onCancel = { showConfirmationDialog = false }) {
                 posViewModel.transact(
-                    Invoice(
+                    document = Invoice(
                         branchId = branchId!!,
                         userId = userId,
                         payment = payment,

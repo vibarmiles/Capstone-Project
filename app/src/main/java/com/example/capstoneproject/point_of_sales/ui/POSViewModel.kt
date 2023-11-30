@@ -7,8 +7,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
-import com.example.capstoneproject.global.data.firebase.report.IReportRepository
-import com.example.capstoneproject.global.data.firebase.report.ReportRepository
 import com.example.capstoneproject.point_of_sales.data.firebase.ISalesInvoiceRepository
 import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
 import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
@@ -22,10 +20,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class POSViewModel : ViewModel() {
-    lateinit var salesInvoices: MutableLiveData<List<Invoice>>
+    private lateinit var salesInvoices: MutableLiveData<List<Invoice>>
     private val salesInvoiceRepository: ISalesInvoiceRepository = SalesInvoiceRepository()
     private val productRepository: IProductRepository = ProductRepository()
-    private val reportRepository: IReportRepository = ReportRepository()
     var isLoading: MutableState<Boolean> = mutableStateOf(true)
     private val resultState = MutableStateFlow(FirebaseResult())
     val result = resultState.asStateFlow()
@@ -94,7 +91,6 @@ class POSViewModel : ViewModel() {
                     if (!result.result) {
                         Log.e("TRANSACTION", "FAILED")
                     } else {
-                        updateReport(document = document)
                         insert(invoice = document)
                         Log.e("TRANSACTION", "FINISHED")
                     }
@@ -121,7 +117,6 @@ class POSViewModel : ViewModel() {
                         Log.e("TRANSACTION", "PRODUCTS ${result.result.toString().uppercase()}")
                         viewModelScope.launch {
                             if (result.result) {
-                                updateReport(document = document)
                                 insert(getDocument(document.originalInvoiceId)!!.let { it.copy(products = it.products.toMutableMap().let { products ->
                                     Log.e("TRANSACTION", "ORIGINAL DOCUMENT ${it.toString().uppercase()}")
                                     for (currentProduct in products) {
@@ -147,12 +142,6 @@ class POSViewModel : ViewModel() {
                     resultState.update { current }
                 }
             }
-        }
-    }
-
-    fun updateReport(document: Invoice) {
-        viewModelScope.launch(Dispatchers.IO) {
-            reportRepository.setValues(document = document) {  }
         }
     }
 }

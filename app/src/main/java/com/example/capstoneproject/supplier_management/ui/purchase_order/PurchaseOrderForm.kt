@@ -24,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
+import com.example.capstoneproject.product_management.ui.product.getCriticalLevel
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Product
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
 import com.example.capstoneproject.supplier_management.data.firebase.Status
@@ -245,7 +246,7 @@ fun AddProductDialog(
                             DropdownMenuItem(text = {
                                 Column {
                                     Text(text = it.value.productName)
-                                    it.value.stock.count { stock -> stock.value < it.value.criticalLevel }.let { count ->
+                                    it.value.stock.count { stock -> stock.value < getCriticalLevel(product = it.value) }.let { count ->
                                         Text(text = when (count) {
                                             0 -> return@let
                                             1 -> "Stock is critical in 1 branch"

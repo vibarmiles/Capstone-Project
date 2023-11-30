@@ -23,10 +23,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
-import com.example.capstoneproject.global.data.firebase.report.Report
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
+import com.example.capstoneproject.product_management.ui.product.getCriticalLevel
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderViewModel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
@@ -63,15 +63,11 @@ fun Dashboard(
             }
         } else {
             val numberOfBranches = branches.value.size
-            val productsUnderCriticalLevel by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.count { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) <= product.criticalLevel } }) }
-            val productsSold by remember(productViewModel.update.value) { mutableStateOf(products.values.sumOf { product -> product.transaction.sold }) }
+            val productsUnderCriticalLevel by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.count { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) <= getCriticalLevel(product = product) } }) }
+            val productsSold by remember(productViewModel.update.value) { mutableStateOf(products.values.sumOf { product -> product.transaction.soldThisYear }) }
             val productsPurchased by remember(productViewModel.update.value) { mutableStateOf(products.values.sumOf { product -> product.transaction.purchased }) }
             val stockInHand by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.sumOf { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) } }) }
             val stockToBeReceived by remember(purchaseOrders.value) { mutableStateOf(purchaseOrders.value.filter { purchaseOrder -> purchaseOrder.status == Status.WAITING }.sumOf { purchaseOrders -> purchaseOrders.products.values.sumOf { product -> product.quantity } }) }
-
-            LaunchedEffect(key1 = Unit) {
-                userViewModel.getLoginTimeStamp(report = Report(beginningMonthStock = stockInHand))
-            }
 
             Column(modifier = Modifier
                 .verticalScroll(state = rememberScrollState())
@@ -81,8 +77,8 @@ fun Dashboard(
                 Spacer(modifier = Modifier.height(2.dp))
                 DashboardItem(icon = DashboardItemIcon(image = Icons.Default.Store, color = Color.Red), data = numberOfBranches.toString(), supportingText = "Branches", onClick = goToBranches)
                 DashboardItem(icon = DashboardItemIcon(image = Icons.Default.Reorder, color = Color.Blue), data = productsUnderCriticalLevel.toString(), supportingText = "Products Under Critical Level", onClick = goToProducts)
-                DashboardItem(icon = DashboardItemIcon(image = Icons.Default.ShoppingCart, color = Color.Magenta), data = productsPurchased.toString(), supportingText = "Products Bought", onClick = goToPO)
-                DashboardItem(icon = DashboardItemIcon(image = Icons.Default.PointOfSale, color = Color.DarkGray), data = productsSold.toString(), supportingText = "Products Sold", onClick = goToPOS)
+                DashboardItem(icon = DashboardItemIcon(image = Icons.Default.ShoppingCart, color = Color.Magenta), data = productsPurchased.toString(), supportingText = "Products Bought This Year", onClick = goToPO)
+                DashboardItem(icon = DashboardItemIcon(image = Icons.Default.PointOfSale, color = Color.DarkGray), data = productsSold.toString(), supportingText = "Products Sold This Year", onClick = goToPOS)
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(text = "Inventory Summary (in Units)", fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(2.dp))
