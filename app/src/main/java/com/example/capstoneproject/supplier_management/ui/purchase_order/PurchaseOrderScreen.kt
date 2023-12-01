@@ -48,7 +48,6 @@ fun PurchaseOrderScreen(
     val firstLaunch = remember { mutableStateOf(true) }
     val context = LocalContext.current
     val state = purchaseOrderViewModel.result.collectAsState()
-    var currentDate = LocalDate.now().plusDays(1)
 
     Scaffold(
         topBar = {
@@ -72,6 +71,7 @@ fun PurchaseOrderScreen(
                 .padding(paddingValues)) {
 
                 LazyColumn {
+                    var currentDate = LocalDate.now().plusDays(1)
                     purchaseOrders.value.sortedByDescending { document -> document.date }.forEach { po ->
                         val localDateTime = if (po.date != null) Instant.ofEpochMilli(po.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
                         val date = localDateTime.toLocalDate()
@@ -102,7 +102,7 @@ fun PurchaseOrderScreen(
                                 .fillMaxWidth()
                                 .heightIn(min = 50.dp)
                                 .padding(4.dp)) {
-                                Button(onClick = { purchaseOrderViewModel.load()  }) {
+                                Button(onClick = { purchaseOrderViewModel.load() }) {
                                     androidx.compose.material.Text(text = "Load More")
                                 }
                             }

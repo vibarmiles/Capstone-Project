@@ -45,7 +45,6 @@ fun ReturnOrderScreen(
     val firstLaunch = remember { mutableStateOf(true) }
     val state = returnOrderViewModel.result.collectAsState()
     val context = LocalContext.current
-    var currentDate = LocalDate.now().plusDays(1)
 
     Scaffold(
         topBar = {
@@ -69,6 +68,7 @@ fun ReturnOrderScreen(
                 .padding(paddingValues)) {
 
                 LazyColumn {
+                    var currentDate = LocalDate.now().plusDays(1)
                     returnOrders.value.sortedByDescending { document -> document.date }.forEach { ro ->
                         val localDateTime = if (ro.date != null) Instant.ofEpochMilli(ro.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
                         val date = localDateTime.toLocalDate()
@@ -102,7 +102,7 @@ fun ReturnOrderScreen(
                     item {
                         if (returnOrderViewModel.returnSize.value == 10) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(4.dp)) {
-                                Button(onClick = { returnOrderViewModel.load()  }) {
+                                Button(onClick = { returnOrderViewModel.load() }) {
                                     Text(text = "Load More")
                                 }
                             }

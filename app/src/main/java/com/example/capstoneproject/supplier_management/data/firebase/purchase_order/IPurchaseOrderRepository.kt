@@ -5,6 +5,7 @@ import com.example.capstoneproject.global.data.firebase.FirebaseResult
 
 interface IPurchaseOrderRepository {
     fun getAll(callback: (Int) -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<PurchaseOrder>>
+    fun getWaiting(result: (FirebaseResult) -> Unit): MutableLiveData<List<PurchaseOrder>>
     fun insert(purchaseOrder: PurchaseOrder, fail: Boolean, result: (FirebaseResult) -> Unit)
     fun delete(purchaseOrder: PurchaseOrder, result: (FirebaseResult) -> Unit)
 }

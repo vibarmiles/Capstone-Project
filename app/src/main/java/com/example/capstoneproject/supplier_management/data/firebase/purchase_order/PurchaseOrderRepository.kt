@@ -9,6 +9,7 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
 
 class PurchaseOrderRepository : IPurchaseOrderRepository {
@@ -24,7 +25,7 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
             query = query.startAfter(document)
         }
 
-        purchaseOrderCollectionReference.limit(10).addSnapshotListener { value, error ->
+        query.limit(10).addSnapshotListener { value, error ->
             error?.let {
                 result.invoke(FirebaseResult(result = false, errorMessage = error.message))
                 return@addSnapshotListener
@@ -52,6 +53,7 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
 
                 po.value = current
 
+                Log.e("Current Size", document.toString())
                 if (currentSize > 0) {
                     callback.invoke(it.size())
                 } else {
@@ -60,6 +62,21 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
             }
         }
         return po
+    }
+
+    override fun getWaiting(result: (FirebaseResult) -> Unit): MutableLiveData<List<PurchaseOrder>> {
+        val waitingPO: MutableLiveData<List<PurchaseOrder>> = MutableLiveData<List<PurchaseOrder>>()
+        purchaseOrderCollectionReference.whereEqualTo("status", "WAITING").addSnapshotListener { value, error ->
+            error?. let {
+                return@addSnapshotListener
+            }
+
+            value?.let {
+                waitingPO.value = value.toObjects()
+                result.invoke(FirebaseResult(result = true))
+            }
+        }
+        return waitingPO
     }
 
     override fun insert(purchaseOrder: PurchaseOrder, fail: Boolean, result: (FirebaseResult) -> Unit) {

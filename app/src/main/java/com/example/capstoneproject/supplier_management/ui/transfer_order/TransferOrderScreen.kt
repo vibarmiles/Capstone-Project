@@ -48,7 +48,6 @@ fun TransferOrderScreen(
     val firstLaunch = remember { mutableStateOf(true) }
     val context = LocalContext.current
     val state = transferOrderViewModel.result.collectAsState()
-    var currentDate = LocalDate.now().plusDays(1)
 
     Scaffold(
         topBar = {
@@ -71,6 +70,7 @@ fun TransferOrderScreen(
             Column(modifier = Modifier
                 .padding(paddingValues)) {
                 LazyColumn {
+                    var currentDate = LocalDate.now().plusDays(1)
                     transferOrders.value.sortedByDescending { document -> document.date }.forEach { to ->
                         val localDateTime = if (to.date != null) Instant.ofEpochMilli(to.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
                         val date = localDateTime.toLocalDate()
@@ -113,7 +113,7 @@ fun TransferOrderScreen(
                                 .fillMaxWidth()
                                 .heightIn(min = 50.dp)
                                 .padding(4.dp)) {
-                                Button(onClick = { transferOrderViewModel.load()  }) {
+                                Button(onClick = { transferOrderViewModel.load() }) {
                                     Text(text = "Load More")
                                 }
                             }

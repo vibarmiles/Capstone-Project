@@ -1,6 +1,5 @@
 package com.example.capstoneproject.supplier_management.ui.transfer_order
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,10 +9,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
@@ -37,7 +34,6 @@ fun ViewTransferOrder(
     val products = remember { transferOrder.products.map { (productViewModel.getProduct(it.value.id)?.productName ?: "Unknown Item") to it.value } }
     var showDialog by remember { mutableStateOf(false) }
     var action: Status? = null
-    val context = LocalContext.current
     val state = transferOrderViewModel.result.collectAsState()
 
     Scaffold(
@@ -89,7 +85,7 @@ fun ViewTransferOrder(
                     action = Status.CANCELLED
                     showDialog = true
                 }) {
-                    action = Status.PENDING
+                    action = Status.COMPLETE
                     showDialog = true
                 }
             }
@@ -101,7 +97,7 @@ fun ViewTransferOrder(
             }
 
             LaunchedEffect(key1 = state.value) {
-                if (state.value.result && action != null) {
+                if (state.value.result) {
                     userViewModel.log("${if (action == Status.COMPLETE) "complete" else "cancel"}_transfer_order")
                     dismissRequest.invoke()
                 } else if (!state.value.result && state.value.errorMessage != null) {

@@ -38,7 +38,6 @@ fun Dashboard(
     scaffoldState: ScaffoldState,
     branchViewModel: BranchViewModel,
     productViewModel: ProductViewModel,
-    userViewModel: UserViewModel,
     purchaseOrderViewModel: PurchaseOrderViewModel,
     goToBranches: () -> Unit,
     goToProducts: () -> Unit,
@@ -47,7 +46,7 @@ fun Dashboard(
 ) {
     val branches = branchViewModel.getAll().observeAsState(listOf())
     val products = productViewModel.getAll()
-    val purchaseOrders = purchaseOrderViewModel.getAll().observeAsState(listOf())
+    val purchaseOrders = purchaseOrderViewModel.getWaiting().observeAsState(listOf())
 
     Scaffold(
         topBar = {

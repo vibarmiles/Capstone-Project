@@ -117,7 +117,6 @@ fun NavigationHost(
                 scaffoldState = scaffoldState,
                 branchViewModel = branchViewModel,
                 productViewModel = productViewModel,
-                userViewModel = userViewModel,
                 purchaseOrderViewModel = purchaseOrderViewModel,
                 goToBranches = { callback.invoke(R.string.branch) },
                 goToProducts = { callback.invoke(R.string.product) },

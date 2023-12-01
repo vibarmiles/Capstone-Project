@@ -47,7 +47,6 @@ fun POSScreen(
     val state = posViewModel.result.collectAsState()
     val firstLaunch = remember { mutableStateOf(true) }
     val context = LocalContext.current
-    var currentDate = LocalDate.now().plusDays(1)
 
     Scaffold(
         topBar = {
@@ -69,6 +68,7 @@ fun POSScreen(
             Column(modifier = Modifier
                 .padding(paddingValues)) {
                 LazyColumn {
+                    var currentDate = LocalDate.now().plusDays(1)
                     invoices.value.sortedByDescending { document -> document.date }.forEach { invoice ->
                         val localDateTime = if (invoice.date != null) Instant.ofEpochMilli(invoice.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
                         val date = localDateTime.toLocalDate()

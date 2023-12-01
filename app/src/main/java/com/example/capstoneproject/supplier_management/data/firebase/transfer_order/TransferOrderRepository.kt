@@ -24,7 +24,7 @@ class TransferOrderRepository : ITransferOrderRepository {
             query = query.startAfter(document)
         }
 
-        transferOrderCollectionReference.limit(10).addSnapshotListener { value, error ->
+        query.limit(10).addSnapshotListener { value, error ->
             error?.let {
                 result.invoke(FirebaseResult(result = false, errorMessage = error.message))
                 return@addSnapshotListener

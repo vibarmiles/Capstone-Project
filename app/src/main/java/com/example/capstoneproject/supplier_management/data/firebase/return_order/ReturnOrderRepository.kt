@@ -23,7 +23,7 @@ class ReturnOrderRepository : IReturnOrderRepository {
             query = query.startAfter(document)
         }
 
-        returnOrderCollectionReference.limit(10).addSnapshotListener { value, error ->
+        query.limit(10).addSnapshotListener { value, error ->
             error?.let {
                 result.invoke(FirebaseResult(result = false, errorMessage = error.message))
                 return@addSnapshotListener

@@ -81,19 +81,23 @@ class ReturnOrderViewModel : ViewModel() {
 
     fun transact(document: ReturnOrder) {
         viewModelScope.launch(Dispatchers.IO) {
-            insert(returnOrder = document, returnResult = false)
-            productRepository.transact(document = document) { result ->
-                viewModelScope.launch {
-                    if (!result.result) {
-                        insert(returnOrder = document.copy(status = Status.FAILED), returnResult = false, fail = true)
-                        Log.e("TRANSACTION", "FAILED")
-                    } else {
-                        insert(returnOrder = document.copy(status = Status.COMPLETE), returnResult = false, fail = true)
-                        Log.e("TRANSACTION", "FINISHED")
-                    }
-                }.let {
-                    if (it.isCompleted) {
-                        resultState.update { result }
+            if (document.status == Status.CANCELLED) {
+                insert(returnOrder = document)
+            } else {
+                insert(returnOrder = document.copy(status = Status.PENDING), returnResult = false)
+                productRepository.transact(document = document) { result ->
+                    viewModelScope.launch {
+                        if (!result.result) {
+                            insert(returnOrder = document.copy(status = Status.FAILED), returnResult = false, fail = true)
+                            Log.e("TRANSACTION", "FAILED")
+                        } else {
+                            insert(returnOrder = document.copy(status = Status.COMPLETE), returnResult = false, fail = true)
+                            Log.e("TRANSACTION", "FINISHED")
+                        }
+                    }.let {
+                        if (it.isCompleted) {
+                            resultState.update { result }
+                        }
                     }
                 }
             }

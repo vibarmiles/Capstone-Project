@@ -1,6 +1,5 @@
 package com.example.capstoneproject.supplier_management.ui.purchase_order
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,11 +10,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
@@ -42,7 +39,6 @@ fun ViewPurchaseOrder(
     var id by remember { mutableStateOf("") }
     var action: Status? = null
     val state = purchaseOrderViewModel.result.collectAsState()
-    LocalContext.current
 
     Scaffold(
         topBar = {
@@ -126,7 +122,7 @@ fun ViewPurchaseOrder(
                         action = Status.CANCELLED
                         showDialog = true
                     }) {
-                        action = Status.PENDING
+                        action = Status.COMPLETE
                         showDialog = true
                     }
                 }
@@ -139,7 +135,7 @@ fun ViewPurchaseOrder(
             }
             
             LaunchedEffect(key1 = state.value) {
-                if (state.value.result && action != null) {
+                if (state.value.result) {
                     userViewModel.log(event = "${if (action == Status.COMPLETE) "complete" else "cancel"}_purchase_order")
                     dismissRequest.invoke()
                 } else if (!state.value.result && state.value.errorMessage != null) {

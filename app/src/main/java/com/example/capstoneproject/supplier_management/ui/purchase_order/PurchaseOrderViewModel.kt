@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 
 class PurchaseOrderViewModel : ViewModel() {
     private lateinit var purchaseOrders: MutableLiveData<List<PurchaseOrder>>
+    private lateinit var waitingPO: MutableLiveData<List<PurchaseOrder>>
     private val purchaseOrderRepository: IPurchaseOrderRepository = PurchaseOrderRepository()
     private val productRepository: IProductRepository = ProductRepository()
     var isLoading: MutableState<Boolean> = mutableStateOf(true)
@@ -38,6 +39,17 @@ class PurchaseOrderViewModel : ViewModel() {
         }
 
         return purchaseOrders
+    }
+
+    fun getWaiting(): MutableLiveData<List<PurchaseOrder>> {
+        if (!this::waitingPO.isInitialized) {
+            waitingPO = purchaseOrderRepository.getWaiting { result ->
+                resultState.update { result }
+                updateLoadingState()
+            }
+        }
+
+        return waitingPO
     }
 
     fun load() {
@@ -81,19 +93,23 @@ class PurchaseOrderViewModel : ViewModel() {
 
     fun transact(document: PurchaseOrder) {
         viewModelScope.launch(Dispatchers.IO) {
-            insert(purchaseOrder = document, returnResult = false)
-            productRepository.transact(document = document) { result ->
-                viewModelScope.launch {
-                    if (!result.result) {
-                        insert(purchaseOrder = document.copy(status = Status.FAILED), returnResult = false, fail = true)
-                        Log.e("TRANSACTION", "FAILED")
-                    } else {
-                        insert(purchaseOrder = document.copy(status = Status.COMPLETE), returnResult = false, fail = true)
-                        Log.e("TRANSACTION", "FINISHED")
-                    }
-                }.let {
-                    if (it.isCompleted) {
-                        resultState.update { result }
+            if (document.status == Status.CANCELLED) {
+                insert(purchaseOrder = document)
+            } else {
+                insert(purchaseOrder = document.copy(status = Status.PENDING), returnResult = false)
+                productRepository.transact(document = document) { result ->
+                    viewModelScope.launch {
+                        if (!result.result) {
+                            insert(purchaseOrder = document.copy(status = Status.FAILED), returnResult = false, fail = true)
+                            Log.e("TRANSACTION", "FAILED")
+                        } else {
+                            insert(purchaseOrder = document.copy(status = Status.COMPLETE), returnResult = false, fail = true)
+                            Log.e("TRANSACTION", "FINISHED")
+                        }
+                    }.let {
+                        if (it.isCompleted) {
+                            resultState.update { result }
+                        }
                     }
                 }
             }
