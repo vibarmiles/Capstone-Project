@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -24,6 +26,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
@@ -76,8 +80,7 @@ fun ProductScreen(
                 }
             }
         }
-    ) {
-            paddingValues ->
+    ) { paddingValues ->
         if (loading) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier
                 .padding(paddingValues)
@@ -170,21 +173,22 @@ fun ProductScreenContent(
     view: (String) -> Unit
 ) {
     val textFieldValue = remember { mutableStateOf("") }
+    val search = remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
-    val focusManager = LocalFocusManager.current
+    val localFocusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
     val isFocused = remember { mutableStateOf(false) }
     val firstVisible by remember { derivedStateOf { listState.firstVisibleItemIndex != 0 } }
 
     if (firstVisible && isFocused.value) {
-        focusManager.clearFocus()
+        localFocusManager.clearFocus()
         isFocused.value = false
     }
 
     val productsFiltered = remember(branchId, productUpdate, textFieldValue.value) {
         derivedStateOf {
             products.filter { product ->
-                textFieldValue.value.let {
+                search.value.let {
                     val supplier = suppliers.firstOrNull { contact -> contact.id == product.value.supplier }?.name?.contains(it, true) ?: false
                     val name = product.value.productName.contains(it, true)
                     Log.e("SEARCH", "$name & $supplier & ${name || supplier}: ${product.value.productName}")
@@ -252,16 +256,29 @@ fun ProductScreenContent(
                         isFocused.value = it.isFocused
                     }
                     .padding(start = 16.dp, top = 16.dp, end = 16.dp)) {
-                    OutlinedTextField(trailingIcon = {
-                        if (isFocused.value) {
-                            IconButton(onClick = {
-                                textFieldValue.value = ""
-                                focusManager.clearFocus()
-                            }) {
-                                Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                    OutlinedTextField(
+                        trailingIcon = {
+                            if (isFocused.value) {
+                                IconButton(onClick = {
+                                    textFieldValue.value = ""
+                                    localFocusManager.clearFocus()
+                                }) {
+                                    Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                                }
                             }
-                        }
-                    }, label = { Text(text = "Enter product or supplier name", color = MaterialTheme.colors.onSurface) }, maxLines = 1, modifier = Modifier.fillMaxWidth(), leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) }, value = textFieldValue.value, onValueChange = { textFieldValue.value = it })
+                        },
+                        label = { Text(text = "Enter product or supplier name", color = MaterialTheme.colors.onSurface) },
+                        maxLines = 1,
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
+                        value = textFieldValue.value,
+                        onValueChange = { textFieldValue.value = it },
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = {
+                            search.value = textFieldValue.value
+                            localFocusManager.clearFocus()
+                        })
+                    )
                 }
             }
 

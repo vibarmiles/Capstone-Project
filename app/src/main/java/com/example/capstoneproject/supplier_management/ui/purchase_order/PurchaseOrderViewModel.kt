@@ -14,7 +14,6 @@ import com.example.capstoneproject.supplier_management.data.firebase.purchase_or
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrderRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -32,8 +31,7 @@ class PurchaseOrderViewModel : ViewModel() {
 
     fun getAll(): MutableLiveData<List<PurchaseOrder>> {
         if (!this::purchaseOrders.isInitialized) {
-            purchaseOrders = purchaseOrderRepository.getAll(callback = { updateLoadingState(); returnSize.value = it }) {
-                    result ->
+            purchaseOrders = purchaseOrderRepository.getAll(callback = { updateLoadingState(); returnSize.value = it }) { result ->
                 resultState.update { result }
             }
         }

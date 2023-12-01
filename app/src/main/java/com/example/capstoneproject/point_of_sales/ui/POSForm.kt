@@ -263,8 +263,7 @@ fun POSForm(
                                 "Item ${soldProductsViewModel.sales.indexOf(product)}"
                             }
                         }
-                    ),
-                    date = userAccountDetails.value.lastLogin as Long
+                    )
                 )
             }
         }

@@ -24,8 +24,7 @@ class BranchViewModel : ViewModel() {
 
     fun getAll(): MutableLiveData<List<Branch>> {
         if (!this::branches.isInitialized) {
-            branches = branchRepository.getAll(callback = { updateLoadingState() }) {
-                    result ->
+            branches = branchRepository.getAll(callback = { updateLoadingState() }) { result ->
                 resultState.update { result }
             }
 

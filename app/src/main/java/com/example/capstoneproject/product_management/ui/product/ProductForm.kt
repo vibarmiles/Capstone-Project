@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -16,11 +17,15 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -83,6 +88,7 @@ fun ProductForm(
     var showDialog by remember { mutableStateOf(false) }
     var newCategory = Category()
     val state by categoryViewModel.result.collectAsState()
+    val localFocusManager = LocalFocusManager.current
 
     Scaffold(
         topBar = {
@@ -93,29 +99,40 @@ fun ProductForm(
             })
         },
         scaffoldState = scaffoldState
-    ) {
-            paddingValues ->
+    ) { paddingValues ->
         Column(modifier = Modifier
             .padding(paddingValues)
             .padding(16.dp)
-            .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-
+            .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
             Box(modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp), contentAlignment = Alignment.Center) {
-                SubcomposeAsyncImage(error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) }, loading = { CircularProgressIndicator() }, model = imageUri, contentDescription = null, modifier = Modifier
-                    .fillMaxHeight()
-                    .width(200.dp), contentScale = ContentScale.Crop)
+                .height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                SubcomposeAsyncImage(
+                    error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) },
+                    loading = { CircularProgressIndicator() },
+                    model = imageUri,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(200.dp), contentScale = ContentScale.Crop
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-                .border(
-                    border = BorderStroke(width = 1.dp, color = Color.Gray),
-                    shape = RoundedCornerShape(5.dp)
-                )
-                .height(intrinsicSize = IntrinsicSize.Min)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .border(
+                        border = BorderStroke(width = 1.dp, color = Color.Gray),
+                        shape = RoundedCornerShape(5.dp)
+                    )
+                    .height(intrinsicSize = IntrinsicSize.Min)
+            ) {
                 Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = imageUri?.path ?: "No Image Selected", modifier = Modifier
                     .weight(1f)
                     .padding(
@@ -128,8 +145,6 @@ fun ProductForm(
                 }
             }
 
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = name, onValueChange = { name = it }, placeholder = { Text(text = "Enter Product's Name") }, label = { Text(text = buildAnnotatedString { append(text = "Product Name"); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, isError = !isNameValid, trailingIcon = { if (!isNameValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) })
-
             ExposedDropdownMenuBox(expanded = expandedContacts, onExpandedChange = { expandedContacts = !expandedContacts }) {
                 OutlinedTextField(isError = contactId == null, colors = GlobalTextFieldColors(), trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedContacts) }, modifier = Modifier.fillMaxWidth(), value = selectedContact, onValueChange = {  }, readOnly = true, label = { Text(text = buildAnnotatedString { append(text = stringResource(id = R.string.supplier)); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) })
 
@@ -137,19 +152,168 @@ fun ProductForm(
                     modifier = Modifier
                         .exposedDropdownSize()
                         .fillMaxWidth(),
-                    expanded = expandedContacts, onDismissRequest = { expandedContacts = false }) {
+                    expanded = expandedContacts,
+                    onDismissRequest = { expandedContacts = false }
+                ) {
                     supplier.value.forEach {
-                        androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.name) }, onClick = { contactId = it.id; selectedContact = it.name; expandedContacts = false })
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(text = it.name) },
+                            onClick = {
+                                contactId = it.id
+                                selectedContact = it.name
+                                expandedContacts = false
+                            }
+                        )
                     }
                 }
             }
 
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = purchasePrice, onValueChange = { value -> if (value.length < 10) value.toDoubleOrNull()?.let { num -> if (num >= 0) purchasePrice = value } ?: run { if (value.isBlank()) purchasePrice = "" } }, placeholder = { Text(text = "Enter Purchase Price") }, label = { Text(text =buildAnnotatedString { append(text = "Purchase Price"); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, isError = !isPurchasePriceValid, trailingIcon = { if (!isPurchasePriceValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = sellingPrice, onValueChange = { value -> if (value.length < 10) value.toDoubleOrNull()?.let { num -> if (num >= 0) sellingPrice = value } ?: run { if (value.isBlank()) sellingPrice = "" } }, placeholder = { Text(text = "Enter Selling Price") }, label = { Text(text = buildAnnotatedString { append(text = "Selling Price"); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, isError = !isSellingPriceValid, trailingIcon = { if (!isSellingPriceValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = leadTimeText, onValueChange = { value -> value.toIntOrNull()?.let { num -> if (num >= 0) leadTimeText = value } ?: run { if (value.isBlank()) leadTimeText = "" } }, placeholder = { Text(text = "Enter Product's Lead Time (in days)") }, label = { Text(text = "Lead Time") }, isError = !isLeadTimeValid, trailingIcon = { if (!isLeadTimeValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = soldLastYearText, onValueChange = { value -> value.toIntOrNull()?.let { num -> if (num >= 0) soldLastYearText = value } ?: run { if (value.isBlank()) soldLastYearText = "" } }, placeholder = { Text(text = "Enter the number of units sold last year") }, label = { Text(text = "Units Sold Last Year") }, isError = !isSoldLastYearValid, trailingIcon = { if (!isSoldLastYearValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = highestSoldMonthText, onValueChange = { value -> value.toIntOrNull()?.let { num -> if (num >= 0) highestSoldMonthText = value } ?: run { if (value.isBlank()) highestSoldMonthText = "" } }, placeholder = { Text(text = "Enter a month's highest amount sold") }, label = { Text(text = "Highest Selling Month") }, isError = !isSoldLastYearValid, trailingIcon = { if (!isSoldLastYearValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(), colors = GlobalTextFieldColors(), value = lowestSoldMonthText, onValueChange = { value -> value.toIntOrNull()?.let { num -> if (num >= 0) { highestSoldMonthText.toIntOrNull()?.let { lowestSoldMonthText = if (it >= num) { value } else { highestSoldMonthText } } } } ?: run { if (value.isBlank()) lowestSoldMonthText = "" } }, placeholder = { Text(text = "Enter a month's lowest amount") }, label = { Text(text = "Lowest Selling Month") }, isError = !isSoldLastYearValid, trailingIcon = { if (!isSoldLastYearValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                colors = GlobalTextFieldColors(),
+                value = name,
+                onValueChange = { name = it },
+                placeholder = { Text(text = "Enter Product's Name") },
+                label = {
+                    Text(text = buildAnnotatedString {
+                        append(text = "Product Name")
+                        withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) {
+                            append(text = " *")
+                        }
+                    })
+                },
+                isError = !isNameValid,
+                trailingIcon = { if (!isNameValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = {
+                    localFocusManager.moveFocus(FocusDirection.Down)
+                })
+            )
+
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                colors = GlobalTextFieldColors(),
+                value = purchasePrice,
+                onValueChange = { value ->
+                    if (value.length < 10) value.toDoubleOrNull()?.let { num ->
+                        if (num >= 0) purchasePrice = value
+                    } ?: run { if (value.isBlank()) purchasePrice = "" }
+                },
+                placeholder = { Text(text = "Enter Purchase Price") },
+                label = { Text(text =buildAnnotatedString {
+                    append(text = "Purchase Price")
+                    withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) {
+                        append(text = " *")
+                    }
+                }) },
+                isError = !isPurchasePriceValid,
+                trailingIcon = { if (!isPurchasePriceValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = {
+                    localFocusManager.moveFocus(FocusDirection.Down)
+                })
+            )
+
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                colors = GlobalTextFieldColors(),
+                value = sellingPrice, onValueChange = { value ->
+                    if (value.length < 10) value.toDoubleOrNull()?.let { num ->
+                        if (num >= 0) sellingPrice = value
+                    } ?: run { if (value.isBlank()) sellingPrice = "" }
+                }, placeholder = { Text(text = "Enter Selling Price") },
+                label = { Text(text = buildAnnotatedString {
+                    append(text = "Selling Price")
+                    withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) {
+                        append(text = " *")
+                    }
+                }) },
+                isError = !isSellingPriceValid,
+                trailingIcon = { if (!isSellingPriceValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = {
+                    localFocusManager.moveFocus(FocusDirection.Down)
+                })
+            )
+
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                colors = GlobalTextFieldColors(),
+                value = leadTimeText,
+                onValueChange = { value ->
+                    value.toIntOrNull()?.let { num ->
+                        if (num >= 0) leadTimeText = value
+                    } ?: run { if (value.isBlank()) leadTimeText = "" }
+                },
+                placeholder = { Text(text = "Enter Product's Lead Time (in days)") },
+                label = { Text(text = "Lead Time") },
+                isError = !isLeadTimeValid,
+                trailingIcon = { if (!isLeadTimeValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = {
+                    localFocusManager.moveFocus(FocusDirection.Down)
+                })
+            )
+
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                colors = GlobalTextFieldColors(),
+                value = soldLastYearText,
+                onValueChange = { value ->
+                    value.toIntOrNull()?.let { num ->
+                        if (num >= 0) soldLastYearText = value
+                    } ?: run { if (value.isBlank()) soldLastYearText = "" }
+                },
+                placeholder = { Text(text = "Enter the number of units sold last year") },
+                label = { Text(text = "Units Sold Last Year") },
+                isError = !isSoldLastYearValid,
+                trailingIcon = { if (!isSoldLastYearValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = {
+                    localFocusManager.moveFocus(FocusDirection.Down)
+                })
+            )
+
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                colors = GlobalTextFieldColors(),
+                value = highestSoldMonthText,
+                onValueChange = { value ->
+                    value.toIntOrNull()?.let { num ->
+                        if (num >= 0) highestSoldMonthText = value
+                    } ?: run { if (value.isBlank()) highestSoldMonthText = "" }
+                }, placeholder = { Text(text = "Enter a month's highest amount sold") },
+                label = { Text(text = "Highest Selling Month") },
+                isError = !isSoldLastYearValid,
+                trailingIcon = { if (!isSoldLastYearValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = {
+                    localFocusManager.moveFocus(FocusDirection.Down)
+                })
+            )
+
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                colors = GlobalTextFieldColors(),
+                value = lowestSoldMonthText,
+                onValueChange = { value ->
+                    value.toIntOrNull()?.let { num ->
+                        if (num >= 0) {
+                            highestSoldMonthText.toIntOrNull()?.let {
+                                lowestSoldMonthText = if (it >= num) { value } else { highestSoldMonthText }
+                            }
+                        }
+                    } ?: run { if (value.isBlank()) lowestSoldMonthText = "" }
+                },
+                placeholder = { Text(text = "Enter a month's lowest amount") },
+                label = { Text(text = "Lowest Selling Month") },
+                isError = !isSoldLastYearValid,
+                trailingIcon = { if (!isSoldLastYearValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    localFocusManager.clearFocus()
+                })
+            )
 
             ExposedDropdownMenuBox(expanded = expandedCategories, onExpandedChange = { expandedCategories = !expandedCategories }) {
                 OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategories) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = selectedCategory, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.category)) })
@@ -161,16 +325,34 @@ fun ProductForm(
                         .requiredHeightIn(max = 300.dp)
                         .fillMaxWidth(),
                     expanded = expandedCategories,
-                    onDismissRequest = { expandedCategories = false }) {
-                    androidx.compose.material3.DropdownMenuItem(text = { Text(text = "None") }, onClick = { categoryId = null; selectedCategory = "None"; expandedCategories = false })
+                    onDismissRequest = { expandedCategories = false }
+                ) {
+                    androidx.compose.material3.DropdownMenuItem(
+                        text = { Text(text = "None") },
+                        onClick = {
+                            categoryId = null
+                            selectedCategory = "None"
+                            expandedCategories = false
+                        }
+                    )
 
                     category.value.forEach {
-                        androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.categoryName) }, onClick = { categoryId = it.id; selectedCategory = it.categoryName; expandedCategories = false })
+                        androidx.compose.material3.DropdownMenuItem(text = {
+                            Text(text = it.categoryName) },
+                            onClick = {
+                                categoryId = it.id
+                                selectedCategory = it.categoryName
+                                expandedCategories = false
+                                localFocusManager.clearFocus()
+                            }
+                        )
                     }
 
                     androidx.compose.material3.DropdownMenuItem(
                         text = { Text(text = "Add New Category...") },
-                        onClick = { showDialog = true }
+                        onClick = {
+                            showDialog = true
+                        }
                     )
                 }
             }
@@ -255,6 +437,7 @@ fun ProductForm(
             } else if (state.result) {
                 categoryId = newCategory.id
                 selectedCategory = newCategory.categoryName
+                localFocusManager.clearFocus()
                 userViewModel.log(event = "add_category")
                 scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
                 categoryViewModel.resetMessage()

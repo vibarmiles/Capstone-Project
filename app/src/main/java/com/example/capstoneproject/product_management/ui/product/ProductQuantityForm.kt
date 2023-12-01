@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -13,9 +14,12 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -37,6 +41,7 @@ fun ProductQuantityFormScreen(
     val branches = branchViewModel.getAll().observeAsState(listOf())
     val map = productViewModel.getProduct(productId)?.stock ?: mapOf()
     val viewModel: BranchQuantityViewModel = viewModel()
+    val localFocusManager = LocalFocusManager.current
 
     Scaffold(
         topBar = {
@@ -46,22 +51,49 @@ fun ProductQuantityFormScreen(
                 }
             })
         }
-    ) {
-            paddingValues ->
-        LazyColumn(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            itemsIndexed(branches.value) {
-                    _, it ->
-                var text by rememberSaveable { mutableStateOf(if (map.containsKey(it.id)) map[it.id].toString() else "")}
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            itemsIndexed(branches.value) { index, it ->
+                var text by remember { mutableStateOf(if (map.containsKey(it.id)) map[it.id].toString() else "")}
                 val isValid by remember { mutableStateOf(true) }
+
                 if (text.isNotBlank()) {
                     viewModel.stockPerBranch[it.id] = text
                 } else {
                     viewModel.stockPerBranch[it.id] = "0"
                 }
-                OutlinedTextField(trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) }, colors = GlobalTextFieldColors(), isError = !isValid, modifier = Modifier.fillMaxWidth(), value = text, label = { Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis) }, placeholder = { Text(text = "Insert Current Quantity") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), onValueChange = { value -> value.toIntOrNull()?.let{ num -> if (num >= 0) text = value; viewModel.stockPerBranch[it.id] = text; } ?: run { if (value.isBlank()) text = "" } })
+
+                OutlinedTextField(
+                    trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                    colors = GlobalTextFieldColors(),
+                    isError = !isValid,
+                    modifier = Modifier.fillMaxWidth(),
+                    value = text, label = {
+                        Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    },
+                    placeholder = { Text(text = "Insert Current Quantity") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = if (branches.value.lastIndex == index) ImeAction.Done else ImeAction.Next),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            localFocusManager.clearFocus()
+                        },
+                        onNext = {
+                            localFocusManager.moveFocus(FocusDirection.Down)
+                        }
+                    ),
+                    onValueChange = { value ->
+                        value.toIntOrNull()?.let{ num ->
+                            if (num >= 0) text = value
+                            viewModel.stockPerBranch[it.id] = text;
+                        } ?: run { if (value.isBlank()) text = "" }
+                    }
+                )
             }
             item {
                 FormButtons(cancel = dismissRequest) {

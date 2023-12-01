@@ -28,6 +28,8 @@ import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
 import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -39,6 +41,7 @@ fun POSScreen(
     scope: CoroutineScope,
     scaffoldState: ScaffoldState,
     posViewModel: POSViewModel,
+    userViewModel: UserViewModel,
     branchViewModel: BranchViewModel,
     add: () -> Unit,
     view: (String) -> Unit
@@ -46,6 +49,7 @@ fun POSScreen(
     val invoices = posViewModel.getAll().observeAsState(listOf())
     val state = posViewModel.result.collectAsState()
     val firstLaunch = remember { mutableStateOf(true) }
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val context = LocalContext.current
 
     Scaffold(
@@ -69,7 +73,7 @@ fun POSScreen(
                 .padding(paddingValues)) {
                 LazyColumn {
                     var currentDate = LocalDate.now().plusDays(1)
-                    invoices.value.sortedByDescending { document -> document.date }.forEach { invoice ->
+                    invoices.value.filter { if (userAccountDetails.value.userLevel != UserLevel.Employee) true else it.branchId == userAccountDetails.value.branchId }.sortedByDescending { document -> document.date }.forEach { invoice ->
                         val localDateTime = if (invoice.date != null) Instant.ofEpochMilli(invoice.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
                         val date = localDateTime.toLocalDate()
                         val time = localDateTime.toLocalTime()

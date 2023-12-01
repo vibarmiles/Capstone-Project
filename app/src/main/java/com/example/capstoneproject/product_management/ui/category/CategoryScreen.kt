@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -13,11 +15,15 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,9 +69,12 @@ fun CategoryScreen(
     ) {
             paddingValues ->
         if (viewModel.isLoading.value) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+            ) {
                 CircularProgressIndicator()
             }
         } else {
@@ -128,7 +137,8 @@ fun CategoryScreen(
 fun CategoryListItem(
     category: String = "Category",
     edit: () -> Unit,
-    delete: () -> Unit) {
+    delete: () -> Unit
+) {
     androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = { Box(modifier = Modifier
         .size(50.dp)
         .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Icon(imageVector = Icons.Filled.Bookmark, contentDescription = null, tint = Color.White) } }, headlineContent = { Text(text = category, fontWeight = FontWeight.Bold) }, trailingContent = {
@@ -147,8 +157,10 @@ fun CategoryListItem(
 fun CategoryDialog(
     category: Category,
     onConfirm: (Category) -> Unit,
-    onCancel: () -> Unit) {
+    onCancel: () -> Unit
+) {
     var categoryName by remember { mutableStateOf(category.categoryName) }
+    val localFocusManager = LocalFocusManager.current
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onCancel,
@@ -158,7 +170,16 @@ fun CategoryDialog(
         text = {
             Column {
                 Text(text = "", fontSize = 1.sp)
-                OutlinedTextField(value = categoryName, colors = GlobalTextFieldColors(), onValueChange = { categoryName = it }, placeholder = { Text(text = "Enter Category Name") })
+                OutlinedTextField(
+                    value = categoryName,
+                    colors = GlobalTextFieldColors(),
+                    onValueChange = { categoryName = it },
+                    placeholder = { Text(text = "Enter Category Name") },
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        localFocusManager.clearFocus()
+                    })
+                )
             }
         },
         confirmButton = {

@@ -15,7 +15,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.capstoneproject.global.ui.navigation.Drawer
 import com.example.capstoneproject.global.ui.navigation.NavigationHost
-import com.example.capstoneproject.global.ui.navigation.Routes
 import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
 import com.example.capstoneproject.ui.theme.CapstoneProjectTheme
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
@@ -132,7 +131,9 @@ fun GlobalContent(
                         scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully!", duration = SnackbarDuration.Short)
                     }
 
-                    navController.navigate(if (userAccountDetails.value.userLevel == UserLevel.Admin) Routes.ActivityLogs.route else Routes.Dashboard.route) {
+                    selectedItem = if (userAccountDetails.value.userLevel == UserLevel.Admin) R.string.user else R.string.dashboard
+
+                    navController.navigate(selectedItem.toString()) {
                         popUpTo(0)
                     }
 

@@ -3,6 +3,7 @@ package com.example.capstoneproject.user_management.ui.users
 import android.util.Patterns
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
@@ -13,10 +14,17 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -51,6 +59,7 @@ fun UserForm(
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     var userLevel by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Admin && user.userLevel == UserLevel.Employee) UserLevel.Owner else user.userLevel) }
     val userLevels = if (userAccountDetails.value.userLevel == UserLevel.Admin) enumValues<UserLevel>().filter { it != UserLevel.Employee } else enumValues<UserLevel>().filter { it != UserLevel.Admin }
+    val localFocusManager = LocalFocusManager.current
 
     Scaffold(
         topBar = {
@@ -70,7 +79,9 @@ fun UserForm(
         Column(modifier = Modifier
             .padding(paddingValues)
             .padding(16.dp)
-            .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
             ExposedDropdownMenuBox(expanded = expandedUsers, onExpandedChange = { expandedUsers = !expandedUsers }) {
                 OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedUsers) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = userLevel.name, onValueChange = {  }, readOnly = true, label = { Text(text = buildAnnotatedString { append(text = stringResource(id = R.string.user_level)); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) })
 
@@ -78,7 +89,10 @@ fun UserForm(
                     .exposedDropdownSize()
                     .fillMaxWidth(), expanded = expandedUsers, onDismissRequest = { expandedUsers = false }) {
                     userLevels.forEach {
-                        androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.name) }, onClick = { userLevel = it; expandedUsers = false })
+                        androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.name) }, onClick = {
+                            userLevel = it
+                            expandedUsers = false
+                        })
                     }
                 }
             }
@@ -91,27 +105,84 @@ fun UserForm(
                         .exposedDropdownSize()
                         .fillMaxWidth(), expanded = expandedBranches, onDismissRequest = { expandedBranches = false }) {
                         branches.value.forEach {
-                            androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.name) }, onClick = { branchId = it.id; branchName = it.name; expandedBranches = false })
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(text = it.name) },
+                                onClick = {
+                                    branchId = it.id
+                                    branchName = it.name
+                                    expandedBranches = false
+                                }
+                            )
                         }
                     }
                 }
             }
 
-            OutlinedTextField(value = firstName, colors = GlobalTextFieldColors(), onValueChange = { firstName = it.filter { value -> value.isLetter() || value.isWhitespace() } }, label = { Text(text = buildAnnotatedString { append(text = "First Name"); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, placeholder = { Text(text = "Enter First Name") }, isError = !isFirstNameValid, trailingIcon = { if (!isFirstNameValid) Icon(
-                imageVector = Icons.Filled.Error,
-                contentDescription = null,
-                tint = Color.Red
-            )}, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = lastName, colors = GlobalTextFieldColors(), onValueChange = { lastName = it.filter { value -> value.isLetter() || value.isWhitespace() } }, label = { Text(text = buildAnnotatedString { append(text = "Last Name"); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, placeholder = { Text(text = "Enter Last Name") }, isError = !isLastNameValid, trailingIcon = { if (!isLastNameValid) Icon(
-                imageVector = Icons.Filled.Error,
-                contentDescription = null,
-                tint = Color.Red
-            )}, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = email, colors = GlobalTextFieldColors(), onValueChange = { email = it }, label = { Text(text = buildAnnotatedString { append(text = "Email"); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) }, placeholder = { Text(text = "Enter Email") }, isError = !isEmailValid, trailingIcon = { if (!isEmailValid) Icon(
-                imageVector = Icons.Filled.Error,
-                contentDescription = null,
-                tint = Color.Red
-            )}, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = firstName,
+                colors = GlobalTextFieldColors(),
+                onValueChange = {
+                    firstName = it.filter { value ->
+                        value.isLetter() || value.isWhitespace()
+                    }
+                },
+                label = {
+                    Text(text = buildAnnotatedString {
+                        append(text = "First Name")
+                        withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") }
+                    })
+                },
+                placeholder = { Text(text = "Enter First Name") },
+                isError = !isFirstNameValid,
+                trailingIcon = { if (!isFirstNameValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = {
+                    localFocusManager.moveFocus(FocusDirection.Down)
+                })
+            )
+            OutlinedTextField(
+                value = lastName,
+                colors = GlobalTextFieldColors(),
+                onValueChange = {
+                    lastName = it.filter { value ->
+                        value.isLetter() || value.isWhitespace()
+                    }
+                },
+                label = {
+                    Text(text = buildAnnotatedString {
+                        append(text = "Last Name")
+                        withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") }
+                    })
+                },
+                placeholder = { Text(text = "Enter Last Name") },
+                isError = !isLastNameValid,
+                trailingIcon = { if (!isLastNameValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = {
+                    localFocusManager.moveFocus(FocusDirection.Down)
+                })
+            )
+            OutlinedTextField(
+                value = email,
+                colors = GlobalTextFieldColors(),
+                onValueChange = { email = it },
+                label = {
+                    Text(text = buildAnnotatedString {
+                        append(text = "Email")
+                        withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") }
+                    })
+                },
+                placeholder = { Text(text = "Enter Email") },
+                isError = !isEmailValid, trailingIcon = { if (!isEmailValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    localFocusManager.clearFocus()
+                }),
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 FormButtons(cancel = back) {

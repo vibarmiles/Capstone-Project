@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.global.data.firebase.log.ILoggingRepository
 import com.example.capstoneproject.global.data.firebase.log.LoggingRepository
+import com.example.capstoneproject.product_management.data.firebase.product.IProductRepository
+import com.example.capstoneproject.product_management.data.firebase.product.ProductRepository
 import com.example.capstoneproject.user_management.data.firebase.IUserRepository
 import com.example.capstoneproject.user_management.data.firebase.User
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
@@ -31,6 +33,7 @@ class UserViewModel : ViewModel() {
     private lateinit var users: SnapshotStateMap<String, User>
     private val userRepository: IUserRepository = UserRepository()
     private val loggingRepository: ILoggingRepository = LoggingRepository()
+    private val productRepository: IProductRepository = ProductRepository()
     val isLoading = mutableStateOf(true)
     val update = mutableStateOf(true)
     private val userAccountDetailsState = MutableStateFlow(UserAccountDetails())
@@ -56,6 +59,7 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             userRepository.getUser(email = email) { user ->
                 getAll()
+                productRepository.checkDate(user.lastLogin as Long)
                 userAccountDetailsState.update { user }
             }
         }
@@ -67,8 +71,7 @@ class UserViewModel : ViewModel() {
 
     fun insert(id: String?, user: User) {
         viewModelScope.launch(Dispatchers.IO) {
-            userRepository.insert(key = id, user = user) {
-                    result ->
+            userRepository.insert(key = id, user = user) { result ->
                 resultState.update { result }
             }
         }

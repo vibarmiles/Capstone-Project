@@ -10,7 +10,6 @@ import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
 import com.example.capstoneproject.supplier_management.data.firebase.return_order.ReturnOrder
 import com.example.capstoneproject.supplier_management.data.firebase.transfer_order.TransferOrder
-import com.example.capstoneproject.user_management.data.firebase.User
 import com.google.firebase.database.*
 import com.google.firebase.database.Transaction
 import com.google.firebase.database.ktx.database
@@ -181,7 +180,7 @@ class ProductRepository : IProductRepository {
 
     })
 
-    override fun transact(document: Any, newDate: Long, result: (FirebaseResult) -> Unit) {
+    override fun transact(document: Any, result: (FirebaseResult) -> Unit) {
         productCollectionReference.runTransaction(object : Transaction.Handler {
             override fun doTransaction(currentData: MutableData): Transaction.Result {
                 val currentProducts = currentData.getValue<Map<String, Product>>() ?: mapOf()
@@ -278,27 +277,6 @@ class ProductRepository : IProductRepository {
                             }
                         }
 
-                        val date = Instant.ofEpochMilli(newDate).atZone(ZoneId.systemDefault()).toLocalDate()
-                        val lastEditDate = Instant.ofEpochMilli((if (currentData.getValue<Product>()?.lastEdit is Long) currentData.getValue<Product>()?.lastEdit else date.toEpochDay()) as Long).atZone(ZoneId.systemDefault()).toLocalDate()
-
-                        for (product in document.products.values) {
-                            if (lastEditDate.month != date.month) {
-                                currentProducts[product.id]!!.let { current ->
-                                    currentData.child(product.id).value = current.copy(lastEdit = ServerValue.TIMESTAMP, changeLeastSold = false, transaction = current.transaction.let {
-                                        val didYearChange = lastEditDate.year != date.year
-                                        it.copy(
-                                            soldThisMonth = 0,
-                                            purchased = if (didYearChange) 0 else it.purchased,
-                                            soldThisYear = if (didYearChange) 0 else it.soldThisYear,
-                                            highestMonth = if (it.highestMonth < it.soldThisMonth) it.soldThisMonth else it.highestMonth,
-                                            lowestMonth = if (it.lowestMonth > it.soldThisMonth || it.lowestMonth == 0) it.soldThisMonth else it.lowestMonth,
-                                            soldLastYear = if (didYearChange || current.changeLeastSold) it.soldThisYear else it.soldLastYear
-                                        )
-                                    })
-                                }
-                            }
-                        }
-
                         when (document.invoiceType) {
                             InvoiceType.SALE -> {
                                 for (product in document.products.values) {
@@ -357,5 +335,34 @@ class ProductRepository : IProductRepository {
                 }
             }
         })
+    }
+
+    override fun checkDate(date: Long) {
+        productCollectionReference.get().addOnSuccessListener {
+            val products = it.getValue<Map<String, Product>>()
+            if (products != null) {
+                for (product in products) {
+                    val newDate = Instant.ofEpochMilli(date).atZone(ZoneId.systemDefault()).toLocalDate()
+                    Log.e("RAW LAST EDIT DATE", "$newDate $date")
+                    val lastEditDate = Instant.ofEpochMilli(product.value.lastEdit as Long).atZone(ZoneId.systemDefault()).toLocalDate()
+                    Log.e("LAST EDIT DATE", lastEditDate.toString())
+                    if (lastEditDate.month != newDate.month) {
+                        product.value.let { current ->
+                            productCollectionReference.child(product.key).setValue(current.copy(lastEdit = ServerValue.TIMESTAMP, changeLeastSold = false, transaction = current.transaction.let { transaction ->
+                                val didYearChange = lastEditDate.year != newDate.year
+                                transaction.copy(
+                                    soldThisMonth = 0,
+                                    purchased = if (didYearChange) 0 else transaction.purchased,
+                                    soldThisYear = if (didYearChange) 0 else transaction.soldThisYear,
+                                    highestMonth = if (transaction.highestMonth < transaction.soldThisMonth) transaction.soldThisMonth else transaction.highestMonth,
+                                    lowestMonth = if (transaction.lowestMonth > transaction.soldThisMonth || transaction.lowestMonth == 0) transaction.soldThisMonth else transaction.lowestMonth,
+                                    soldLastYear = if (didYearChange || current.changeLeastSold) transaction.soldThisYear else transaction.soldLastYear
+                                )
+                            }))
+                        }
+                    }
+                }
+            }
+        }
     }
 }

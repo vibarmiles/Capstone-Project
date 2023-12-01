@@ -411,6 +411,7 @@ fun NavigationHost(
                 scaffoldState = scaffoldState,
                 posViewModel = posViewModel,
                 branchViewModel = branchViewModel,
+                userViewModel = userViewModel,
                 add = { navController.navigate(Routes.POS.Add.route) },
                 view = { navController.navigate(Routes.POS.View.createRoute(it)) }
             )

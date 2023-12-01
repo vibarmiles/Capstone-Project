@@ -24,8 +24,7 @@ class CategoryViewModel : ViewModel() {
 
     fun getAll(): MutableLiveData<List<Category>> {
         if (!this::categories.isInitialized) {
-            categories = categoryRepository.getAll(callback = { updateLoadingState() }) {
-                    result ->
+            categories = categoryRepository.getAll(callback = { updateLoadingState() }) { result ->
                 resultState.update { result }
             }
         }

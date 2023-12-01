@@ -3,6 +3,8 @@ package com.example.capstoneproject.supplier_management.ui.return_order
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -12,7 +14,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,6 +55,7 @@ fun ReturnOrderForm(
     var branchId by remember { mutableStateOf(branches.value.firstOrNull()?.id) }
     var textFieldValue by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches Found") }
     var reason by remember { mutableStateOf("") }
+    val localFocusManager = LocalFocusManager.current
 
     Scaffold(
         topBar = {
@@ -110,7 +116,17 @@ fun ReturnOrderForm(
                         OutlinedTextField(modifier = Modifier.fillMaxWidth(), label = { Text(text = "Return Item from this branch") }, value = textFieldValue, enabled = false, readOnly = true, onValueChange = {  })
                     }
 
-                    OutlinedTextField(value = reason, colors = GlobalTextFieldColors(), label = { Text(text = "Reason") }, modifier = Modifier.fillMaxWidth(), onValueChange = { reason = it })
+                    OutlinedTextField(
+                        value = reason,
+                        colors = GlobalTextFieldColors(),
+                        label = { Text(text = "Reason") },
+                        modifier = Modifier.fillMaxWidth(),
+                        onValueChange = { reason = it },
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = {
+                            localFocusManager.clearFocus()
+                        })
+                    )
                 }
                 
                 androidx.compose.material3.ListItem(
