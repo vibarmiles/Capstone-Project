@@ -65,7 +65,7 @@ class UserRepository : IUserRepository {
                 userCollectionReference.child(found.key).setValue(found.value.copy(lastLogin = ServerValue.TIMESTAMP)).addOnSuccessListener {
                     userCollectionReference.child(found.key).get().addOnSuccessListener { u ->
                         u.getValue<User>()!!.let { thisUser ->
-                            user.invoke(UserAccountDetails(id = found.key, branchId = thisUser.branchId, lastLogin = thisUser.lastLogin, userLevel = thisUser.userLevel, isActive = thisUser.isActive))
+                            user.invoke(UserAccountDetails(id = found.key, branchId = thisUser.branchId, previousLoginDate = found.value.lastLogin as Long, loginDate = thisUser.lastLogin as Long, userLevel = thisUser.userLevel, isActive = thisUser.isActive))
                         }
                     }.addOnFailureListener { exception ->
                         user.invoke(UserAccountDetails(errorMessage = exception.message))

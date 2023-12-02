@@ -17,6 +17,7 @@ import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 
 class ProductRepository : IProductRepository {
@@ -337,30 +338,31 @@ class ProductRepository : IProductRepository {
         })
     }
 
-    override fun checkDate(date: Long) {
+    override fun checkDate(date: LocalDate, callback: (Float) -> Unit) {
         productCollectionReference.get().addOnSuccessListener {
             val products = it.getValue<Map<String, Product>>()
-            if (products != null) {
-                for (product in products) {
-                    val newDate = Instant.ofEpochMilli(date).atZone(ZoneId.systemDefault()).toLocalDate()
-                    Log.e("RAW LAST EDIT DATE", "$newDate $date")
-                    val lastEditDate = Instant.ofEpochMilli(product.value.lastEdit as Long).atZone(ZoneId.systemDefault()).toLocalDate()
-                    Log.e("LAST EDIT DATE", lastEditDate.toString())
-                    if (lastEditDate.month != newDate.month) {
-                        product.value.let { current ->
-                            productCollectionReference.child(product.key).setValue(current.copy(lastEdit = ServerValue.TIMESTAMP, changeLeastSold = false, transaction = current.transaction.let { transaction ->
-                                val didYearChange = lastEditDate.year != newDate.year
-                                transaction.copy(
-                                    soldThisMonth = 0,
-                                    purchased = if (didYearChange) 0 else transaction.purchased,
-                                    soldThisYear = if (didYearChange) 0 else transaction.soldThisYear,
-                                    highestMonth = if (transaction.highestMonth < transaction.soldThisMonth) transaction.soldThisMonth else transaction.highestMonth,
-                                    lowestMonth = if (transaction.lowestMonth > transaction.soldThisMonth || transaction.lowestMonth == 0) transaction.soldThisMonth else transaction.lowestMonth,
-                                    soldLastYear = if (didYearChange || current.changeLeastSold) transaction.soldThisYear else transaction.soldLastYear
-                                )
-                            }))
+            val numberOfProducts = products?.size ?: 0
+            products?.toList()?.forEachIndexed { index, product ->
+                val lastEditDate = Instant.ofEpochMilli(product.second.lastEdit as Long).atZone(ZoneId.systemDefault()).toLocalDate()
+                if (lastEditDate.month != date.month) {
+                    product.second.let { current ->
+                        productCollectionReference.child(product.first).setValue(current.copy(lastEdit = ServerValue.TIMESTAMP, changeLeastSold = false, transaction = current.transaction.let { transaction ->
+                            val didYearChange = lastEditDate.year != date.year
+                            transaction.copy(
+                                soldThisMonth = 0,
+                                soldLastMonth = transaction.soldThisMonth,
+                                purchased = if (didYearChange) 0 else transaction.purchased,
+                                soldThisYear = if (didYearChange) 0 else transaction.soldThisYear,
+                                highestMonth = if (transaction.highestMonth < transaction.soldThisMonth) transaction.soldThisMonth else transaction.highestMonth,
+                                lowestMonth = if (transaction.lowestMonth > transaction.soldThisMonth || transaction.lowestMonth == 0) transaction.soldThisMonth else transaction.lowestMonth,
+                                soldLastYear = if (didYearChange || current.changeLeastSold) transaction.soldThisYear else transaction.soldLastYear
+                            )
+                        })).addOnCompleteListener {
+                            callback.invoke((index + 1).toFloat() / numberOfProducts)
                         }
                     }
+                } else {
+                    callback.invoke((index + 1).toFloat() / numberOfProducts)
                 }
             }
         }

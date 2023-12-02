@@ -22,6 +22,7 @@ data class Transaction(
     val soldThisYear: Int = 0,
     val soldLastYear: Int = 0,
     val soldThisMonth: Int = 0,
+    val soldLastMonth: Int = 0,
     val highestMonth: Int = 0,
     val lowestMonth: Int = 0,
 )

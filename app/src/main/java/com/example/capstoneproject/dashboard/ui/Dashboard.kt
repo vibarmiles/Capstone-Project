@@ -52,8 +52,7 @@ fun Dashboard(
         topBar = {
             BaseTopAppBar(title = stringResource(id = R.string.dashboard), scope = scope, scaffoldState = scaffoldState)
         }
-    ) {
-            paddingValues ->
+    ) { paddingValues ->
         if (branchViewModel.isLoading.value || productViewModel.isLoading.value || purchaseOrderViewModel.isLoading.value) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier
                 .padding(paddingValues)

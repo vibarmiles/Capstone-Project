@@ -8,8 +8,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.global.data.firebase.log.ILoggingRepository
 import com.example.capstoneproject.global.data.firebase.log.LoggingRepository
-import com.example.capstoneproject.product_management.data.firebase.product.IProductRepository
-import com.example.capstoneproject.product_management.data.firebase.product.ProductRepository
 import com.example.capstoneproject.user_management.data.firebase.IUserRepository
 import com.example.capstoneproject.user_management.data.firebase.User
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
@@ -23,7 +21,8 @@ import kotlinx.coroutines.launch
 data class UserAccountDetails(
     val id: String = "",
     val branchId: String? = null,
-    val lastLogin: Any = 0,
+    val previousLoginDate: Long = 0,
+    val loginDate: Long = 0,
     val userLevel: UserLevel = UserLevel.Employee,
     val isActive: Boolean = false,
     val errorMessage: String? = null
@@ -33,7 +32,6 @@ class UserViewModel : ViewModel() {
     private lateinit var users: SnapshotStateMap<String, User>
     private val userRepository: IUserRepository = UserRepository()
     private val loggingRepository: ILoggingRepository = LoggingRepository()
-    private val productRepository: IProductRepository = ProductRepository()
     val isLoading = mutableStateOf(true)
     val update = mutableStateOf(true)
     private val userAccountDetailsState = MutableStateFlow(UserAccountDetails())
@@ -59,7 +57,6 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             userRepository.getUser(email = email) { user ->
                 getAll()
-                productRepository.checkDate(user.lastLogin as Long)
                 userAccountDetailsState.update { user }
             }
         }

@@ -20,9 +20,8 @@ import com.example.capstoneproject.R
 import com.example.capstoneproject.activity_logs.ui.ActivityLogsScreen
 import com.example.capstoneproject.activity_logs.ui.ActivityLogsViewModel
 import com.example.capstoneproject.dashboard.ui.Dashboard
-import com.example.capstoneproject.global.ui.viewmodel.AppViewModel
+import com.example.capstoneproject.global.ui.AppViewModel
 import com.example.capstoneproject.login.data.login.GoogleLoginRepository
-import com.example.capstoneproject.login.data.login.SignInResult
 import com.example.capstoneproject.product_management.ui.branch.BranchFormScreen
 import com.example.capstoneproject.product_management.ui.branch.BranchScreen
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
@@ -73,6 +72,7 @@ fun NavigationHost(
     val activityLogsRepository: ActivityLogsViewModel = viewModel()
     val context = LocalContext.current
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
+    val appUi = viewModel.uiState.collectAsState()
 
     val googleAuthUiClient by lazy {
         GoogleLoginRepository(context = context, oneTapClient = Identity.getSignInClient(context))
@@ -84,22 +84,19 @@ fun NavigationHost(
     ) {
         composable(Routes.LoginScreen.route) {
             val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartIntentSenderForResult(), onResult = { result ->
+                viewModel.loadLogin(true)
                 if (result.resultCode == Activity.RESULT_OK) {
                     scope.launch {
                         val signInResult = googleAuthUiClient.getSignInResult(
                             intent = result.data ?: return@launch
                         )
 
-                        viewModel.user.value = signInResult
+                        viewModel.updateUser(signInResult)
                     }
                 }
             })
 
-            LoginScreen {
-                /*navController.navigate(Routes.Dashboard.route) {
-                    popUpTo(0)
-                }
-                viewModel.isLoading.value = false*/
+            LoginScreen(loadLogin = appUi.value.loadLogin) {
                 scope.launch {
                     val signIn = googleAuthUiClient.signIn()
                     launcher.launch(
@@ -486,9 +483,8 @@ fun NavigationHost(
         composable(Routes.Logout.route) {
             LaunchedEffect(key1 = Unit) {
                 callback.invoke(R.string.login)
-                viewModel.user.value = SignInResult(data = null, errorMessage = null)
+                viewModel.resetUiState()
                 userViewModel.logout()
-                viewModel.isLoading.value = true
                 googleAuthUiClient.signOut()
                 scaffoldState.snackbarHostState.showSnackbar(message = "Signed Out Successfully!", duration = SnackbarDuration.Short)
             }

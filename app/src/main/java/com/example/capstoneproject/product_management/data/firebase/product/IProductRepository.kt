@@ -13,5 +13,5 @@ interface IProductRepository {
     fun removeCategory(categoryId: String, result: (FirebaseResult) -> Unit)
     fun removeBranchStock(branchId: String, result: (FirebaseResult) -> Unit)
     fun transact(document: Any, result: (FirebaseResult) -> Unit)
-    fun checkDate(date: Long)
+    fun checkDate(date: LocalDate, callback: (Float) -> Unit)
 }
