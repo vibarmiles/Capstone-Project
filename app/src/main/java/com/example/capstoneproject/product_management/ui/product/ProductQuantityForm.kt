@@ -19,7 +19,6 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -63,12 +62,6 @@ fun ProductQuantityFormScreen(
                 var text by remember { mutableStateOf(if (map.containsKey(it.id)) map[it.id].toString() else "")}
                 val isValid by remember { mutableStateOf(true) }
 
-                if (text.isNotBlank()) {
-                    viewModel.stockPerBranch[it.id] = text
-                } else {
-                    viewModel.stockPerBranch[it.id] = "0"
-                }
-
                 OutlinedTextField(
                     trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
                     colors = GlobalTextFieldColors(),
@@ -90,8 +83,13 @@ fun ProductQuantityFormScreen(
                     onValueChange = { value ->
                         value.toIntOrNull()?.let{ num ->
                             if (num >= 0) text = value
-                            viewModel.stockPerBranch[it.id] = text;
-                        } ?: run { if (value.isBlank()) text = "" }
+                            viewModel.stockPerBranch[it.id] = text
+                        } ?: run {
+                            if (value.isBlank()) {
+                                text = ""
+                                viewModel.stockPerBranch.remove(it.id)
+                            }
+                        }
                     }
                 )
             }

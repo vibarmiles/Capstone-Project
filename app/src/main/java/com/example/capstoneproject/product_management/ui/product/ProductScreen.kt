@@ -385,12 +385,14 @@ fun Products(product: Product, quantity: Int, supplier: String, view: () -> Unit
 fun getCriticalLevel(
     product: Product
 ): Double {
-    return (((if (product.transaction.soldLastYear == 0) product.transaction.soldThisYear.toDouble() else product.transaction.soldLastYear.toDouble() / 12) + (product.transaction.highestMonth - product.transaction.lowestMonth)) / 2)
+    val safetyStock = ((product.transaction.monthlySales.values.maxOrNull() ?: 0).toDouble() - (product.transaction.monthlySales.values.minOrNull() ?: 0)) / 2
+    return ((product.transaction.soldThisYear.toDouble() / 12) + safetyStock)
 }
 
 fun getReorderPoint(
     product: Product
 ): Double {
     val lastEditDate = Instant.ofEpochMilli(product.lastEdit as Long).atZone(ZoneId.systemDefault()).toLocalDate()
-    return ((if (product.transaction.soldLastYear == 0) product.transaction.soldThisYear.toDouble() else product.transaction.soldLastYear.toDouble() / if (lastEditDate.isLeapYear) 366 else 365) * product.leadTime) + (product.transaction.highestMonth - product.transaction.lowestMonth)
+    val firstStep = product.transaction.soldThisYear.toDouble() / if (lastEditDate.isLeapYear) 366 else 365
+    return (firstStep * product.leadTime) + ((product.transaction.monthlySales.values.maxOrNull() ?: 0) - (product.transaction.monthlySales.values.minOrNull() ?: 0))
 }

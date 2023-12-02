@@ -11,6 +11,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.StackedBarChart
@@ -49,7 +50,8 @@ fun ViewProduct(
     userLevel: UserLevel,
     productId: String,
     edit: () -> Unit,
-    set: () -> Unit,
+    setBranchQuantity: () -> Unit,
+    setMonthlySales: () -> Unit,
     delete: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -76,7 +78,8 @@ fun ViewProduct(
                         IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
                         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Product") }, onClick = { expanded = false; edit.invoke() })
-                            DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.StackedBarChart, contentDescription = null) }, text = { Text(text = "Adjust Quantity") }, onClick = { expanded = false; set.invoke() })
+                            DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.BarChart, contentDescription = null) }, text = { Text(text = "Adjust Quantity") }, onClick = { expanded = false; setBranchQuantity.invoke() })
+                            DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.StackedBarChart, contentDescription = null) }, text = { Text(text = "Adjust Monthly Sales") }, onClick = { expanded = false; setMonthlySales.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Product") }, onClick = { expanded = false; showDeleteDialog = true })
                         }
                     }

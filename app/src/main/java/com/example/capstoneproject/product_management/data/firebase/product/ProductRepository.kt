@@ -78,6 +78,18 @@ class ProductRepository : IProductRepository {
         }
     }
 
+    override fun setMonthlySales(
+        key: String,
+        value: Map<String, Int>,
+        result: (FirebaseResult) -> Unit
+    ) {
+        productCollectionReference.child(key).child("transaction").child("monthlySales").setValue(value).addOnSuccessListener {
+            result.invoke(FirebaseResult(result = true))
+        }.addOnFailureListener {
+            result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+        }
+    }
+
     override fun insert(key: String?, product: Product, result: (FirebaseResult) -> Unit) {
         val uri: Uri? = if (product.image != null) Uri.parse(product.image) else null
 
@@ -301,7 +313,7 @@ class ProductRepository : IProductRepository {
                                         currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
                                             stock[document.branchId] = stock.getOrDefault(document.branchId, 0) + product.quantity
                                             stock
-                                        }, transaction = current.transaction.let { it.copy(soldThisYear = (it.soldThisYear - product.quantity).let { diff -> if (diff < 0) 0 else diff}) })
+                                        }, transaction = current.transaction.let { it.copy(soldThisMonth = (it.soldThisMonth - product.quantity).let { diff -> if (diff < 0) 0 else diff}, soldThisYear = (it.soldThisYear - product.quantity).let { diff -> if (diff < 0) 0 else diff}) })
                                     }
                                 }
                             }
@@ -346,16 +358,17 @@ class ProductRepository : IProductRepository {
                 val lastEditDate = Instant.ofEpochMilli(product.second.lastEdit as Long).atZone(ZoneId.systemDefault()).toLocalDate()
                 if (lastEditDate.month != date.month) {
                     product.second.let { current ->
-                        productCollectionReference.child(product.first).setValue(current.copy(lastEdit = ServerValue.TIMESTAMP, changeLeastSold = false, transaction = current.transaction.let { transaction ->
+                        productCollectionReference.child(product.first).setValue(current.copy(lastEdit = ServerValue.TIMESTAMP, transaction = current.transaction.let { transaction ->
                             val didYearChange = lastEditDate.year != date.year
+                            val yearSale = transaction.monthlySales.toMutableMap().let { monthlySale ->
+                                monthlySale[date.minusMonths(1).month.name] = transaction.soldThisMonth
+                                monthlySale
+                            }
                             transaction.copy(
                                 soldThisMonth = 0,
-                                soldLastMonth = transaction.soldThisMonth,
                                 purchased = if (didYearChange) 0 else transaction.purchased,
-                                soldThisYear = if (didYearChange) 0 else transaction.soldThisYear,
-                                highestMonth = if (transaction.highestMonth < transaction.soldThisMonth) transaction.soldThisMonth else transaction.highestMonth,
-                                lowestMonth = if (transaction.lowestMonth > transaction.soldThisMonth || transaction.lowestMonth == 0) transaction.soldThisMonth else transaction.lowestMonth,
-                                soldLastYear = if (didYearChange || current.changeLeastSold) transaction.soldThisYear else transaction.soldLastYear
+                                soldThisYear = yearSale.values.sum(),
+                                monthlySales = yearSale
                             )
                         })).addOnCompleteListener {
                             callback.invoke((index + 1).toFloat() / numberOfProducts)

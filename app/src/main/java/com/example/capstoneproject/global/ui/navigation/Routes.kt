@@ -10,8 +10,11 @@ sealed class Routes(val route: String) {
             fun createRoute(productId: String) = Product.route + "/View/$productId"
         }
         object Add : Routes("$route/Add")
-        object Set : Routes("$route/Set/{productId}") {
-            fun createRoute(productId: String) = Product.route + "/Set/$productId"
+        object SetBranchQuantity : Routes("$route/SetBranchQuantity/{productId}") {
+            fun createRoute(productId: String) = Product.route + "/SetBranchQuantity/$productId"
+        }
+        object SetMonthlySales : Routes("$route/SetMonthlySales/{productId}") {
+            fun createRoute(productId: String) = Product.route + "/SetMonthlySales/$productId"
         }
         object Edit : Routes("$route/Edit/{productId}") {
             fun createRoute(productId: String) = Product.route + "/Edit/$productId"

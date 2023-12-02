@@ -148,7 +148,8 @@ fun NavigationHost(
                 userLevel = userAccountDetails.value.userLevel,
                 productId = productId,
                 edit = { navController.navigate(Routes.Product.Edit.createRoute(productId)) },
-                set = { navController.navigate(Routes.Product.Set.createRoute(productId)) },
+                setBranchQuantity = { navController.navigate(Routes.Product.SetBranchQuantity.createRoute(productId)) },
+                setMonthlySales = { navController.navigate(Routes.Product.SetMonthlySales.createRoute(productId)) },
                 delete = { navController.popBackStack() }
             )
         }
@@ -180,12 +181,23 @@ fun NavigationHost(
             )
         }
 
-        composable(Routes.Product.Set.route) {
+        composable(Routes.Product.SetBranchQuantity.route) {
             val productId: String = it.arguments?.getString("productId")!!
 
             ProductQuantityFormScreen(
                 productViewModel = productViewModel,
                 branchViewModel = branchViewModel,
+                productId = productId,
+                dismissRequest = { navController.popBackStack() },
+                userViewModel = userViewModel
+            )
+        }
+
+        composable(Routes.Product.SetMonthlySales.route) {
+            val productId: String = it.arguments?.getString("productId")!!
+
+            ProductMonthlySalesFormScreen(
+                productViewModel = productViewModel,
                 productId = productId,
                 dismissRequest = { navController.popBackStack() },
                 userViewModel = userViewModel

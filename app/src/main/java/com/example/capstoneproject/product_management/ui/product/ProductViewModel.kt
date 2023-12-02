@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Month
 
 class ProductViewModel : ViewModel() {
     private lateinit var products: SnapshotStateMap<String, Product>
@@ -59,6 +60,15 @@ class ProductViewModel : ViewModel() {
     fun setStock(key: String, value: Map<String, Int>) {
         viewModelScope.launch(Dispatchers.IO) {
             productRepository.setQuantityForBranch(key = key, value = value) {
+                    result ->
+                resultState.update { result }
+            }
+        }
+    }
+
+    fun setMonthlySales(key: String, value: Map<Month, Int>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            productRepository.setMonthlySales(key = key, value = value.mapKeys { it.key.name }) {
                     result ->
                 resultState.update { result }
             }
