@@ -3,6 +3,7 @@ package com.example.capstoneproject.product_management.ui.category
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -82,8 +83,7 @@ fun CategoryScreen(
                 Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered categories"; 1 -> "1 category is entered"; else -> "$size categories are entered"})
                 Divider()
                 LazyColumn(modifier = Modifier.padding(paddingValues)) {
-                    itemsIndexed(categories.value.sortedBy { it.categoryName.uppercase() }) {
-                            _, item ->
+                    items(items = categories.value.sortedBy { it.categoryName.uppercase() }) { item ->
                         Column {
                             CategoryListItem(item.categoryName, edit = {
                                 showDialog = true

@@ -18,6 +18,8 @@ data class Product(
 )
 
 data class Transaction(
+    val openingStock: Int = 0,
+    val closingStock: Int = 0,
     val purchased: Int = 0,
     val soldThisYear: Int = 0,
     val soldThisMonth: Int = 0,

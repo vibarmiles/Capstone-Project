@@ -62,6 +62,10 @@ fun ProductQuantityFormScreen(
                 var text by remember { mutableStateOf(if (map.containsKey(it.id)) map[it.id].toString() else "")}
                 val isValid by remember { mutableStateOf(true) }
 
+                if (text.isNotBlank()) {
+                    viewModel.stockPerBranch[it.id] = text
+                }
+
                 OutlinedTextField(
                     trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
                     colors = GlobalTextFieldColors(),

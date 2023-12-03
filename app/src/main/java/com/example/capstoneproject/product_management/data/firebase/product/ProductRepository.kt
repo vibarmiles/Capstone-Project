@@ -313,7 +313,7 @@ class ProductRepository : IProductRepository {
                                         currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
                                             stock[document.branchId] = stock.getOrDefault(document.branchId, 0) + product.quantity
                                             stock
-                                        }, transaction = current.transaction.let { it.copy(soldThisMonth = (it.soldThisMonth - product.quantity).let { diff -> if (diff < 0) 0 else diff}, soldThisYear = (it.soldThisYear - product.quantity).let { diff -> if (diff < 0) 0 else diff}) })
+                                        }, transaction = current.transaction.let { it.copy(soldThisMonth = (it.soldThisMonth - product.quantity), soldThisYear = (it.soldThisYear - product.quantity)) })
                                     }
                                 }
                             }
@@ -365,6 +365,8 @@ class ProductRepository : IProductRepository {
                                 monthlySale
                             }
                             transaction.copy(
+                                openingStock = current.stock.values.sum(),
+                                closingStock = transaction.openingStock,
                                 soldThisMonth = 0,
                                 purchased = if (didYearChange) 0 else transaction.purchased,
                                 soldThisYear = yearSale.values.sum(),

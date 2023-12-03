@@ -2,9 +2,10 @@ package com.example.capstoneproject.product_management.ui.product
 
 import android.util.Log
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -22,6 +23,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -48,6 +50,11 @@ import kotlinx.coroutines.CoroutineScope
 import java.time.Instant
 import java.time.ZoneId
 
+
+enum class Direction {
+    LEFT, RIGHT
+}
+
 @Composable
 fun ProductScreen(
     scope: CoroutineScope,
@@ -64,6 +71,7 @@ fun ProductScreen(
     val categories = categoryViewModel.getAll().observeAsState(listOf())
     val products = productViewModel.getAll()
     val suppliers = contactViewModel.getAll().observeAsState(listOf())
+    val direction = remember { mutableStateOf(Direction.LEFT) }
     val state by productViewModel.result.collectAsState()
     var page by rememberSaveable { mutableStateOf(0) }
     val loading = productViewModel.isLoading.value || branchViewModel.isLoading.value || categoryViewModel.isLoading.value
@@ -92,14 +100,52 @@ fun ProductScreen(
                 .fillMaxSize()
                 .padding(paddingValues)) {
                 if (userAccountDetails.value.userLevel != UserLevel.Employee) {
-                    TabLayout(tabs = branch.value.sortedBy { it.name.uppercase() }, selectedTab = page, products = products.values.toList(), productUpdate = productViewModel.update.value) { page = it }
+                    TabLayout(
+                        tabs = branch.value.sortedBy { it.name.uppercase() },
+                        selectedTab = page,
+                        products = products.values.toList(),
+                        productUpdate = productViewModel.update.value
+                    ) { page = it }
                 }
 
-                ProductScreenContent(suppliers = suppliers.value, branchId = if (userAccountDetails.value.userLevel == UserLevel.Employee) {
+                ProductScreenContent(
+                    modifier = Modifier
+                        .pointerInput(Unit) {
+                            detectHorizontalDragGestures(onDragEnd = {
+                                when (direction.value) {
+                                    Direction.LEFT -> {
+                                        if (page - 1 >= 0) {
+                                            page -= 1
+                                        }
+                                    }
+                                    Direction.RIGHT -> {
+                                        if (page + 1 <= branch.value.size) {
+                                            page += 1
+                                        }
+                                    }
+                                }
+                            }) { change, dragAmount ->
+                                change.consume()
+
+                                if (dragAmount > 50) {
+                                    direction.value = Direction.LEFT
+                                } else if (dragAmount < -50) {
+                                    direction.value = Direction.RIGHT
+                                }
+                            }
+                        },
+                    suppliers = suppliers.value,
+                    branchId = if (userAccountDetails.value.userLevel == UserLevel.Employee) {
                     userAccountDetails.value.branchId ?: ""
-                } else {
-                    if (page == 0) "Default" else branch.value.sortedBy { it.name.uppercase() }[page - 1].id
-                }, categories = categories.value.sortedBy { it.categoryName.uppercase() }, products = products.filterValues { if (userAccountDetails.value.userLevel != UserLevel.Employee) true else it.isActive }.toList().sortedBy { it.second.productName.uppercase() }.toMap(), productUpdate = productViewModel.update.value, view = { view.invoke(it) }, numberOfBranches = branch.value.size.let { if (it == 0) 1 else it })
+                    } else {
+                        if (page == 0) "Default" else branch.value.sortedBy { it.name.uppercase() }[page - 1].id
+                    },
+                    categories = categories.value.sortedBy { it.categoryName.uppercase() },
+                    products = products.filterValues { if (userAccountDetails.value.userLevel != UserLevel.Employee) true else it.isActive }.toList().sortedBy { it.second.productName.uppercase() }.toMap(),
+                    productUpdate = productViewModel.update.value,
+                    view = { view.invoke(it) },
+                    numberOfBranches = branch.value.size.let { if (it == 0) 1 else it }
+                )
             }
         }
 
@@ -125,9 +171,13 @@ fun TabLayout(
 ) {
     val defaultMap = remember(tabs) { products.filter { product -> product.stock.values.sum() <= getCriticalLevel(product = product) } }
 
-    ScrollableTabRow(selectedTabIndex = selectedTab, edgePadding = 0.dp, modifier = Modifier
-        .height(50.dp)
-        .fillMaxWidth()) {
+    ScrollableTabRow(
+        selectedTabIndex = selectedTab,
+        edgePadding = 0.dp,
+        modifier = Modifier
+            .height(50.dp)
+            .fillMaxWidth()
+    ) {
         Tab(selected = selectedTab == 0, onClick = { onClick.invoke(0) }, text = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(text = "All")
@@ -139,8 +189,7 @@ fun TabLayout(
             }
         })
 
-        tabs.forEachIndexed {
-                index, tab ->
+        tabs.forEachIndexed { index, tab ->
             val map = remember(productUpdate) {
                 products.filter { product ->
                     (product.stock[tab.id] ?: 0) <= getCriticalLevel(product = product)
@@ -164,6 +213,7 @@ fun TabLayout(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProductScreenContent(
+    modifier: Modifier,
     branchId: String,
     categories: List<Category>,
     products: Map<String, Product>,
@@ -241,7 +291,7 @@ fun ProductScreenContent(
         }
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
+    LazyColumn(modifier = modifier.fillMaxSize(), state = listState) {
         if (products.isEmpty()) {
             item {
                 Text(modifier = Modifier.padding(16.dp), text = "There are no entered products")
@@ -258,9 +308,10 @@ fun ProductScreenContent(
                     .padding(start = 16.dp, top = 16.dp, end = 16.dp)) {
                     OutlinedTextField(
                         trailingIcon = {
-                            if (isFocused.value) {
+                            if (textFieldValue.value.isNotEmpty()) {
                                 IconButton(onClick = {
                                     textFieldValue.value = ""
+                                    search.value = ""
                                     localFocusManager.clearFocus()
                                 }) {
                                     Icon(imageVector = Icons.Default.Close, contentDescription = null)
@@ -293,8 +344,7 @@ fun ProductScreenContent(
                     Divider()
                 }
 
-                itemsIndexed(critical.value) {
-                        _, it ->
+                items(items = critical.value) { it ->
                     Log.d("id", products.toString())
                     Column {
                         Products(product = it.second, supplier = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier", quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, view = { view.invoke(it.first) })
@@ -314,8 +364,7 @@ fun ProductScreenContent(
                     Divider()
                 }
 
-                itemsIndexed(reorder.value) {
-                        _, it ->
+                items(items = reorder.value) { it ->
                     Log.d("id", products.toString())
                     Column {
                         Products(product = it.second, supplier = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier", quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, view = { view.invoke(it.first) })
@@ -335,8 +384,7 @@ fun ProductScreenContent(
                     Divider()
                 }
 
-                itemsIndexed(default.value) {
-                        _, it ->
+                items(items = default.value) { it ->
                     Log.d("id", products.toString())
                     Column {
                         Products(product = it.second, supplier = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier", quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, view = { view.invoke(it.first) })
@@ -356,8 +404,7 @@ fun ProductScreenContent(
                     Divider()
                 }
 
-                itemsIndexed(category.value) {
-                        _, it ->
+                items(items = category.value) { it ->
                     Log.d("id", products.toString())
                     Column {
                         Products(product = it.second, supplier = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier", quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, view = { view.invoke(it.first) })
@@ -374,7 +421,12 @@ fun ProductScreenContent(
 }
 
 @Composable
-fun Products(product: Product, quantity: Int, supplier: String, view: () -> Unit) {
+fun Products(
+    product: Product,
+    quantity: Int,
+    supplier: String,
+    view: () -> Unit
+) {
     androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = { SubcomposeAsyncImage(error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) },  model = product.image, contentScale = ContentScale.Crop, modifier = Modifier
         .clip(RoundedCornerShape(5.dp))
         .size(50.dp), loading = { CircularProgressIndicator() }, contentDescription = null) }, headlineContent = { Text(text = product.productName, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = supplier, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
@@ -386,13 +438,13 @@ fun getCriticalLevel(
     product: Product
 ): Double {
     val safetyStock = ((product.transaction.monthlySales.values.maxOrNull() ?: 0).toDouble() - (product.transaction.monthlySales.values.minOrNull() ?: 0)) / 2
-    return ((product.transaction.soldThisYear.toDouble() / 12) + safetyStock)
+    return ((product.transaction.monthlySales.values.sum().toDouble() / 12) + safetyStock)
 }
 
 fun getReorderPoint(
     product: Product
 ): Double {
     val lastEditDate = Instant.ofEpochMilli(product.lastEdit as Long).atZone(ZoneId.systemDefault()).toLocalDate()
-    val firstStep = product.transaction.soldThisYear.toDouble() / if (lastEditDate.isLeapYear) 366 else 365
+    val firstStep = product.transaction.monthlySales.values.sum().toDouble() / if (lastEditDate.isLeapYear) 366 else 365
     return (firstStep * product.leadTime) + ((product.transaction.monthlySales.values.maxOrNull() ?: 0) - (product.transaction.monthlySales.values.minOrNull() ?: 0))
 }

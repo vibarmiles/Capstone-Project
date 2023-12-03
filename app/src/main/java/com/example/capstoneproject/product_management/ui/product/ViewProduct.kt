@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -124,12 +125,16 @@ fun ViewProduct(
 }
 
 @Composable
-fun ViewProductTabs(selectedTabIndex: Int, onClick: (Int) -> Unit) {
+fun ViewProductTabs(
+    selectedTabIndex: Int,
+    onClick: (Int) -> Unit
+) {
     TabRow(
         selectedTabIndex = selectedTabIndex,
         modifier = Modifier
             .height(50.dp)
-            .fillMaxWidth()) {
+            .fillMaxWidth()
+    ) {
         Tab(selected = selectedTabIndex == 0, onClick = { onClick.invoke(0) }) {
             Text(text = "Product Details")
         }
@@ -178,8 +183,7 @@ fun ViewProductStock(stock: Map<String, Int>, branch: List<Branch>) {
             }, tonalElevation = 20.dp)
         }
 
-        itemsIndexed(branch) {
-                _, branch ->
+        items(items = branch) { branch ->
             androidx.compose.material3.ListItem(colors = ProjectListItemColors(), headlineContent = {
                 Row {
                     Text(text = branch.name, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))

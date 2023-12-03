@@ -36,6 +36,7 @@ import com.example.capstoneproject.supplier_management.ui.purchase_order.Purchas
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderViewModel
 import com.example.capstoneproject.login.ui.login.LoginScreen
 import com.example.capstoneproject.point_of_sales.ui.*
+import com.example.capstoneproject.reports_management.ui.ReportsScreen
 import com.example.capstoneproject.supplier_management.ui.purchase_order.ViewPurchaseOrder
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderForm
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderScreen
@@ -411,7 +412,12 @@ fun NavigationHost(
         }
 
         composable(Routes.Report.route) {
-
+            ReportsScreen(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                productViewModel = productViewModel,
+                contactViewModel = contactViewModel
+            )
         }
 
         composable(Routes.POS.route) {

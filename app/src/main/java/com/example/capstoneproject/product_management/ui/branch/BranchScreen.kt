@@ -3,6 +3,7 @@ package com.example.capstoneproject.product_management.ui.branch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
@@ -65,8 +66,7 @@ fun BranchScreen(
                 Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered branches"; 1 -> "1 branch is entered"; else -> "$size branches are entered"})
                 Divider()
                 LazyColumn(modifier = Modifier.padding(paddingValues)) {
-                    itemsIndexed(branches.sortedBy { it.name.uppercase() }) {
-                            _, item ->
+                    items(items = branches.sortedBy { it.name.uppercase() }) { item ->
                         Column {
                             BranchListItem(branch = item, edit = {
                                 edit.invoke(item)

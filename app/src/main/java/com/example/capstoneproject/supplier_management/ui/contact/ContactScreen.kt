@@ -2,6 +2,7 @@ package com.example.capstoneproject.supplier_management.ui.contact
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -94,8 +95,7 @@ fun ContactScreenContent(
         Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered suppliers"; 1 -> "1 supplier is entered"; else -> "$size suppliers are entered"})
         Divider()
         LazyColumn(modifier = Modifier.padding(paddingValues)) {
-            itemsIndexed(contacts.toList()) {
-                    _, it ->
+            items(items = contacts.toList()) {
                 var expanded: Boolean by remember { mutableStateOf(false) }
                 Column {
                     ListItem(colors = ProjectListItemColors(), leadingContent = { Icon(modifier = Modifier.size(50.dp), imageVector = Icons.Filled.ContactPhone, contentDescription = null) }, headlineContent = { Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = it.contact, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {

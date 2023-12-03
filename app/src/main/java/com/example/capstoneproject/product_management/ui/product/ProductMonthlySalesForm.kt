@@ -42,7 +42,7 @@ fun ProductMonthlySalesFormScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(text = ("Stock Adjustment").uppercase()) }, navigationIcon = {
+            TopAppBar(title = { Text(text = ("Monthly Sales").uppercase()) }, navigationIcon = {
                 IconButton(onClick = dismissRequest) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)
                 }
@@ -59,6 +59,10 @@ fun ProductMonthlySalesFormScreen(
             itemsIndexed(Month.values()) { index, it ->
                 var text by remember { mutableStateOf(if (map.containsKey(it.name)) map[it.name].toString() else "") }
                 val isValid by remember { mutableStateOf(true) }
+
+                if (text.isNotBlank()) {
+                    viewModel.salesPerMonth[it] = text
+                }
 
                 OutlinedTextField(
                     trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
