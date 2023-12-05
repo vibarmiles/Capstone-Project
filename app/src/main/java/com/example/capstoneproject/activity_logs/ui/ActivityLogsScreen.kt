@@ -4,10 +4,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -34,8 +36,12 @@ fun ActivityLogsScreen(
 ) {
     val logs = activityLogsViewModel.getLogs().observeAsState(listOf())
     val users = userViewModel.getAll()
-    var currentDate = LocalDate.now().plusDays(1)
-    android.util.Log.e("DATE NOW", currentDate.toString())
+    val activityLogsList = remember(logs.value) {
+        logs.value.groupBy {
+            val localDate = if (it.date != null) Instant.ofEpochMilli(it.date.time).atZone(ZoneId.systemDefault()).toLocalDate() else LocalDate.now()
+            localDate!!
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -48,35 +54,29 @@ fun ActivityLogsScreen(
     ) { paddingValues ->
         LazyColumn(modifier = Modifier
             .padding(paddingValues)) {
-            logs.value.sortedByDescending { document -> document.date }.forEachIndexed { index, log ->
-                val localDateTime = if (log.date != null) Instant.ofEpochMilli(log.date.time).atZone(
-                    ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
-                val date = localDateTime.toLocalDate()
-                val time = localDateTime.toLocalTime()
-
-                if (currentDate != date) {
-                    android.util.Log.e("DATE LOG", date.toString())
-                    currentDate = date
-
-                    stickyHeader {
-                        Column(modifier = Modifier
+            activityLogsList.toList().sortedByDescending { document -> document.first }.forEach { document ->
+                stickyHeader {
+                    Column(
+                        modifier = Modifier
                             .background(color = MaterialTheme.colors.surface)
                             .fillMaxWidth()
                             .padding(16.dp)) {
-                            Text(
-                                text = DateTimeFormatter.ofLocalizedDate(
-                                    FormatStyle.FULL
-                                ).format(date),
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colors.secondary
-                            )
-                        }
-                        Divider()
+                        Text(
+                            text = DateTimeFormatter.ofLocalizedDate(
+                                FormatStyle.FULL
+                            ).format(document.first),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colors.secondary
+                        )
                     }
+                    Divider()
                 }
 
-                item {
-                    LogItem(time = time, log = log, name = users[log.userId]?.let { "${it.lastName}, ${it.firstName}" } ?: "Unknown User", count = index + 1)
+                itemsIndexed(
+                    items = document.second,
+                    key = { _, it -> it.id }
+                ) { index, it ->
+                    LogItem(log = it, name = users[it.userId]?.let { "${it.lastName}, ${it.firstName}" } ?: "Unknown User", count = index + 1)
                 }
             }
 
@@ -86,7 +86,7 @@ fun ActivityLogsScreen(
                         .fillMaxWidth()
                         .heightIn(min = 50.dp)
                         .padding(4.dp)) {
-                        Button(onClick = { activityLogsViewModel.load()  }) {
+                        Button(onClick = { activityLogsViewModel.load() }) {
                             Text(text = "Load More")
                         }
                     }
@@ -98,11 +98,13 @@ fun ActivityLogsScreen(
 
 @Composable
 fun LogItem(
-    time: LocalTime,
     log: Log,
     name: String,
     count: Int,
 ) {
+    val time = remember {
+        log.date!!.toInstant().atZone(ZoneId.systemDefault()).toLocalTime()
+    }
     Column {
         androidx.compose.material3.ListItem(
             modifier = Modifier.fillMaxWidth(),

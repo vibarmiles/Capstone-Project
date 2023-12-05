@@ -235,59 +235,34 @@ fun ProductScreenContent(
         isFocused.value = false
     }
 
-    val productsFiltered = remember(branchId, productUpdate, textFieldValue.value) {
-        derivedStateOf {
-            products.filter { product ->
-                search.value.let {
-                    val supplier = suppliers.firstOrNull { contact -> contact.id == product.value.supplier }?.name?.contains(it, true) ?: false
-                    val name = product.value.productName.contains(it, true)
-                    Log.e("SEARCH", "$name & $supplier & ${name || supplier}: ${product.value.productName}")
-                    name || supplier
-                }
+    val productsFiltered = remember(branchId, productUpdate, search.value) {
+        products.filter { product ->
+            search.value.let {
+                val supplier = suppliers.firstOrNull { contact -> contact.id == product.value.supplier }?.name?.contains(it, true) ?: false
+                val name = product.value.productName.contains(it, true)
+                Log.e("SEARCH", "$name & $supplier & ${name || supplier}: ${product.value.productName}")
+                name || supplier
             }
         }
     }
 
-    val critical = remember(branchId, productUpdate) {
-        derivedStateOf {
-            productsFiltered.value.filterValues {
-                (getCriticalLevel(product = it) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
-            }.toList()
-        }
+    val critical = remember(productsFiltered) {
+        productsFiltered.filterValues {
+            (getCriticalLevel(product = it) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
+        }.toList()
     }
 
-    val reorder = remember(branchId, productUpdate) {
-        derivedStateOf {
-            productsFiltered.value.filterValues {
-                ((getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0) && ((getCriticalLevel(product = it) / if (branchId == "Default") 1 else numberOfBranches) < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
-            }.toList()
-        }
+    val reorder = remember(productsFiltered) {
+        productsFiltered.filterValues {
+            ((getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0) && ((getCriticalLevel(product = it) / if (branchId == "Default") 1 else numberOfBranches) < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
+        }.toList()
     }
 
-    val default = remember(branchId, productUpdate) {
-        derivedStateOf {
-            productsFiltered.value.filterValues {
-                it.category !in categories.map { category -> category.id } && (getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
-            }.toList()
-        }
-    }
-
-    val productsInCategories = remember(branchId, productUpdate) {
-        derivedStateOf {
-            val map = mutableMapOf<Category, List<Pair<String, Product>>>()
-            for (category in categories) {
-                val list = productsFiltered.value.filterValues {
-                    it.category == category.id && (getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) < (if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
-                }.toList()
-
-                if (list.isEmpty()) {
-                    continue
-                }
-
-                map[category] = list
-            }
-
-            map
+    val productsInCategories = remember(productsFiltered) {
+        productsFiltered.filterValues {
+            (getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) < (if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
+        }.toList().groupBy {
+            categories.firstOrNull { category -> it.second.category == category.id }?.categoryName ?: "No Category"
         }
     }
 
@@ -333,7 +308,7 @@ fun ProductScreenContent(
                 }
             }
 
-            if (critical.value.isNotEmpty()) {
+            if (critical.isNotEmpty()) {
                 stickyHeader {
                     Column(modifier = Modifier
                         .background(color = MaterialTheme.colors.surface)
@@ -344,7 +319,12 @@ fun ProductScreenContent(
                     Divider()
                 }
 
-                items(items = critical.value) { it ->
+                items(
+                    items = critical,
+                    key = {
+                        it.first
+                    }
+                ) {
                     Log.d("id", products.toString())
                     Column {
                         Products(product = it.second, supplier = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier", quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, view = { view.invoke(it.first) })
@@ -353,18 +333,23 @@ fun ProductScreenContent(
                 }
             }
 
-            if (reorder.value.isNotEmpty()) {
+            if (reorder.isNotEmpty()) {
                 stickyHeader {
                     Column(modifier = Modifier
                         .background(color = MaterialTheme.colors.surface)
                         .fillMaxWidth()
                         .padding(16.dp)) {
                         Text(text = "Under Reorder Point", fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
+                        Divider()
                     }
-                    Divider()
                 }
 
-                items(items = reorder.value) { it ->
+                items(
+                    items = reorder,
+                    key = {
+                        it.first
+                    }
+                ) {
                     Log.d("id", products.toString())
                     Column {
                         Products(product = it.second, supplier = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier", quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, view = { view.invoke(it.first) })
@@ -373,42 +358,30 @@ fun ProductScreenContent(
                 }
             }
 
-            if (default.value.isNotEmpty()) {
-                stickyHeader {
-                    Column(modifier = Modifier
-                        .background(color = MaterialTheme.colors.surface)
-                        .fillMaxWidth()
-                        .padding(16.dp)) {
-                        Text(text = "No Category", fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
-                    }
-                    Divider()
-                }
-
-                items(items = default.value) { it ->
-                    Log.d("id", products.toString())
-                    Column {
-                        Products(product = it.second, supplier = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier", quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, view = { view.invoke(it.first) })
+            if (productsInCategories.isNotEmpty()) {
+                productsInCategories.toList().sortedWith(
+                    comparator = compareBy<Pair<String, List<Pair<String, Product>>>> { it.first != "No Category" }.thenBy { it.first.uppercase() }).forEach {
+                    stickyHeader {
+                        Column(modifier = Modifier
+                            .background(color = MaterialTheme.colors.surface)
+                            .fillMaxWidth()
+                            .padding(16.dp)) {
+                            Text(text = it.first, fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
+                        }
                         Divider()
                     }
-                }
-            }
 
-            for (category in productsInCategories.value) {
-                stickyHeader {
-                    Column(modifier = Modifier
-                        .background(color = MaterialTheme.colors.surface)
-                        .fillMaxWidth()
-                        .padding(16.dp)) {
-                        Text(text = category.key.categoryName, fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
-                    }
-                    Divider()
-                }
-
-                items(items = category.value) { it ->
-                    Log.d("id", products.toString())
-                    Column {
-                        Products(product = it.second, supplier = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier", quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, view = { view.invoke(it.first) })
-                        Divider()
+                    items(
+                        items = it.second.sortedBy { product -> product.second.productName },
+                        key = { id ->
+                            id.first
+                        }
+                    ) {
+                        Log.d("id", products.toString())
+                        Column {
+                            Products(product = it.second, supplier = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier", quantity = if (branchId == "Default") it.second.stock.values.sum() else it.second.stock[branchId] ?: 0, view = { view.invoke(it.first) })
+                            Divider()
+                        }
                     }
                 }
             }
@@ -437,7 +410,13 @@ fun Products(
 fun getCriticalLevel(
     product: Product
 ): Double {
-    val safetyStock = ((product.transaction.monthlySales.values.maxOrNull() ?: 0).toDouble() - (product.transaction.monthlySales.values.minOrNull() ?: 0)) / 2
+    val safetyStock = ((product.transaction.monthlySales.values.maxOrNull() ?: 0).toDouble() - (product.transaction.monthlySales.values.let {
+        if (it.minOrNull() != null) {
+            if (it.min() == it.max()) 0 else it.min()
+        } else {
+            0
+        }
+    })) / 2
     return ((product.transaction.monthlySales.values.sum().toDouble() / 12) + safetyStock)
 }
 
@@ -446,5 +425,11 @@ fun getReorderPoint(
 ): Double {
     val lastEditDate = Instant.ofEpochMilli(product.lastEdit as Long).atZone(ZoneId.systemDefault()).toLocalDate()
     val firstStep = product.transaction.monthlySales.values.sum().toDouble() / if (lastEditDate.isLeapYear) 366 else 365
-    return (firstStep * product.leadTime) + ((product.transaction.monthlySales.values.maxOrNull() ?: 0) - (product.transaction.monthlySales.values.minOrNull() ?: 0))
+    return (firstStep * product.leadTime) + ((product.transaction.monthlySales.values.maxOrNull() ?: 0) - (product.transaction.monthlySales.values.let {
+        if (it.minOrNull() != null) {
+            if (it.min() == it.max()) 0 else it.min()
+        } else {
+            0
+        }
+    }))
 }

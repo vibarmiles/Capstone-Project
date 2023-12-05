@@ -3,7 +3,7 @@ package com.example.capstoneproject.user_management.ui.users
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -43,7 +43,7 @@ fun UserScreen(
     val size = users.filterNot { it.value.userLevel == if (userAccountDetails.value.userLevel == UserLevel.Admin) UserLevel.Employee else UserLevel.Admin }.size
     val listOfUsers = remember(userViewModel.update) {
         derivedStateOf {
-            users.toList().sortedBy { pair -> pair.second.userLevel }
+            users.toList().filterNot { it.second.userLevel == if (userAccountDetails.value.userLevel == UserLevel.Admin) UserLevel.Employee else UserLevel.Admin }.sortedWith(comparator = compareBy<Pair<String, User>> { it.second.userLevel }.thenBy { it.second.lastName.uppercase() })
         }
     }
     lateinit var user: Pair<String, User>
@@ -69,8 +69,10 @@ fun UserScreen(
                 Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered users"; 1 -> "1 user is entered"; else -> "$size users are entered"})
                 Divider()
                 LazyColumn(modifier = Modifier.padding(paddingValues)) {
-                    itemsIndexed(listOfUsers.value.filterNot { it.second.userLevel == if (userAccountDetails.value.userLevel == UserLevel.Admin) UserLevel.Employee else UserLevel.Admin }.sortedBy { it.second.lastName.uppercase() }) {
-                            _, it ->
+                    items(
+                        items = listOfUsers.value,
+                        key = { it.first }
+                    ) {
                         Column {
                             UserListItem(user = it.second, edit = { edit.invoke(it.first) }) {
                                 user = it

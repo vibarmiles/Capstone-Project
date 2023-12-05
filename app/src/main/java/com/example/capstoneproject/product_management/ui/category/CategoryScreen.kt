@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,16 +15,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
@@ -48,6 +43,9 @@ fun CategoryScreen(
     userViewModel: UserViewModel
 ) {
     val categories = viewModel.getAll().observeAsState(listOf())
+    val categoriesList = remember(categories.value) {
+        categories.value.sortedBy { it.categoryName.uppercase() }
+    }
     val state by viewModel.result.collectAsState()
     var category = Category()
     val size = categories.value.size
@@ -83,7 +81,12 @@ fun CategoryScreen(
                 Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered categories"; 1 -> "1 category is entered"; else -> "$size categories are entered"})
                 Divider()
                 LazyColumn(modifier = Modifier.padding(paddingValues)) {
-                    items(items = categories.value.sortedBy { it.categoryName.uppercase() }) { item ->
+                    items(
+                        items = categoriesList,
+                        key = {
+                            it.id
+                        }
+                    ) { item ->
                         Column {
                             CategoryListItem(item.categoryName, edit = {
                                 showDialog = true

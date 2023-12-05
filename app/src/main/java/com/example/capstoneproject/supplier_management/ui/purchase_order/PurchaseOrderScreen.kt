@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -45,6 +46,12 @@ fun PurchaseOrderScreen(
     view: (String) -> Unit
 ) {
     val purchaseOrders = purchaseOrderViewModel.getAll().observeAsState(listOf())
+    val purchaseOrdersList = remember(purchaseOrders.value) {
+        purchaseOrders.value.groupBy {
+            val localDate = if (it.date != null) Instant.ofEpochMilli(it.date.time).atZone(ZoneId.systemDefault()).toLocalDate() else LocalDate.now()
+            localDate!!
+        }
+    }
     val firstLaunch = remember { mutableStateOf(true) }
     val context = LocalContext.current
     val state = purchaseOrderViewModel.result.collectAsState()
@@ -67,32 +74,25 @@ fun PurchaseOrderScreen(
                 CircularProgressIndicator()
             }
         } else {
-            Column(modifier = Modifier
-                .padding(paddingValues)) {
-
+            Column(modifier = Modifier.padding(paddingValues)) {
                 LazyColumn {
-                    var currentDate = LocalDate.now().plusDays(1)
-                    purchaseOrders.value.sortedByDescending { document -> document.date }.forEach { po ->
-                        val localDateTime = if (po.date != null) Instant.ofEpochMilli(po.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
-                        val date = localDateTime.toLocalDate()
-                        val time = localDateTime.toLocalTime()
-
-                        if (currentDate != date) {
-                            currentDate = date
-
-                            stickyHeader {
-                                Column(modifier = Modifier
+                    purchaseOrdersList.toList().sortedByDescending { document -> document.first }.forEach { document ->
+                        stickyHeader {
+                            Column(
+                                modifier = Modifier
                                     .background(color = MaterialTheme.colors.surface)
                                     .fillMaxWidth()
                                     .padding(16.dp)) {
-                                    Text(text = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).format(date), fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
-                                }
-                                Divider()
+                                Text(text = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).format(document.first), fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
                             }
+                            Divider()
                         }
 
-                        item {
-                            PurchaseOrderItem(time = time, purchaseOrder = po, goto = { view.invoke(it) })
+                        items(
+                            items = document.second,
+                            key = { it.id }
+                        ) {
+                            PurchaseOrderItem(purchaseOrder = it, goto = { id -> view.invoke(id) })
                         }
                     }
 
@@ -136,10 +136,12 @@ fun PurchaseOrderScreen(
 
 @Composable
 fun PurchaseOrderItem(
-    time: LocalTime,
     purchaseOrder: PurchaseOrder,
     goto: (String) -> Unit
 ) {
+    val time = remember {
+        purchaseOrder.date!!.toInstant().atZone(ZoneId.systemDefault()).toLocalTime()
+    }
     androidx.compose.material3.ListItem(
         colors = ProjectListItemColors(),
         modifier = Modifier.clickable { goto.invoke(purchaseOrder.id) },

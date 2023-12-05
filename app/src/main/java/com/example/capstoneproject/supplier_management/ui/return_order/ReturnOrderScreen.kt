@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -44,6 +45,12 @@ fun ReturnOrderScreen(
     val returnOrders = returnOrderViewModel.getAll().observeAsState(listOf())
     val firstLaunch = remember { mutableStateOf(true) }
     val state = returnOrderViewModel.result.collectAsState()
+    val returnOrdersList = remember(returnOrders.value) {
+        returnOrders.value.groupBy {
+            val localDate = if (it.date != null) Instant.ofEpochMilli(it.date.time).atZone(ZoneId.systemDefault()).toLocalDate() else LocalDate.now()
+            localDate!!
+        }
+    }
     val context = LocalContext.current
 
     Scaffold(
@@ -68,34 +75,29 @@ fun ReturnOrderScreen(
                 .padding(paddingValues)) {
 
                 LazyColumn {
-                    var currentDate = LocalDate.now().plusDays(1)
-                    returnOrders.value.sortedByDescending { document -> document.date }.forEach { ro ->
-                        val localDateTime = if (ro.date != null) Instant.ofEpochMilli(ro.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
-                        val date = localDateTime.toLocalDate()
-                        val time = localDateTime.toLocalTime()
-
-                        if (currentDate != date) {
-                            currentDate = date
-
-                            stickyHeader {
-                                Column(modifier = Modifier
+                    returnOrdersList.toList().sortedByDescending { document -> document.first }.forEach { document ->
+                        stickyHeader {
+                            Column(
+                                modifier = Modifier
                                     .background(color = MaterialTheme.colors.surface)
                                     .fillMaxWidth()
                                     .padding(16.dp)) {
-                                    Text(
-                                        text = DateTimeFormatter.ofLocalizedDate(
-                                            FormatStyle.FULL
-                                        ).format(date),
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colors.secondary
-                                    )
-                                }
-                                Divider()
+                                Text(
+                                    text = DateTimeFormatter.ofLocalizedDate(
+                                        FormatStyle.FULL
+                                    ).format(document.first),
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colors.secondary
+                                )
                             }
+                            Divider()
                         }
 
-                        item {
-                            ReturnOrderItem(time = time, returnOrder = ro, goto = { view.invoke(it) })
+                        items(
+                            items = document.second,
+                            key = { it.id }
+                        ) {
+                            ReturnOrderItem(returnOrder = it, goto = { id -> view.invoke(id) })
                         }
                     }
 
@@ -134,10 +136,12 @@ fun ReturnOrderScreen(
 
 @Composable
 fun ReturnOrderItem(
-    time: LocalTime,
     returnOrder: ReturnOrder,
     goto: (String) -> Unit
 ) {
+    val time = remember {
+        returnOrder.date!!.toInstant().atZone(ZoneId.systemDefault()).toLocalTime()
+    }
     androidx.compose.material3.ListItem(
         colors = ProjectListItemColors(),
         modifier = Modifier.clickable { goto.invoke(returnOrder.id) },

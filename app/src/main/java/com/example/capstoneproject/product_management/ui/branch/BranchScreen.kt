@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -38,11 +37,14 @@ fun BranchScreen(
     add: () -> Unit,
     edit: (Branch) -> Unit
 ) {
-    val branches by viewModel.getAll().observeAsState(listOf())
+    val branches = viewModel.getAll().observeAsState(listOf())
+    val branchesList = remember(branches.value) {
+        branches.value.sortedBy { it.name.uppercase() }
+    }
     lateinit var branch: Branch
     var showDeleteDialog by remember { mutableStateOf(false) }
     val state by viewModel.result.collectAsState()
-    val size = branches.size
+    val size = branchesList.size
 
     Scaffold(
         topBar = {
@@ -66,7 +68,12 @@ fun BranchScreen(
                 Text(modifier = Modifier.padding(16.dp), text = when (size) { 0 -> "There are no entered branches"; 1 -> "1 branch is entered"; else -> "$size branches are entered"})
                 Divider()
                 LazyColumn(modifier = Modifier.padding(paddingValues)) {
-                    items(items = branches.sortedBy { it.name.uppercase() }) { item ->
+                    items(
+                        items = branchesList,
+                        key = {
+                            it.id
+                        }
+                    ) { item ->
                         Column {
                             BranchListItem(branch = item, edit = {
                                 edit.invoke(item)

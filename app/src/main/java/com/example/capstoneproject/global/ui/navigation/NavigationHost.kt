@@ -416,7 +416,8 @@ fun NavigationHost(
                 scope = scope,
                 scaffoldState = scaffoldState,
                 productViewModel = productViewModel,
-                contactViewModel = contactViewModel
+                contactViewModel = contactViewModel,
+                userAccountDetails = userAccountDetails.value
             )
         }
 

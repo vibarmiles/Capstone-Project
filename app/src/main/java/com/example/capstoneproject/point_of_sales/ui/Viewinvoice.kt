@@ -78,6 +78,7 @@ fun ViewInvoice(
                         Text(text = "Branch: ${branchViewModel.getBranch(id = invoice.branchId)?.name}")
                         Text(text = "Employee: ${userViewModel.getUserDetails(userId = invoice.userId)?.let { it.lastName + ", " + it.firstName }}")
                         Text(text = "Employee ID: ${invoice.userId}")
+                        Text(text = "Payment Type: ${invoice.payment}")
                         Divider()
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(text = "Item", modifier = Modifier.weight(1f))

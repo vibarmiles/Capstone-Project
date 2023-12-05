@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -47,9 +48,15 @@ fun POSScreen(
     view: (String) -> Unit
 ) {
     val invoices = posViewModel.getAll().observeAsState(listOf())
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
+    val invoicesList = remember(invoices.value) {
+        invoices.value.filter { if (userAccountDetails.value.userLevel == UserLevel.Employee) userAccountDetails.value.branchId == it.branchId else true }.groupBy {
+            val localDate = if (it.date != null) Instant.ofEpochMilli(it.date.time).atZone(ZoneId.systemDefault()).toLocalDate() else LocalDate.now()
+            localDate!!
+        }
+    }
     val state = posViewModel.result.collectAsState()
     val firstLaunch = remember { mutableStateOf(true) }
-    val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val context = LocalContext.current
 
     Scaffold(
@@ -72,34 +79,29 @@ fun POSScreen(
             Column(modifier = Modifier
                 .padding(paddingValues)) {
                 LazyColumn {
-                    var currentDate = LocalDate.now().plusDays(1)
-                    invoices.value.filter { if (userAccountDetails.value.userLevel != UserLevel.Employee) true else it.branchId == userAccountDetails.value.branchId }.sortedByDescending { document -> document.date }.forEach { invoice ->
-                        val localDateTime = if (invoice.date != null) Instant.ofEpochMilli(invoice.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
-                        val date = localDateTime.toLocalDate()
-                        val time = localDateTime.toLocalTime()
-
-                        if (currentDate != date) {
-                            currentDate = date
-
-                            stickyHeader {
-                                Column(modifier = Modifier
+                    invoicesList.toList().sortedByDescending { document -> document.first }.forEach { document ->
+                        stickyHeader {
+                            Column(
+                                modifier = Modifier
                                     .background(color = MaterialTheme.colors.surface)
                                     .fillMaxWidth()
                                     .padding(16.dp)) {
-                                    Text(
-                                        text = DateTimeFormatter.ofLocalizedDate(
-                                            FormatStyle.FULL
-                                        ).format(date),
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colors.secondary
-                                    )
-                                }
-                                Divider()
+                                Text(
+                                    text = DateTimeFormatter.ofLocalizedDate(
+                                        FormatStyle.FULL
+                                    ).format(document.first),
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colors.secondary
+                                )
                             }
+                            Divider()
                         }
 
-                        item {
-                            POSItem(time = time, invoice = invoice, branchViewModel = branchViewModel, goto = { view.invoke(it) })
+                        items(
+                            items = document.second,
+                            key = { it.id }
+                        ) {
+                            POSItem(invoice = it, branchViewModel = branchViewModel, goto = { id -> view.invoke(id) })
                         }
                     }
 
@@ -141,11 +143,13 @@ fun POSScreen(
 
 @Composable
 fun POSItem(
-    time: LocalTime,
     invoice: Invoice,
     branchViewModel: BranchViewModel,
     goto: (String) -> Unit
 ) {
+    val time = remember {
+        invoice.date!!.toInstant().atZone(ZoneId.systemDefault()).toLocalTime()
+    }
     Column {
         androidx.compose.material3.ListItem(
             modifier = Modifier
@@ -153,21 +157,29 @@ fun POSItem(
                 .clickable { goto.invoke(invoice.id) },
             colors = ProjectListItemColors(),
             headlineContent = {
-                Column {
-                    Text(text = buildAnnotatedString {
+                Text(
+                    text = buildAnnotatedString {
                         if (invoice.invoiceType == InvoiceType.SALE) {
                             append("₱${String.format("%.2f", invoice.products.values.sumOf { it.quantity * it.price })}")
                         } else {
                             withStyle(
-                                style = SpanStyle(color = MaterialTheme.colors.error,)
+                                style = SpanStyle(color = MaterialTheme.colors.error)
                             ) {
                                 append("₱${String.format("%.2f", invoice.products.values.sumOf { it.quantity * it.price })}")
                             }
                         }
-                    }, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm a")))
-                    Text(text = branchViewModel.getBranch(invoice.branchId)?.name ?: "Unknown Branch")
-                }
+                    },
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
+            supportingContent = {
+                Text(text = "${time.format(DateTimeFormatter.ofPattern("hh:mm a"))} in ${branchViewModel.getBranch(invoice.branchId)?.name ?: "Unknown Branch"}")
+            },
+            trailingContent = {
+                Text(text = "(${invoice.payment})", fontWeight = FontWeight.Bold)
             }
         )
         Divider()

@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -22,7 +23,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
-import androidx.core.graphics.toColor
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -45,6 +45,12 @@ fun TransferOrderScreen(
     view: (String) -> Unit
 ) {
     val transferOrders = transferOrderViewModel.getAll().observeAsState(listOf())
+    val transferOrdersList = remember(transferOrders.value) {
+        transferOrders.value.groupBy {
+            val localDate = if (it.date != null) Instant.ofEpochMilli(it.date.time).atZone(ZoneId.systemDefault()).toLocalDate() else LocalDate.now()
+            localDate!!
+        }
+    }
     val firstLaunch = remember { mutableStateOf(true) }
     val context = LocalContext.current
     val state = transferOrderViewModel.result.collectAsState()
@@ -70,38 +76,30 @@ fun TransferOrderScreen(
             Column(modifier = Modifier
                 .padding(paddingValues)) {
                 LazyColumn {
-                    var currentDate = LocalDate.now().plusDays(1)
-                    transferOrders.value.sortedByDescending { document -> document.date }.forEach { to ->
-                        val localDateTime = if (to.date != null) Instant.ofEpochMilli(to.date.time).atZone(ZoneId.systemDefault()).toLocalDateTime() else LocalDateTime.now()
-                        val date = localDateTime.toLocalDate()
-                        val time = localDateTime.toLocalTime()
-
-                        if (currentDate != date) {
-                            currentDate = date
-
-                            stickyHeader {
-                                Column(
-                                    modifier = Modifier
-                                        .background(color = MaterialTheme.colors.surface)
-                                        .fillMaxWidth()
-                                        .padding(16.dp)
-                                ) {
-                                    Text(
-                                        text = DateTimeFormatter.ofLocalizedDate(
-                                            FormatStyle.FULL
-                                        ).format(date),
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colors.secondary
-                                    )
-                                }
-                                Divider()
+                    transferOrdersList.toList().sortedByDescending { document -> document.first }.forEach { document ->
+                        stickyHeader {
+                            Column(
+                                modifier = Modifier
+                                    .background(color = MaterialTheme.colors.surface)
+                                    .fillMaxWidth()
+                                    .padding(16.dp)) {
+                                Text(
+                                    text = DateTimeFormatter.ofLocalizedDate(
+                                        FormatStyle.FULL
+                                    ).format(document.first),
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colors.secondary
+                                )
                             }
+                            Divider()
                         }
 
-                        item {
+                        items(
+                            items = document.second,
+                            key = { it.id }
+                        ) {
                             TransferOrderItem(
-                                time = time,
-                                transferOrder = to,
+                                transferOrder = it,
                                 branchViewModel = branchViewModel,
                                 goto = { view.invoke(it) })
                         }
@@ -145,11 +143,13 @@ fun TransferOrderScreen(
 
 @Composable
 fun TransferOrderItem(
-    time: LocalTime,
     transferOrder: TransferOrder,
     branchViewModel: BranchViewModel,
     goto: (String) -> Unit
 ) {
+    val time = remember {
+        transferOrder.date!!.toInstant().atZone(ZoneId.systemDefault()).toLocalTime()
+    }
     Column(
         modifier = Modifier.clickable { goto.invoke(transferOrder.id) }
     ) {
