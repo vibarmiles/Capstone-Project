@@ -1,5 +1,6 @@
 package com.example.capstoneproject.reports_management.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,10 +23,11 @@ import kotlin.math.abs
 @Composable
 fun MonthlySales(
     date: LocalDate,
-    products: List<Product>
+    products: List<Product>,
+    showData: (String) -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items (11) { month ->
+        items (12) { month ->
             val totalSales = if (month == 0) {
                 products.sumOf { it.sellingPrice * it.transaction.soldThisMonth }
             } else {
@@ -34,11 +36,16 @@ fun MonthlySales(
             val previousTotalSales = totalSalesInMonth(date.minusMonths(month.toLong() + 1).month, products)
             val percent = (((totalSales - previousTotalSales) / previousTotalSales)) * 100
 
-            Column {
+            Column(
+                modifier = Modifier
+                    .clickable {
+                        showData.invoke(date.minusMonths(month.toLong()).month.name)
+                    }
+            ) {
                 ListItem(
                     headlineContent = {
                         Text(
-                            text = "₱${String.format("%.2f", totalSales)}",
+                            text = "₱${String.format("%,.2f", totalSales)}",
                             fontWeight = FontWeight.Bold
                         )
                     },
@@ -48,7 +55,7 @@ fun MonthlySales(
                     trailingContent = {
                         if (previousTotalSales > 0) {
                             Text(
-                                text = String.format("%.2f", abs(percent)),
+                                text = String.format("%,.2f", abs(percent)) + "%",
                                 color = if (percent < 0) MaterialTheme.colors.error else if (percent > 0) Color(ColorUtils.blendARGB(Color.Green.toArgb(), Color.Black.toArgb(), 0.2f)) else MaterialTheme.colors.onSurface,
                                 fontWeight = FontWeight.Bold
                             )

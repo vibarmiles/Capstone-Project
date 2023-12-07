@@ -82,12 +82,12 @@ fun UserForm(
             .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ExposedDropdownMenuBox(expanded = expandedUsers, onExpandedChange = { expandedUsers = !expandedUsers }) {
-                OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedUsers) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = userLevel.name, onValueChange = {  }, readOnly = true, label = { Text(text = buildAnnotatedString { append(text = stringResource(id = R.string.user_level)); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) })
+            ExposedDropdownMenuBox(expanded = expandedUsers && userAccountDetails.value.id != userId, onExpandedChange = { expandedUsers = !expandedUsers }) {
+                OutlinedTextField(enabled = userAccountDetails.value.id != userId, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedUsers && userAccountDetails.value.id != userId) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = userLevel.name, onValueChange = {  }, readOnly = true, label = { Text(text = buildAnnotatedString { append(text = stringResource(id = R.string.user_level)); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) })
 
                 DropdownMenu(modifier = Modifier
                     .exposedDropdownSize()
-                    .fillMaxWidth(), expanded = expandedUsers, onDismissRequest = { expandedUsers = false }) {
+                    .fillMaxWidth(), expanded = expandedUsers && userAccountDetails.value.id != userId, onDismissRequest = { expandedUsers = false }) {
                     userLevels.forEach {
                         androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.name) }, onClick = {
                             userLevel = it

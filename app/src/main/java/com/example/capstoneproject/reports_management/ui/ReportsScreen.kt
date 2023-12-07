@@ -82,7 +82,7 @@ fun ReportsScreen(
                 when (it) {
                     0 -> FSNAnalysis(products = productsWithInventoryTurnoverRatio, suppliers = suppliers.value)
                     1 -> TurnoverRatio(products = productsWithInventoryTurnoverRatio, suppliers = suppliers.value)
-                    2 -> MonthlySales(date = date, products = products.values.toList())
+                    2 -> MonthlySales(date = date, products = products.values.toList(), showData = {  })
                 }
             }
         }

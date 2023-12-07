@@ -50,7 +50,6 @@ import kotlinx.coroutines.CoroutineScope
 import java.time.Instant
 import java.time.ZoneId
 
-
 enum class Direction {
     LEFT, RIGHT
 }
@@ -192,7 +191,7 @@ fun TabLayout(
         tabs.forEachIndexed { index, tab ->
             val map = remember(productUpdate) {
                 products.filter { product ->
-                    (product.stock[tab.id] ?: 0) <= getCriticalLevel(product = product)
+                    (product.stock[tab.id] ?: 0) <= (getCriticalLevel(product = product) / tabs.size)
                 }
             }
 
@@ -246,19 +245,19 @@ fun ProductScreenContent(
         }
     }
 
-    val critical = remember(productsFiltered) {
+    val critical = remember(productsFiltered, productUpdate, branchId) {
         productsFiltered.filterValues {
             (getCriticalLevel(product = it) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
         }.toList()
     }
 
-    val reorder = remember(productsFiltered) {
+    val reorder = remember(productsFiltered, productUpdate, branchId) {
         productsFiltered.filterValues {
             ((getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0) && ((getCriticalLevel(product = it) / if (branchId == "Default") 1 else numberOfBranches) < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
         }.toList()
     }
 
-    val productsInCategories = remember(productsFiltered) {
+    val productsInCategories = remember(productsFiltered, productUpdate, branchId) {
         productsFiltered.filterValues {
             (getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) < (if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
         }.toList().groupBy {

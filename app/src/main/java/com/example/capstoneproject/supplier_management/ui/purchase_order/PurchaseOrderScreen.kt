@@ -147,7 +147,7 @@ fun PurchaseOrderItem(
         modifier = Modifier.clickable { goto.invoke(purchaseOrder.id) },
         headlineContent = {
             Column {
-                Text(text = "₱${String.format("%.2f", purchaseOrder.products.values.sumOf { (it.price * it.quantity) })}", fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = "₱${String.format("%,.2f", purchaseOrder.products.values.sumOf { (it.price * it.quantity) })}", fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm a")))
             }
         },
