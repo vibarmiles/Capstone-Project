@@ -1,6 +1,7 @@
 package com.example.capstoneproject.product_management.ui.category
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,6 +12,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -142,18 +144,49 @@ fun CategoryListItem(
     edit: () -> Unit,
     delete: () -> Unit
 ) {
-    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = { Box(modifier = Modifier
-        .size(50.dp)
-        .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Icon(imageVector = Icons.Filled.Bookmark, contentDescription = null, tint = Color.White) } }, headlineContent = { Text(text = category, fontWeight = FontWeight.Bold) }, trailingContent = {
-        Row {
-            IconButton(onClick = edit) {
-                Icon(Icons.Filled.Edit, contentDescription = null)
+    var expanded: Boolean by remember { mutableStateOf(false) }
+    androidx.compose.material3.ListItem(
+        modifier = Modifier.clickable { edit.invoke() },
+        colors = ProjectListItemColors(),
+        leadingContent = {
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .background(color = Purple500, shape = CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Bookmark,
+                    contentDescription = null,
+                    tint = Color.White
+                )
             }
-            IconButton(onClick = delete) {
-                Icon(Icons.Filled.Delete, contentDescription = null)
+        },
+        headlineContent = { Text(text = category, fontWeight = FontWeight.Bold) },
+        trailingContent = {
+            IconButton(
+                onClick = { expanded = !expanded },
+                content = {
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = null
+                    )
+                }
+            )
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                androidx.compose.material3.DropdownMenuItem(
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Outlined.Block, contentDescription = null)
+                    },
+                    text = { Text(text = "Set Inactive") },
+                    onClick = { expanded = false; delete.invoke() }
+                )
             }
         }
-    })
+    )
 }
 
 @Composable

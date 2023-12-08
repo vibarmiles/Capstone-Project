@@ -10,8 +10,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -67,22 +65,24 @@ fun ReportsScreen(
                     .height(50.dp)
                     .fillMaxWidth()
             ) {
-                Tab(selected = pagerState.currentPage == 0, onClick = { scope.launch { pagerState.animateScrollToPage(0) } }) {
+                Tab(
+                    selected = pagerState.currentPage == 0,
+                    onClick = { scope.launch { pagerState.animateScrollToPage(0) } }
+                ) {
                     Text(text = "FSN Analysis")
                 }
-                Tab(selected = pagerState.currentPage == 1, onClick = { scope.launch { pagerState.animateScrollToPage(1) } }) {
-                    Text(text = "Turnover Ratio")
-                }
-                Tab(selected = pagerState.currentPage == 2, onClick = { scope.launch { pagerState.animateScrollToPage(2) } }) {
+                Tab(
+                    selected = pagerState.currentPage == 2,
+                    onClick = { scope.launch { pagerState.animateScrollToPage(1) } }
+                ) {
                     Text(text = "Monthly Sales")
                 }
             }
 
-            HorizontalPager(pageCount = 3, state = pagerState) {
+            HorizontalPager(pageCount = 2, state = pagerState) {
                 when (it) {
                     0 -> FSNAnalysis(products = productsWithInventoryTurnoverRatio, suppliers = suppliers.value)
-                    1 -> TurnoverRatio(products = productsWithInventoryTurnoverRatio, suppliers = suppliers.value)
-                    2 -> MonthlySales(date = date, products = products.values.toList(), showData = {  })
+                    1 -> MonthlySales(date = date, products = products.values.toList(), showData = {  })
                 }
             }
         }

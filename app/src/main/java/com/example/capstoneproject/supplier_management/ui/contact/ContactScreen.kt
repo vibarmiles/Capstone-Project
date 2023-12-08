@@ -1,5 +1,6 @@
 package com.example.capstoneproject.supplier_management.ui.contact
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,8 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContactPhone
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material3.ListItem
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -57,7 +57,11 @@ fun ContactScreen(
                 CircularProgressIndicator()
             }
         } else {
-            ContactScreenContent(paddingValues = paddingValues, contacts = contacts.value.sortedBy { it.name.uppercase() }, edit = { edit.invoke(it) }) {
+            ContactScreenContent(
+                paddingValues = paddingValues,
+                contacts = contacts.value.sortedBy { it.name.uppercase() },
+                edit = { edit.invoke(it) }
+            ) {
                 contact = it
                 showDeleteDialog = true
             }
@@ -100,13 +104,49 @@ fun ContactScreenContent(
             ) {
                 var expanded: Boolean by remember { mutableStateOf(false) }
                 Column {
-                    ListItem(colors = ProjectListItemColors(), leadingContent = { Icon(modifier = Modifier.size(50.dp), imageVector = Icons.Filled.ContactPhone, contentDescription = null) }, headlineContent = { Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = it.contact, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
-                        IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
-                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                            androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Contact") }, onClick = { expanded = false; edit.invoke(it) })
-                            androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Contact") }, onClick = { expanded = false; delete.invoke(it) })
+                    ListItem(
+                        modifier = Modifier.clickable { edit(it) },
+                        colors = ProjectListItemColors(),
+                        leadingContent = {
+                            Icon(
+                                modifier = Modifier.size(50.dp),
+                                imageVector = Icons.Filled.ContactPhone,
+                                contentDescription = null
+                            )
+                        },
+                        headlineContent = {
+                            Text(
+                                text = it.name,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        supportingContent = {
+                            Text(
+                                text = it.contact,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
+                        trailingContent = {
+                            IconButton(
+                                onClick = { expanded = !expanded },
+                                content = {
+                                    Icon(
+                                        imageVector = Icons.Filled.MoreVert,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Block, contentDescription = null) }, text = { Text(text = "Set Inactive") }, onClick = { expanded = false; delete.invoke(it) })
+                            }
                         }
-                    })
+                    )
                     Divider()
                 }
             }

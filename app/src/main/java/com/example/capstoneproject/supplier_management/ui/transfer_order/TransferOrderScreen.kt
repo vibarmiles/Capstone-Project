@@ -101,7 +101,7 @@ fun TransferOrderScreen(
                             TransferOrderItem(
                                 transferOrder = it,
                                 branchViewModel = branchViewModel,
-                                goto = { view.invoke(it) })
+                                goto = { id -> view.invoke(id) })
                         }
                     }
 
