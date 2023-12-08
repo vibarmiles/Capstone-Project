@@ -60,15 +60,6 @@ class TransferOrderViewModel : ViewModel() {
         }
     }
 
-    fun delete(transferOrder: TransferOrder) {
-        viewModelScope.launch(Dispatchers.IO) {
-            transferOrderRepository.delete(transferOrder = transferOrder) {
-                    result ->
-                resultState.update { result }
-            }
-        }
-    }
-
     private fun updateLoadingState() {
         isLoading.value = false
     }

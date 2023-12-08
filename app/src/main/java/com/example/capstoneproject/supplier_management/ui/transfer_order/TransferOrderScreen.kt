@@ -95,7 +95,7 @@ fun TransferOrderScreen(
                         }
 
                         items(
-                            items = document.second,
+                            items = document.second.sortedByDescending { it.date },
                             key = { it.id }
                         ) {
                             TransferOrderItem(
@@ -147,8 +147,8 @@ fun TransferOrderItem(
     branchViewModel: BranchViewModel,
     goto: (String) -> Unit
 ) {
-    val time = remember {
-        transferOrder.date!!.toInstant().atZone(ZoneId.systemDefault()).toLocalTime()
+    val time = remember(transferOrder) {
+        transferOrder.date?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalTime()
     }
     Column(
         modifier = Modifier.clickable { goto.invoke(transferOrder.id) }
@@ -164,7 +164,7 @@ fun TransferOrderItem(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm a")))
+                    Text(text = (time ?: LocalTime.now()).format(DateTimeFormatter.ofPattern("hh:mm a")))
                 }
             },
             supportingContent = {

@@ -89,7 +89,7 @@ fun PurchaseOrderScreen(
                         }
 
                         items(
-                            items = document.second,
+                            items = document.second.sortedByDescending { it.date },
                             key = { it.id }
                         ) {
                             PurchaseOrderItem(purchaseOrder = it, goto = { id -> view.invoke(id) })
@@ -139,8 +139,8 @@ fun PurchaseOrderItem(
     purchaseOrder: PurchaseOrder,
     goto: (String) -> Unit
 ) {
-    val time = remember {
-        purchaseOrder.date!!.toInstant().atZone(ZoneId.systemDefault()).toLocalTime()
+    val time = remember(purchaseOrder) {
+        purchaseOrder.date?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalTime()
     }
     androidx.compose.material3.ListItem(
         colors = ProjectListItemColors(),
@@ -148,7 +148,7 @@ fun PurchaseOrderItem(
         headlineContent = {
             Column {
                 Text(text = "₱${String.format("%,.2f", purchaseOrder.products.values.sumOf { (it.price * it.quantity) })}", fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm a")))
+                Text(text = (time ?: LocalTime.now()).format(DateTimeFormatter.ofPattern("hh:mm a")))
             }
         },
         trailingContent = {

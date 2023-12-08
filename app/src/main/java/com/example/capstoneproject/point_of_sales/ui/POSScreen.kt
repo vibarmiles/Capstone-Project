@@ -98,7 +98,7 @@ fun POSScreen(
                         }
 
                         items(
-                            items = document.second,
+                            items = document.second.sortedByDescending { it.date },
                             key = { it.id }
                         ) {
                             POSItem(invoice = it, branchViewModel = branchViewModel, goto = { id -> view.invoke(id) })
@@ -147,8 +147,8 @@ fun POSItem(
     branchViewModel: BranchViewModel,
     goto: (String) -> Unit
 ) {
-    val time = remember {
-        invoice.date!!.toInstant().atZone(ZoneId.systemDefault()).toLocalTime()
+    val time = remember(invoice) {
+        invoice.date?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalTime()
     }
     Column {
         androidx.compose.material3.ListItem(
@@ -176,7 +176,7 @@ fun POSItem(
                 )
             },
             supportingContent = {
-                Text(text = "${time.format(DateTimeFormatter.ofPattern("hh:mm a"))} in ${branchViewModel.getBranch(invoice.branchId)?.name ?: "Unknown Branch"}")
+                Text(text = "${(time ?: LocalTime.now()).format(DateTimeFormatter.ofPattern("hh:mm a"))} in ${branchViewModel.getBranch(invoice.branchId)?.name ?: "Unknown Branch"}")
             },
             trailingContent = {
                 Text(text = "(${invoice.payment})", fontWeight = FontWeight.Bold)

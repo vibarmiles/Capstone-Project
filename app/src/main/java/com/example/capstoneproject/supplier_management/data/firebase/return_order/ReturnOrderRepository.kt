@@ -3,11 +3,13 @@ package com.example.capstoneproject.supplier_management.data.firebase.return_ord
 import androidx.lifecycle.MutableLiveData
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.supplier_management.data.firebase.Status
+import com.google.firebase.firestore.AggregateSource
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
 
 class ReturnOrderRepository : IReturnOrderRepository {
@@ -83,19 +85,26 @@ class ReturnOrderRepository : IReturnOrderRepository {
                 result.invoke(FirebaseResult(result = false, errorMessage = it.message))
             }
         } else {
+            returnOrderCollectionReference.count().get(AggregateSource.SERVER).addOnSuccessListener {
+                if ((it.count + 1) > 6) {
+                    returnOrderCollectionReference.orderBy("date").limit((it.count + 1) - 100).get().addOnSuccessListener { snapshot ->
+                        firestore.runBatch { batch ->
+                            val documents = ro.value?.toMutableList()
+                            for (document in snapshot.toObjects<ReturnOrder>()) {
+                                batch.delete(returnOrderCollectionReference.document(document.id))
+                                documents?.remove(document)
+                            }
+                            ro.value = documents
+                        }
+                    }
+                }
+            }
+
             returnOrderCollectionReference.add(returnOrder).addOnSuccessListener {
                 result.invoke(FirebaseResult(result = true))
             }.addOnFailureListener {
                 result.invoke(FirebaseResult(result = false, errorMessage = it.message))
             }
-        }
-    }
-
-    override fun delete(returnOrder: ReturnOrder, result: (FirebaseResult) -> Unit) {
-        returnOrderCollectionReference.document(returnOrder.id).delete().addOnSuccessListener {
-            result.invoke(FirebaseResult(result = true))
-        }.addOnFailureListener {
-            result.invoke(FirebaseResult(result = false, errorMessage = it.message))
         }
     }
 }

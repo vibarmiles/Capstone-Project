@@ -168,7 +168,7 @@ fun TabLayout(
     productUpdate: Boolean,
     onClick: (Int) -> Unit
 ) {
-    val defaultMap = remember(tabs) { products.filter { product -> product.stock.values.sum() <= getCriticalLevel(product = product) } }
+    val defaultMap = remember(tabs) { products.filter { product -> product.isActive }.filter { product -> product.stock.values.sum() <= getCriticalLevel(product = product) } }
 
     ScrollableTabRow(
         selectedTabIndex = selectedTab,

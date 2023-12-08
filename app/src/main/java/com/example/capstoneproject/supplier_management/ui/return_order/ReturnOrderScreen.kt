@@ -94,7 +94,7 @@ fun ReturnOrderScreen(
                         }
 
                         items(
-                            items = document.second,
+                            items = document.second.sortedByDescending { it.date },
                             key = { it.id }
                         ) {
                             ReturnOrderItem(returnOrder = it, goto = { id -> view.invoke(id) })
@@ -139,8 +139,8 @@ fun ReturnOrderItem(
     returnOrder: ReturnOrder,
     goto: (String) -> Unit
 ) {
-    val time = remember {
-        returnOrder.date!!.toInstant().atZone(ZoneId.systemDefault()).toLocalTime()
+    val time = remember(returnOrder) {
+        returnOrder.date?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalTime()
     }
     androidx.compose.material3.ListItem(
         colors = ProjectListItemColors(),
@@ -154,7 +154,7 @@ fun ReturnOrderItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm a")))
+                Text(text = (time ?: LocalTime.now()).format(DateTimeFormatter.ofPattern("hh:mm a")))
             }
         },
         supportingContent = {

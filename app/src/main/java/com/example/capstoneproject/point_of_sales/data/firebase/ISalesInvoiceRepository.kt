@@ -6,5 +6,4 @@ import com.example.capstoneproject.global.data.firebase.FirebaseResult
 interface ISalesInvoiceRepository {
     fun getAll(callback: (Int) -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<Invoice>>
     fun insert(invoice: Invoice, access: Boolean, result: (FirebaseResult) -> Unit)
-    fun delete(invoice: Invoice, result: (FirebaseResult) -> Unit)
 }

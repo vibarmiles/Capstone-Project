@@ -6,5 +6,4 @@ import com.example.capstoneproject.global.data.firebase.FirebaseResult
 interface IReturnOrderRepository {
     fun getAll(callback: (Int) -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<ReturnOrder>>
     fun insert(returnOrder: ReturnOrder, fail: Boolean, result: (FirebaseResult) -> Unit)
-    fun delete(returnOrder: ReturnOrder, result: (FirebaseResult) -> Unit)
 }

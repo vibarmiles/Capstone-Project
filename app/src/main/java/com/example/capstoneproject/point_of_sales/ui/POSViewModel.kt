@@ -58,15 +58,6 @@ class POSViewModel : ViewModel() {
         }
     }
 
-    fun delete(invoice: Invoice) {
-        viewModelScope.launch(Dispatchers.IO) {
-            salesInvoiceRepository.delete(invoice = invoice) {
-                    result ->
-                resultState.update { result }
-            }
-        }
-    }
-
     private fun updateLoadingState() {
         isLoading.value = false
         Log.e("LOADING", isLoading.value.toString())

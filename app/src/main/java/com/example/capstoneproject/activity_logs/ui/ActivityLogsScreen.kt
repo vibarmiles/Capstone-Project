@@ -73,7 +73,7 @@ fun ActivityLogsScreen(
                 }
 
                 itemsIndexed(
-                    items = document.second,
+                    items = document.second.sortedByDescending { it.date },
                     key = { _, it -> it.id }
                 ) { index, it ->
                     LogItem(log = it, name = users[it.userId]?.let { "${it.lastName}, ${it.firstName}" } ?: "Unknown User", count = index + 1)
@@ -102,8 +102,8 @@ fun LogItem(
     name: String,
     count: Int,
 ) {
-    val time = remember {
-        log.date!!.toInstant().atZone(ZoneId.systemDefault()).toLocalTime()
+    val time = remember(log) {
+        log.date?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalTime()
     }
     Column {
         androidx.compose.material3.ListItem(
@@ -116,7 +116,7 @@ fun LogItem(
                 Text(text = name)
             },
             supportingContent = {
-                Text(text = time.format(DateTimeFormatter.ofPattern("hh:mm a")))
+                Text(text = (time ?: LocalTime.now()).format(DateTimeFormatter.ofPattern("hh:mm a")))
             },
             trailingContent = {
                 Box(

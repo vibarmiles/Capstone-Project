@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.supplier_management.data.firebase.Status
+import com.google.firebase.firestore.AggregateSource
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
@@ -102,19 +103,26 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
                 result.invoke(FirebaseResult(result = false, errorMessage = it.message))
             }
         } else {
+            purchaseOrderCollectionReference.count().get(AggregateSource.SERVER).addOnSuccessListener {
+                if ((it.count + 1) > 100) {
+                    purchaseOrderCollectionReference.orderBy("date").limit((it.count + 1) - 100).get().addOnSuccessListener { snapshot ->
+                        firestore.runBatch { batch ->
+                            val documents = po.value?.toMutableList()
+                            for (document in snapshot.toObjects<PurchaseOrder>()) {
+                                batch.delete(purchaseOrderCollectionReference.document(document.id))
+                                documents?.remove(document)
+                            }
+                            po.value = documents
+                        }
+                    }
+                }
+            }
+
             purchaseOrderCollectionReference.add(purchaseOrder).addOnSuccessListener {
                 result.invoke(FirebaseResult(result = true))
             }.addOnFailureListener {
                 result.invoke(FirebaseResult(result = false, errorMessage = it.message))
             }
-        }
-    }
-
-    override fun delete(purchaseOrder: PurchaseOrder, result: (FirebaseResult) -> Unit) {
-        purchaseOrderCollectionReference.document(purchaseOrder.id).delete().addOnSuccessListener {
-            result.invoke(FirebaseResult(result = true))
-        }.addOnFailureListener {
-            result.invoke(FirebaseResult(result = false, errorMessage = it.message))
         }
     }
 }

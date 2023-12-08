@@ -58,15 +58,6 @@ class ReturnOrderViewModel : ViewModel() {
         }
     }
 
-    fun delete(returnOrder: ReturnOrder) {
-        viewModelScope.launch(Dispatchers.IO) {
-            returnOrderRepository.delete(returnOrder = returnOrder) {
-                    result ->
-                resultState.update { result }
-            }
-        }
-    }
-
     private fun updateLoadingState() {
         isLoading.value = false
     }

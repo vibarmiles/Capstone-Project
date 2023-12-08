@@ -68,15 +68,6 @@ class PurchaseOrderViewModel : ViewModel() {
         }
     }
 
-    fun delete(purchaseOrder: PurchaseOrder) {
-        viewModelScope.launch(Dispatchers.IO) {
-            purchaseOrderRepository.delete(purchaseOrder = purchaseOrder) {
-                    result ->
-                resultState.update { result }
-            }
-        }
-    }
-
     private fun updateLoadingState() {
         isLoading.value = false
     }

@@ -3,11 +3,13 @@ package com.example.capstoneproject.point_of_sales.data.firebase
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
+import com.google.firebase.firestore.AggregateSource
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
 
 class SalesInvoiceRepository : ISalesInvoiceRepository {
@@ -92,6 +94,21 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
                 result.invoke(FirebaseResult(result = false, errorMessage = it.message))
             }
         } else {
+            salesInvoiceCollectionReference.count().get(AggregateSource.SERVER).addOnSuccessListener {
+                if ((it.count + 1) > 6) {
+                    salesInvoiceCollectionReference.orderBy("date").limit((it.count + 1) - 100).get().addOnSuccessListener { snapshot ->
+                        firestore.runBatch { batch ->
+                            val documents = si.value?.toMutableList()
+                            for (document in snapshot.toObjects<Invoice>()) {
+                                batch.delete(salesInvoiceCollectionReference.document(document.id))
+                                documents?.remove(document)
+                            }
+                            si.value = documents
+                        }
+                    }
+                }
+            }
+
             if (invoice.invoiceType == InvoiceType.SALE) {
                 salesInvoiceCollectionReference.add(invoice).addOnSuccessListener {
                     result.invoke(FirebaseResult(result = true))
@@ -133,14 +150,6 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
                     result.invoke(FirebaseResult(result = false, errorMessage = it.message))
                 }
             }
-        }
-    }
-
-    override fun delete(invoice: Invoice, result: (FirebaseResult) -> Unit) {
-        salesInvoiceCollectionReference.document(invoice.id).delete().addOnSuccessListener {
-            result.invoke(FirebaseResult(result = true))
-        }.addOnFailureListener {
-            result.invoke(FirebaseResult(result = false, errorMessage = it.message))
         }
     }
 }
