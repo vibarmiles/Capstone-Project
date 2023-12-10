@@ -29,20 +29,21 @@ fun ReportsScreen(
     scaffoldState: ScaffoldState,
     productViewModel: ProductViewModel,
     contactViewModel: ContactViewModel,
-    userAccountDetails: UserAccountDetails
+    userAccountDetails: UserAccountDetails,
+    view: (String) -> Unit
 ) {
     val pagerState = rememberPagerState(0)
     val date = Instant.ofEpochMilli(userAccountDetails.loginDate).atZone(ZoneId.systemDefault()).toLocalDate()
     val products = productViewModel.getAll()
     val suppliers = contactViewModel.getAll().observeAsState(listOf())
-    val productsWithInventoryTurnoverRatio = products.values
+    val productsWithInventoryTurnoverRatio = products
         .map {
-            val averageStock = (it.transaction.openingStock + it.transaction.closingStock).toDouble() / 2
-            val sales = it.transaction.monthlySales.values.sum().toDouble()
+            val averageStock = (it.value.transaction.openingStock + it.value.transaction.closingStock).toDouble() / 2
+            val sales = it.value.transaction.monthlySales.values.sum().toDouble()
             val turnoverRatio = if (averageStock != 0.0) sales / averageStock else 0.0
             turnoverRatio to it
         }
-        .sortedWith(compareByDescending<Pair<Double, Product>> { it.first }.thenBy { it.second.productName })
+        .sortedWith(compareByDescending<Pair<Double, Map.Entry<String, Product>>> { it.first }.thenBy { it.second.value.productName })
     
     Scaffold(
         topBar = {
@@ -82,7 +83,7 @@ fun ReportsScreen(
             HorizontalPager(pageCount = 2, state = pagerState) {
                 when (it) {
                     0 -> FSNAnalysis(products = productsWithInventoryTurnoverRatio, suppliers = suppliers.value)
-                    1 -> MonthlySales(date = date, products = products.values.toList(), showData = {  })
+                    1 -> MonthlySales(date = date, products = products.values.toList(), showData = { month -> view.invoke(month) })
                 }
             }
         }

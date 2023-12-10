@@ -10,12 +10,8 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ListItem
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.core.graphics.ColorUtils
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
@@ -23,11 +19,11 @@ import com.example.capstoneproject.supplier_management.data.firebase.contact.Con
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FSNAnalysis(
-    products: List<Pair<Double, Product>>,
+    products: List<Pair<Double, Map.Entry<String, Product>>>,
     suppliers: List<Contact>
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize()
     ) {
         stickyHeader {
             Column {
@@ -47,15 +43,20 @@ fun FSNAnalysis(
                 Divider()
             }
         }
-        items(items = products) {
+        items(
+            items = products,
+            key = {
+                  it.second.key
+            },
+        ) {
             Column {
                 ListItem(
                     colors = ProjectListItemColors(),
                     headlineContent = {
-                        Text(text = it.second.productName, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+                        Text(text = it.second.value.productName, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
                     },
                     supportingContent = {
-                        Text(text = suppliers.firstOrNull { supplier -> supplier.id == it.second.supplier }?.name ?: "Unknown Supplier")
+                        Text(text = suppliers.firstOrNull { supplier -> supplier.id == it.second.value.supplier }?.name ?: "Unknown Supplier")
                     },
                     trailingContent = {
                         Text(

@@ -37,6 +37,7 @@ import com.example.capstoneproject.supplier_management.ui.purchase_order.Purchas
 import com.example.capstoneproject.login.ui.login.LoginScreen
 import com.example.capstoneproject.point_of_sales.ui.*
 import com.example.capstoneproject.reports_management.ui.ReportsScreen
+import com.example.capstoneproject.reports_management.ui.ViewMonthScreen
 import com.example.capstoneproject.supplier_management.ui.purchase_order.ViewPurchaseOrder
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderForm
 import com.example.capstoneproject.supplier_management.ui.return_order.ReturnOrderScreen
@@ -417,7 +418,22 @@ fun NavigationHost(
                 scaffoldState = scaffoldState,
                 productViewModel = productViewModel,
                 contactViewModel = contactViewModel,
-                userAccountDetails = userAccountDetails.value
+                userAccountDetails = userAccountDetails.value,
+                view = {
+                    navController.navigate(Routes.Report.View.createRoute(month = it))
+                }
+            )
+        }
+
+        composable(Routes.Report.View.route) {
+            val month = it.arguments?.getString("month")!!
+
+            ViewMonthScreen(
+                scope = scope,
+                scaffoldState = scaffoldState,
+                productViewModel = productViewModel,
+                contactViewModel = contactViewModel,
+                month = month
             )
         }
 
