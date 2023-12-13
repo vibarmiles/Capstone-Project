@@ -54,7 +54,6 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
 
                 po.value = current
 
-                Log.e("Current Size", document.toString())
                 if (currentSize > 0) {
                     callback.invoke(it.size())
                 } else {
