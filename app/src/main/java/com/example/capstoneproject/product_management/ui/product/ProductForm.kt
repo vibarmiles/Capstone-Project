@@ -187,9 +187,11 @@ fun ProductForm(
                 colors = GlobalTextFieldColors(),
                 value = purchasePrice,
                 onValueChange = { value ->
-                    if (value.length < 10) value.toDoubleOrNull()?.let { num ->
-                        if (num >= 0) purchasePrice = value
-                    } ?: run { if (value.isBlank()) purchasePrice = "" }
+                    if (value.substringAfter('.').length <= 2 || !value.contains('.')) {
+                        if (value.length < 10) value.toDoubleOrNull()?.let { num ->
+                            if (num >= 0) purchasePrice = value
+                        } ?: run { if (value.isBlank()) purchasePrice = "" }
+                    }
                 },
                 placeholder = { Text(text = "Enter Purchase Price") },
                 label = { Text(text =buildAnnotatedString {
@@ -211,9 +213,11 @@ fun ProductForm(
                 colors = GlobalTextFieldColors(),
                 value = sellingPrice,
                 onValueChange = { value ->
-                    if (value.length < 10) value.toDoubleOrNull()?.let { num ->
-                        if (num >= 0) sellingPrice = value
-                    } ?: run { if (value.isBlank()) sellingPrice = "" }
+                    if (value.substringAfter('.').length <= 2 || !value.contains('.')) {
+                        if (value.length < 10) value.toDoubleOrNull()?.let { num ->
+                            if (num >= 0) sellingPrice = value
+                        } ?: run { if (value.isBlank()) sellingPrice = "" }
+                    }
                 },
                 placeholder = { Text(text = "Enter Selling Price") },
                 label = { Text(text = buildAnnotatedString {

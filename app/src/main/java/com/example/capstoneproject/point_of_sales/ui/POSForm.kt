@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -16,7 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -62,6 +65,7 @@ fun POSForm(
     var paymentTextFieldValue by remember { mutableStateOf(Payment.CASH.name) }
     var discount by remember { mutableStateOf(0.0) }
     var discountTextFieldValue by remember { mutableStateOf("") }
+    val localFocusManager = LocalFocusManager.current
 
     Scaffold(
         topBar = {
@@ -149,21 +153,28 @@ fun POSForm(
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text(text = "Enter Discount (if any)") },
+                        enabled = soldProductsViewModel.sales.isNotEmpty(),
                         value = discountTextFieldValue,
                         onValueChange = { value ->
-                            value.toDoubleOrNull()?.let { num ->
-                                if (num >= 0) {
-                                    val total = soldProductsViewModel.sales.sumOf { it.quantity * it.price }
-                                    discountTextFieldValue = if (num <= total) {
-                                        discount = num
-                                        value
-                                    } else {
-                                        discount = total
-                                        total.toString()
+                            if (value.substringAfter('.').length <= 2 || !value.contains('.')) {
+                                value.toDoubleOrNull()?.let { num ->
+                                    if (num >= 0) {
+                                        val total = soldProductsViewModel.sales.sumOf { it.quantity * it.price }
+                                        discountTextFieldValue = if (num <= total) {
+                                            discount = num
+                                            value
+                                        } else {
+                                            discount = total
+                                            total.toString()
+                                        }
                                     }
-                                }
-                            } ?: run { if (value.isBlank()) discountTextFieldValue = ""; discount = 0.0 }
+                                } ?: run { if (value.isBlank()) discountTextFieldValue = ""; discount = 0.0 }
+                            }
                         },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = {
+                            localFocusManager.clearFocus()
+                        })
                     )
 
                     ExposedDropdownMenuBox(
