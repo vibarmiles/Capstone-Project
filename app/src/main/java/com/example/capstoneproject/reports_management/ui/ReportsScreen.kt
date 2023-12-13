@@ -30,7 +30,7 @@ fun ReportsScreen(
     productViewModel: ProductViewModel,
     contactViewModel: ContactViewModel,
     userAccountDetails: UserAccountDetails,
-    view: (String) -> Unit
+    view: (String, Int) -> Unit
 ) {
     val pagerState = rememberPagerState(0)
     val date = Instant.ofEpochMilli(userAccountDetails.loginDate).atZone(ZoneId.systemDefault()).toLocalDate()
@@ -39,7 +39,7 @@ fun ReportsScreen(
     val productsWithInventoryTurnoverRatio = products
         .map {
             val averageStock = (it.value.transaction.openingStock + it.value.transaction.closingStock).toDouble() / 2
-            val sales = it.value.transaction.monthlySales.values.sum().toDouble()
+            val sales = productViewModel.getMonthlySales(it.value).sum().toDouble()
             val turnoverRatio = if (averageStock != 0.0) sales / averageStock else 0.0
             turnoverRatio to it
         }
@@ -83,7 +83,7 @@ fun ReportsScreen(
             HorizontalPager(pageCount = 2, state = pagerState) {
                 when (it) {
                     0 -> FSNAnalysis(products = productsWithInventoryTurnoverRatio, suppliers = suppliers.value)
-                    1 -> MonthlySales(date = date, products = products.values.toList(), showData = { month -> view.invoke(month) })
+                    1 -> MonthlySales(date = date, products = products.values.toList(), showData = { month, year -> view.invoke(month, year) })
                 }
             }
         }

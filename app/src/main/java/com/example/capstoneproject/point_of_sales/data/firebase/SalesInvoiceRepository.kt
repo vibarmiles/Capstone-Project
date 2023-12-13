@@ -95,7 +95,7 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
             }
         } else {
             salesInvoiceCollectionReference.count().get(AggregateSource.SERVER).addOnSuccessListener {
-                if ((it.count + 1) > 6) {
+                if ((it.count + 1) > 100) {
                     salesInvoiceCollectionReference.orderBy("date").limit((it.count + 1) - 100).get().addOnSuccessListener { snapshot ->
                         firestore.runBatch { batch ->
                             val documents = si.value?.toMutableList()

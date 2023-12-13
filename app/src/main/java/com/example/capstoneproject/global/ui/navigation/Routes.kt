@@ -59,8 +59,8 @@ sealed class Routes(val route: String) {
     }
     object ActivityLogs : Routes((R.string.activity_logs).toString())
     object Report : Routes((R.string.report).toString()) {
-        object View : Routes(this.route + "/View/{month}") {
-            fun createRoute(month: String) = Report.route + "/View/$month"
+        object View : Routes(this.route + "/View/{year}/{month}") {
+            fun createRoute(month: String, year: Int) = Report.route + "/View/$year/$month"
         }
     }
     object POS : Routes((R.string.pos).toString()) {

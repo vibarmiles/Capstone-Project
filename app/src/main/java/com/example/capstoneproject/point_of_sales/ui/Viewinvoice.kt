@@ -102,8 +102,24 @@ fun ViewInvoice(
                 item {
                     Divider()
                     Row {
-                        Text(text = "Total Price:", modifier = Modifier.weight(1f))
+                        Text(text = "Subtotal:", modifier = Modifier.weight(1f))
                         Text(text = products.sumOf { it.second.price * it.second.quantity }.toString())
+                    }
+                }
+
+                item {
+                    Divider()
+                    Row {
+                        Text(text = "Discount:", modifier = Modifier.weight(1f))
+                        Text(text = invoice.discount.toString())
+                    }
+                }
+
+                item {
+                    Divider()
+                    Row {
+                        Text(text = "Total Price:", modifier = Modifier.weight(1f))
+                        Text(text = (products.sumOf { it.second.price * it.second.quantity } - invoice.discount).toString())
                     }
                 }
             }

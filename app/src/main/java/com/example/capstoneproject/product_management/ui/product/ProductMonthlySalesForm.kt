@@ -26,7 +26,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
+import java.time.Instant
+import java.time.LocalDate
 import java.time.Month
+import java.time.ZoneId
 
 
 @Composable
@@ -37,7 +40,10 @@ fun ProductMonthlySalesFormScreen(
     userViewModel: UserViewModel
 ) {
     val map = productViewModel.getProduct(productId)?.transaction?.monthlySales ?: mapOf()
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
+    val currentYear = Instant.ofEpochMilli(userAccountDetails.value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate().year
     val viewModel: ProductMonthlySalesViewModel = viewModel()
+    val year = LocalDate.now().year
     val localFocusManager = LocalFocusManager.current
 
     Scaffold(
@@ -56,44 +62,76 @@ fun ProductMonthlySalesFormScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            itemsIndexed(Month.values()) { index, it ->
-                var text by remember { mutableStateOf(if (map.containsKey(it.name)) map[it.name].toString() else "") }
-                val isValid by remember { mutableStateOf(true) }
-
-                if (text.isNotBlank()) {
-                    viewModel.salesPerMonth[it] = text
-                }
-
+            item {
+                var text by remember { mutableStateOf(LocalDate.now().year.toString()) }
                 OutlinedTextField(
-                    trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
-                    colors = GlobalTextFieldColors(),
-                    isError = !isValid,
-                    modifier = Modifier.fillMaxWidth(),
-                    value = text, label = {
-                        Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    },
-                    placeholder = { Text(text = "Insert Current Quantity") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = if (Month.values().lastIndex == index) ImeAction.Done else ImeAction.Next),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            localFocusManager.clearFocus()
-                        },
-                        onNext = {
-                            localFocusManager.moveFocus(FocusDirection.Down)
-                        }
-                    ),
-                    onValueChange = { value ->
-                        value.toIntOrNull()?.let{ num ->
-                            if (num >= 0) text = value
-                            viewModel.salesPerMonth[it] = text
-                        } ?: run {
-                            if (value.isBlank()) {
-                                text = ""
-                                viewModel.salesPerMonth.remove(it)
+                    value = text,
+                    onValueChange = {
+                        if (it.length <= 4) {
+                            it.toIntOrNull().let { _ ->
+                                text = it
                             }
                         }
-                    }
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = {
+                        localFocusManager.moveFocus(FocusDirection.Down)
+                    })
                 )
+            }
+
+            if (year in 1970..currentYear) {
+                itemsIndexed(Month.values()) { index, it ->
+                    var text by remember(year) { mutableStateOf(
+                        map.let { yearMap ->
+                            if (yearMap.containsKey(year.toString())) {
+                                yearMap[year.toString()]!![it.name].toString()
+                            } else {
+                                ""
+                            }
+                        }
+                    ) }
+                    val isValid by remember { mutableStateOf(true) }
+
+                    if (text.isNotBlank()) {
+                        viewModel.salesPerMonth[it] = text
+                    }
+
+                    OutlinedTextField(
+                        trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                        colors = GlobalTextFieldColors(),
+                        isError = !isValid,
+                        modifier = Modifier.fillMaxWidth(),
+                        value = text, label = {
+                            Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        },
+                        placeholder = { Text(text = "Insert Current Quantity") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = if (Month.values().lastIndex == index) ImeAction.Done else ImeAction.Next),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                localFocusManager.clearFocus()
+                            },
+                            onNext = {
+                                localFocusManager.moveFocus(FocusDirection.Down)
+                            }
+                        ),
+                        onValueChange = { value ->
+                            value.toIntOrNull()?.let{ num ->
+                                if (num >= 0) text = value
+                                viewModel.salesPerMonth[it] = text
+                            } ?: run {
+                                if (value.isBlank()) {
+                                    text = ""
+                                    viewModel.salesPerMonth.remove(it)
+                                }
+                            }
+                        }
+                    )
+                }
+            } else {
+                item {
+                    Text(text = "Invalid Year")
+                }
             }
 
             item {
@@ -107,7 +145,8 @@ fun ProductMonthlySalesFormScreen(
                         for (pair in viewModel.salesPerMonth) {
                             newMap[pair.key] = pair.value.toInt()
                         }
-                        productViewModel.setMonthlySales(productId, newMap)
+
+                        productViewModel.setMonthlySales(productId, newMap, year)
                         userViewModel.log("adjust_monthly_sales")
                         dismissRequest.invoke()
                     }

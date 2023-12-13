@@ -60,6 +60,8 @@ fun POSForm(
     var textFieldValue by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Employee) branchViewModel.getBranch(userAccountDetails.value.branchId)?.name ?: "Unknown Branch" else branches.value.firstOrNull()?.name ?: "No Branches Found") }
     var payment by remember { mutableStateOf(Payment.CASH) }
     var paymentTextFieldValue by remember { mutableStateOf(Payment.CASH.name) }
+    var discount by remember { mutableStateOf(0.0) }
+    var discountTextFieldValue by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -135,16 +137,34 @@ fun POSForm(
                     } else {
                         OutlinedTextField(
                             modifier = Modifier.fillMaxWidth(),
-                            label = {
-                                Text(
-                                    text = "Sell Item from this branch"
-                                )
-                            },
+                            label = { Text(text = "Sell Item from this branch") },
                             value = textFieldValue,
                             enabled = false,
                             readOnly = true,
-                            onValueChange = { })
+                            onValueChange = { }
+                        )
                     }
+
+
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(text = "Enter Discount (if any)") },
+                        value = discountTextFieldValue,
+                        onValueChange = { value ->
+                            value.toDoubleOrNull()?.let { num ->
+                                if (num >= 0) {
+                                    val total = soldProductsViewModel.sales.sumOf { it.quantity * it.price }
+                                    discountTextFieldValue = if (num <= total) {
+                                        discount = num
+                                        value
+                                    } else {
+                                        discount = total
+                                        total.toString()
+                                    }
+                                }
+                            } ?: run { if (value.isBlank()) discountTextFieldValue = ""; discount = 0.0 }
+                        },
+                    )
 
                     ExposedDropdownMenuBox(
                         expanded = expandedPayment,
@@ -258,6 +278,7 @@ fun POSForm(
                         branchId = branchId!!,
                         userId = userId,
                         payment = payment,
+                        discount = discount,
                         products = soldProductsViewModel.sales.let {
                             it.associateBy { product ->
                                 "Item ${soldProductsViewModel.sales.indexOf(product)}"

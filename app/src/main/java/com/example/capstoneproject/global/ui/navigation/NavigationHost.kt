@@ -419,22 +419,25 @@ fun NavigationHost(
                 productViewModel = productViewModel,
                 contactViewModel = contactViewModel,
                 userAccountDetails = userAccountDetails.value,
-                view = {
-                    navController.navigate(Routes.Report.View.createRoute(month = it))
+                view = { month, year ->
+                    navController.navigate(Routes.Report.View.createRoute(month = month, year = year))
                 }
             )
         }
 
         composable(Routes.Report.View.route) {
             val month = it.arguments?.getString("month")!!
+            val year = it.arguments?.getString("year")!!.toInt()
 
             ViewMonthScreen(
-                scope = scope,
-                scaffoldState = scaffoldState,
                 productViewModel = productViewModel,
                 contactViewModel = contactViewModel,
-                month = month
-            )
+                userAccountDetails = userAccountDetails.value,
+                month = month,
+                year = year
+            ) {
+                navController.popBackStack()
+            }
         }
 
         composable(Routes.POS.route) {

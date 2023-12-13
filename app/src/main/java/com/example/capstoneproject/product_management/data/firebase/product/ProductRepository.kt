@@ -81,9 +81,10 @@ class ProductRepository : IProductRepository {
     override fun setMonthlySales(
         key: String,
         value: Map<String, Int>,
+        year: Int,
         result: (FirebaseResult) -> Unit
     ) {
-        productCollectionReference.child(key).child("transaction").child("monthlySales").setValue(value).addOnSuccessListener {
+        productCollectionReference.child(key).child("transaction").child("monthlySales").child(year.toString()).setValue(value).addOnSuccessListener {
             result.invoke(FirebaseResult(result = true))
         }.addOnFailureListener {
             result.invoke(FirebaseResult(result = false, errorMessage = it.message))
@@ -310,10 +311,7 @@ class ProductRepository : IProductRepository {
                             InvoiceType.REFUND -> {
                                 for (product in document.products.values) {
                                     currentProducts[product.id]!!.let { current ->
-                                        currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
-                                            stock[document.branchId] = stock.getOrDefault(document.branchId, 0) + product.quantity
-                                            stock
-                                        }, transaction = current.transaction.let { it.copy(soldThisMonth = (it.soldThisMonth - product.quantity), soldThisYear = (it.soldThisYear - product.quantity)) })
+                                        currentData.child(product.id).value = current.copy(transaction = current.transaction.let { it.copy(soldThisMonth = (it.soldThisMonth - product.quantity), soldThisYear = (it.soldThisYear - product.quantity)) })
                                     }
                                 }
                             }
@@ -361,7 +359,18 @@ class ProductRepository : IProductRepository {
                         productCollectionReference.child(product.first).setValue(current.copy(lastEdit = ServerValue.TIMESTAMP, transaction = current.transaction.let { transaction ->
                             val didYearChange = lastEditDate.year != date.year
                             val yearSale = transaction.monthlySales.toMutableMap().let { monthlySale ->
-                                monthlySale[date.minusMonths(1).month.name] = transaction.soldThisMonth
+                                monthlySale[date.year.toString()].let { _ ->
+                                    if (!monthlySale.containsKey(date.year.toString())) {
+                                        monthlySale.putIfAbsent(date.year.toString(), mapOf(Pair(date.minusMonths(1).month.name, transaction.soldThisMonth)))
+                                    } else {
+                                        val map = monthlySale[date.year.toString()]!!.toMutableMap()
+                                        map[date.minusMonths(1).month.name] = transaction.soldThisMonth
+                                        monthlySale[date.year.toString()] = map
+                                    }
+
+                                    monthlySale
+                                }
+                                monthlySale.remove(date.minusYears(5).year.toString())
                                 monthlySale
                             }
                             transaction.copy(
@@ -369,7 +378,7 @@ class ProductRepository : IProductRepository {
                                 closingStock = transaction.openingStock,
                                 soldThisMonth = 0,
                                 purchased = if (didYearChange) 0 else transaction.purchased,
-                                soldThisYear = yearSale.values.sum(),
+                                soldThisYear = yearSale[date.year.toString()]?.values?.sum() ?: 0,
                                 monthlySales = yearSale
                             )
                         })).addOnCompleteListener {

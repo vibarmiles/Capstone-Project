@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.*
@@ -108,7 +107,7 @@ fun ViewProduct(
 
             HorizontalPager(state = pagerState, pageCount = 2) {
                 when (it) {
-                    0 -> ViewProductDetails(productId = productId, product = product, supplier = contactViewModel.getAll().observeAsState(listOf()).value.firstOrNull { contact -> contact.id == product.supplier }?.name ?: "Unknown Supplier", category = categoryViewModel.getAll().observeAsState(listOf()).value.firstOrNull { category -> category.id == product.category }?.categoryName ?: "No Category", numberOfBranches = branches.value.size)
+                    0 -> ViewProductDetails(productId = productId, product = product, supplier = contactViewModel.getAll().observeAsState(listOf()).value.firstOrNull { contact -> contact.id == product.supplier }?.name ?: "Unknown Supplier", category = categoryViewModel.getAll().observeAsState(listOf()).value.firstOrNull { category -> category.id == product.category }?.categoryName ?: "No Category", numberOfBranches = branches.value.size, productViewModel = productViewModel)
                     1 -> ViewProductStock(stock = product.stock, branch = branches.value)
                 }
             }
@@ -152,6 +151,7 @@ fun ViewProductDetails(
     supplier: String,
     category: String,
     numberOfBranches: Int,
+    productViewModel: ProductViewModel
 ) {
     Column(modifier = Modifier
         .fillMaxSize()
@@ -163,10 +163,10 @@ fun ViewProductDetails(
         Text(text = "Supplier: $supplier", maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(text = "Purchase Price: ${String.format("%,.2f", product.purchasePrice)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(text = "Selling Price: ${String.format("%,.2f", product.sellingPrice)} (${String.format("%.2f", ((product.sellingPrice/product.purchasePrice) - 1) * 100).trimEnd('0').trimEnd('.')}%)", maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "Reorder Point: ${String.format("%.2f", getReorderPoint(product = product))}", maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "Reorder Point per Branch: ${String.format("%.2f", getReorderPoint(product = product) / if (numberOfBranches == 0) 1 else numberOfBranches)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "Critical Level: ${String.format("%.2f", getCriticalLevel(product = product))}", maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "Critical Level per Branch: ${String.format("%.2f", getCriticalLevel(product = product) / if (numberOfBranches == 0) 1 else numberOfBranches)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Reorder Point: ${String.format("%.2f", productViewModel.getReorderPoint(product = product))}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Reorder Point per Branch: ${String.format("%.2f", productViewModel.getReorderPoint(product = product) / if (numberOfBranches == 0) 1 else numberOfBranches)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Critical Level: ${String.format("%.2f", productViewModel.getCriticalLevel(product = product))}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Critical Level per Branch: ${String.format("%.2f", productViewModel.getCriticalLevel(product = product) / if (numberOfBranches == 0) 1 else numberOfBranches)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

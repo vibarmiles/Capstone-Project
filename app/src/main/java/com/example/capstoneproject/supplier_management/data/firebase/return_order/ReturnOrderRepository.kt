@@ -86,7 +86,7 @@ class ReturnOrderRepository : IReturnOrderRepository {
             }
         } else {
             returnOrderCollectionReference.count().get(AggregateSource.SERVER).addOnSuccessListener {
-                if ((it.count + 1) > 6) {
+                if ((it.count + 1) > 100) {
                     returnOrderCollectionReference.orderBy("date").limit((it.count + 1) - 100).get().addOnSuccessListener { snapshot ->
                         firestore.runBatch { batch ->
                             val documents = ro.value?.toMutableList()

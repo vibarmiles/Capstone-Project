@@ -160,7 +160,7 @@ fun POSItem(
                 Text(
                     text = buildAnnotatedString {
                         if (invoice.invoiceType == InvoiceType.SALE) {
-                            append("₱${String.format("%,.2f", invoice.products.values.sumOf { it.quantity * it.price })}")
+                            append("₱${String.format("%,.2f", invoice.products.values.sumOf { it.quantity * it.price } - invoice.discount)}")
                         } else {
                             withStyle(
                                 style = SpanStyle(color = MaterialTheme.colors.error)

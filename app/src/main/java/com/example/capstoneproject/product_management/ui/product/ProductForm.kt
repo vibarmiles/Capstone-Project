@@ -130,7 +130,8 @@ fun ProductForm(
                         horizontal = OutlinedTextFieldDefaults
                             .contentPadding()
                             .calculateLeftPadding(layoutDirection = LayoutDirection.Ltr)
-                    ))
+                    )
+                )
                 Button(modifier = Modifier.fillMaxHeight(), onClick = { imageUriLauncher.launch(arrayOf("image/*")) }) {
                     Text(text = "Upload Image")
                 }
@@ -208,11 +209,13 @@ fun ProductForm(
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 colors = GlobalTextFieldColors(),
-                value = sellingPrice, onValueChange = { value ->
+                value = sellingPrice,
+                onValueChange = { value ->
                     if (value.length < 10) value.toDoubleOrNull()?.let { num ->
                         if (num >= 0) sellingPrice = value
                     } ?: run { if (value.isBlank()) sellingPrice = "" }
-                }, placeholder = { Text(text = "Enter Selling Price") },
+                },
+                placeholder = { Text(text = "Enter Selling Price") },
                 label = { Text(text = buildAnnotatedString {
                     append(text = "Selling Price")
                     withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) {

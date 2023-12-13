@@ -13,6 +13,7 @@ data class Invoice(
     val userId: String = "",
     val lock: Boolean = false,
     val payment: Payment = Payment.CASH,
+    val discount: Double = 0.0,
     val products: Map<String, Product> = mapOf()
 )
 

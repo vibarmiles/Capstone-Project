@@ -87,7 +87,7 @@ class TransferOrderRepository : ITransferOrderRepository {
             }
         } else {
             transferOrderCollectionReference.count().get(AggregateSource.SERVER).addOnSuccessListener {
-                if ((it.count + 1) > 6) {
+                if ((it.count + 1) > 100) {
                     transferOrderCollectionReference.orderBy("date").limit((it.count + 1) - 100).get().addOnSuccessListener { snapshot ->
                         firestore.runBatch { batch ->
                             val documents = to.value?.toMutableList()

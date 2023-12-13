@@ -23,5 +23,5 @@ data class Transaction(
     val purchased: Int = 0,
     val soldThisYear: Int = 0,
     val soldThisMonth: Int = 0,
-    val monthlySales: Map<String, Int> = mapOf()
+    val monthlySales: Map<String, Map<String, Int>> = mapOf()
 )

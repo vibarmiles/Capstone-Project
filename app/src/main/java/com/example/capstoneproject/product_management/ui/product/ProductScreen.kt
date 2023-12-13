@@ -47,8 +47,6 @@ import com.example.capstoneproject.supplier_management.ui.contact.ContactViewMod
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import kotlinx.coroutines.CoroutineScope
-import java.time.Instant
-import java.time.ZoneId
 
 enum class Direction {
     LEFT, RIGHT
@@ -103,7 +101,8 @@ fun ProductScreen(
                         tabs = branch.value.sortedBy { it.name.uppercase() },
                         selectedTab = page,
                         products = products.values.toList(),
-                        productUpdate = productViewModel.update.value
+                        productUpdate = productViewModel.update.value,
+                        productViewModel = productViewModel
                     ) { page = it }
                 }
 
@@ -143,7 +142,8 @@ fun ProductScreen(
                     products = products.filterValues { if (userAccountDetails.value.userLevel != UserLevel.Employee) true else it.isActive }.toList().sortedBy { it.second.productName.uppercase() }.toMap(),
                     productUpdate = productViewModel.update.value,
                     view = { view.invoke(it) },
-                    numberOfBranches = branch.value.size.let { if (it == 0) 1 else it }
+                    numberOfBranches = branch.value.size.let { if (it == 0) 1 else it },
+                    productViewModel = productViewModel
                 )
             }
         }
@@ -165,10 +165,11 @@ fun TabLayout(
     tabs: List<Branch>,
     selectedTab: Int,
     products: List<Product>,
+    productViewModel: ProductViewModel,
     productUpdate: Boolean,
     onClick: (Int) -> Unit
 ) {
-    val defaultMap = remember(tabs) { products.filter { product -> product.isActive }.filter { product -> product.stock.values.sum() <= getCriticalLevel(product = product) } }
+    val defaultMap = remember(tabs) { products.filter { product -> product.isActive }.filter { product -> product.stock.values.sum() <= productViewModel.getCriticalLevel(product = product) } }
 
     ScrollableTabRow(
         selectedTabIndex = selectedTab,
@@ -191,7 +192,7 @@ fun TabLayout(
         tabs.forEachIndexed { index, tab ->
             val map = remember(productUpdate) {
                 products.filter { product ->
-                    (product.stock[tab.id] ?: 0) <= (getCriticalLevel(product = product) / tabs.size)
+                    (product.stock[tab.id] ?: 0) <= (productViewModel.getCriticalLevel(product = product) / tabs.size)
                 }
             }
 
@@ -216,6 +217,7 @@ fun ProductScreenContent(
     branchId: String,
     categories: List<Category>,
     products: Map<String, Product>,
+    productViewModel: ProductViewModel,
     suppliers: List<Contact>,
     productUpdate: Boolean,
     numberOfBranches: Int,
@@ -247,19 +249,19 @@ fun ProductScreenContent(
 
     val critical = remember(productsFiltered, productUpdate, branchId) {
         productsFiltered.filterValues {
-            (getCriticalLevel(product = it) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
+            (productViewModel.getCriticalLevel(product = it) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
         }.toList()
     }
 
     val reorder = remember(productsFiltered, productUpdate, branchId) {
         productsFiltered.filterValues {
-            ((getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0) && ((getCriticalLevel(product = it) / if (branchId == "Default") 1 else numberOfBranches) < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
+            ((productViewModel.getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0) && ((productViewModel.getCriticalLevel(product = it) / if (branchId == "Default") 1 else numberOfBranches) < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
         }.toList()
     }
 
     val productsInCategories = remember(productsFiltered, productUpdate, branchId) {
         productsFiltered.filterValues {
-            (getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) < (if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
+            (productViewModel.getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) < (if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
         }.toList().groupBy {
             categories.firstOrNull { category -> it.second.category == category.id }?.categoryName ?: "No Category"
         }
@@ -404,31 +406,4 @@ fun Products(
         .size(50.dp), loading = { CircularProgressIndicator() }, contentDescription = null) }, headlineContent = { Text(text = product.productName, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = supplier, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
             Text(text =  "$quantity Units", fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }, modifier = Modifier.clickable { view.invoke() })
-}
-
-fun getCriticalLevel(
-    product: Product
-): Double {
-    val safetyStock = ((product.transaction.monthlySales.values.maxOrNull() ?: 0).toDouble() - (product.transaction.monthlySales.values.let {
-        if (it.minOrNull() != null) {
-            if (it.min() == it.max()) 0 else it.min()
-        } else {
-            0
-        }
-    })) / 2
-    return ((product.transaction.monthlySales.values.sum().toDouble() / 12) + safetyStock)
-}
-
-fun getReorderPoint(
-    product: Product
-): Double {
-    val lastEditDate = Instant.ofEpochMilli(product.lastEdit as Long).atZone(ZoneId.systemDefault()).toLocalDate()
-    val firstStep = product.transaction.monthlySales.values.sum().toDouble() / if (lastEditDate.isLeapYear) 366 else 365
-    return (firstStep * product.leadTime) + ((product.transaction.monthlySales.values.maxOrNull() ?: 0) - (product.transaction.monthlySales.values.let {
-        if (it.minOrNull() != null) {
-            if (it.min() == it.max()) 0 else it.min()
-        } else {
-            0
-        }
-    }))
 }

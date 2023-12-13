@@ -16,7 +16,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.core.graphics.ColorUtils
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import java.time.LocalDate
-import java.time.Month
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
@@ -24,22 +23,22 @@ import kotlin.math.abs
 fun MonthlySales(
     date: LocalDate,
     products: List<Product>,
-    showData: (String) -> Unit
+    showData: (String, Int) -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items (12) { month ->
+        items (60) { month ->
             val totalSales = if (month == 0) {
                 products.sumOf { it.sellingPrice * it.transaction.soldThisMonth }
             } else {
-                totalSalesInMonth(date.minusMonths(month.toLong()).month, products)
+                totalSalesInMonth(date.minusMonths(month.toLong()), products)
             }
-            val previousTotalSales = totalSalesInMonth(date.minusMonths(month.toLong() + 1).month, products)
+            val previousTotalSales = totalSalesInMonth(date.minusMonths(month.toLong() + 1), products)
             val percent = (((totalSales - previousTotalSales) / previousTotalSales)) * 100
 
             Column(
                 modifier = Modifier
                     .clickable {
-                        showData.invoke(date.minusMonths(month.toLong()).month.name)
+                        showData.invoke(date.minusMonths(month.toLong()).month.name, date.minusMonths(month.toLong()).year)
                     }
             ) {
                 ListItem(
@@ -69,10 +68,10 @@ fun MonthlySales(
 }
 
 fun totalSalesInMonth(
-    month: Month,
+    date: LocalDate,
     products: List<Product>
 ): Double {
     return products.sumOf {
-        it.sellingPrice * it.transaction.monthlySales.getOrDefault(month.name, 0)
+        it.sellingPrice * it.transaction.monthlySales.getOrDefault(date.year.toString(), mapOf()).getOrDefault(date.month.name, 0)
     }
 }

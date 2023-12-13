@@ -26,10 +26,8 @@ import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
-import com.example.capstoneproject.product_management.ui.product.getCriticalLevel
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderViewModel
-import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
@@ -61,7 +59,7 @@ fun Dashboard(
             }
         } else {
             val numberOfBranches = branches.value.size
-            val productsUnderCriticalLevel by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.count { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) <= getCriticalLevel(product = product) } }) }
+            val productsUnderCriticalLevel by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.count { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) <= productViewModel.getCriticalLevel(product = product) } }) }
             val productsSold by remember(productViewModel.update.value) { mutableStateOf(products.values.sumOf { product -> product.transaction.soldThisYear }) }
             val productsPurchased by remember(productViewModel.update.value) { mutableStateOf(products.values.sumOf { product -> product.transaction.purchased }) }
             val stockInHand by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.sumOf { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) } }) }
