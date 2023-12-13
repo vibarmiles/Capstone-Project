@@ -157,7 +157,6 @@ fun ViewProductDetails(
         .fillMaxSize()
         .padding(16.dp)) {
         Text(text = product.productName, fontSize = 24.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
-        Text(text = "ID: $productId", maxLines = 1, overflow = TextOverflow.Ellipsis)
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = "Category: $category", maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(text = "Supplier: $supplier", maxLines = 1, overflow = TextOverflow.Ellipsis)
