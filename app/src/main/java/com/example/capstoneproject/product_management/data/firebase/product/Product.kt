@@ -1,7 +1,6 @@
 package com.example.capstoneproject.product_management.data.firebase.product
 
 import com.google.firebase.database.ServerValue
-import java.time.Month
 
 data class Product(
     var image: String? = null,
@@ -14,7 +13,7 @@ data class Product(
     val leadTime: Int = 3,
     val stock: Map<String, Int> = mapOf(),
     val transaction: Transaction = Transaction(),
-    val isActive: Boolean = true
+    val active: Boolean = true
 )
 
 data class Transaction(

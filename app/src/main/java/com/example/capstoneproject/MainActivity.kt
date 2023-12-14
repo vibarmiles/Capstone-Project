@@ -25,6 +25,7 @@ import com.example.capstoneproject.global.ui.navigation.Drawer
 import com.example.capstoneproject.global.ui.navigation.NavigationHost
 import com.example.capstoneproject.global.ui.navigation.Routes
 import com.example.capstoneproject.ui.theme.CapstoneProjectTheme
+import com.example.capstoneproject.user_management.data.firebase.User
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import com.google.firebase.database.ktx.database
@@ -73,6 +74,8 @@ fun GlobalContent(
     var canExit by remember { mutableStateOf(false) }
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val appUi = appViewModel.uiState.collectAsState()
+    val users = userViewModel.getAll()
+    var user: User by remember { mutableStateOf(User()) }
     val context = LocalContext.current
 
     Scaffold(
@@ -177,6 +180,13 @@ fun GlobalContent(
                 Toast.makeText(context, "Press again to exit!", Toast.LENGTH_SHORT).show()
                 delay(2000)
                 canExit = false
+            }
+        }
+
+        LaunchedEffect(key1 = userViewModel.update.value) {
+            user = users.getOrDefault(userAccountDetails.value.id, User())
+            if (!user.active || (user.userLevel != userAccountDetails.value.userLevel)) {
+                navController.navigate(Routes.Logout.route)
             }
         }
 

@@ -63,10 +63,11 @@ class UserRepository : IUserRepository {
         userCollectionReference.get().addOnSuccessListener {
             val found = it.getValue<Map<String, User>>()?.entries?.firstOrNull { foundUser -> foundUser.value.email == email }
             if (found != null) {
+                Log.e("Found User", found.value.active.toString())
                 userCollectionReference.child(found.key).setValue(found.value.copy(lastLogin = ServerValue.TIMESTAMP)).addOnSuccessListener {
                     userCollectionReference.child(found.key).get().addOnSuccessListener { u ->
                         u.getValue<User>()!!.let { thisUser ->
-                            user.invoke(UserAccountDetails(id = found.key, branchId = thisUser.branchId, previousLoginDate = found.value.lastLogin as Long, loginDate = thisUser.lastLogin as Long, userLevel = thisUser.userLevel, isActive = thisUser.isActive))
+                            user.invoke(UserAccountDetails(id = found.key, branchId = thisUser.branchId, previousLoginDate = found.value.lastLogin as Long, loginDate = thisUser.lastLogin as Long, userLevel = thisUser.userLevel, isActive = thisUser.active))
                         }
                     }.addOnFailureListener { exception ->
                         user.invoke(UserAccountDetails(errorMessage = exception.message))
@@ -95,7 +96,7 @@ class UserRepository : IUserRepository {
     }
 
     override fun delete(key: String, result: (FirebaseResult) -> Unit) {
-        userCollectionReference.child(key).child("isActive").setValue(false).addOnSuccessListener {
+        userCollectionReference.child(key).child("active").setValue(false).addOnSuccessListener {
             result.invoke(FirebaseResult(result = true))
         }.addOnFailureListener {
             result.invoke(FirebaseResult(result = false, errorMessage = it.message))

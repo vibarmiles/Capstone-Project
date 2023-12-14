@@ -1,6 +1,7 @@
 package com.example.capstoneproject.user_management.ui.users
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,7 +44,7 @@ fun UserScreen(
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
     val size = users.filterNot { it.value.userLevel == if (userAccountDetails.value.userLevel == UserLevel.Admin) UserLevel.Employee else UserLevel.Admin }.size
-    val listOfUsers = remember(userViewModel.update) {
+    val listOfUsers = remember(userViewModel.update.value) {
         derivedStateOf {
             users.toList().filterNot { it.second.userLevel == if (userAccountDetails.value.userLevel == UserLevel.Admin) UserLevel.Employee else UserLevel.Admin }.sortedWith(comparator = compareBy<Pair<String, User>> { it.second.userLevel }.thenBy { it.second.lastName.uppercase() })
         }
@@ -74,7 +77,11 @@ fun UserScreen(
                         key = { it.first }
                     ) {
                         Column {
-                            UserListItem(user = it.second, edit = { edit.invoke(it.first) }) {
+                            UserListItem(
+                                user = it.second,
+                                isUser = it.first == userAccountDetails.value.id,
+                                edit = { edit.invoke(it.first) }
+                            ) {
                                 user = it
                                 showDeleteDialog = true
                             }
@@ -107,22 +114,55 @@ fun UserScreen(
 @Composable
 fun UserListItem(
     user: User,
+    isUser: Boolean,
     edit: () -> Unit,
     delete: () -> Unit
 ) {
-    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = {
-        Box(modifier = Modifier
-            .size(50.dp)
-            .background(color = Purple500, shape = CircleShape), contentAlignment = Alignment.Center) { Text(text = user.email.first().uppercase(), fontSize = 16.sp, color = Color.White, textAlign = TextAlign.Center)
-        }
-    }, headlineContent = { Text(text = "${user.lastName}, ${user.firstName}") }, supportingContent = { Text(text = user.email, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
-        Row {
-            IconButton(onClick = edit) {
-                Icon(Icons.Filled.Edit, contentDescription = null)
+    var expanded by remember { mutableStateOf(false) }
+    androidx.compose.material3.ListItem(
+        modifier = Modifier.clickable { edit.invoke() },
+        colors = ProjectListItemColors(),
+        leadingContent = {
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .background(color = Purple500,
+                        shape = CircleShape),
+                contentAlignment = Alignment.Center
+            ) { Text(
+                text = user.email.first().uppercase(),
+                fontSize = 16.sp,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
             }
-            IconButton(onClick = delete) {
-                Icon(Icons.Filled.Delete, contentDescription = null)
+        },
+        headlineContent = { Text(text = "${user.lastName}, ${user.firstName}") },
+        supportingContent = { Text(text = user.email, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        trailingContent = {
+            if (!isUser) {
+                IconButton(
+                    onClick = { expanded = !expanded },
+                    content = {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = null
+                        )
+                    }
+                )
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    androidx.compose.material3.DropdownMenuItem(
+                        leadingIcon = {
+                            Icon(imageVector = Icons.Outlined.Block, contentDescription = null)
+                        },
+                        text = { Text(text = "Set Inactive") },
+                        onClick = { expanded = false; delete.invoke() }
+                    )
+                }
             }
         }
-    })
+    )
 }
