@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import java.time.Month
 import java.time.ZoneId
 
@@ -107,47 +108,37 @@ class ProductViewModel : ViewModel() {
         resultState.update { FirebaseResult() }
     }
 
-    fun getMonthlySales(product: Product): MutableCollection<Int> {
-        var count = 1
+    fun getMonthlySales(date: LocalDate, product: Product): MutableCollection<Int> {
         return product.transaction.monthlySales
-            .toList()
-            .sortedByDescending { it.first }
             .let {
                 val map = mutableMapOf<String, Int>()
-                it.forEach { currentMap ->
-                    if (count > 12) {
-                        return@forEach
-                    }
 
-                    for (entry in currentMap.second.mapKeys { entry -> Month.values().first { month -> month.name == entry.key } }.toList().sortedBy { item -> item.first }) {
-                        if (count <= 12) {
-                            count += 1
-                        } else {
-                            break
-                        }
-                        map["${entry.first} ${currentMap.first}"] = entry.second
-                    }
+                for (month in 1..12) {
+                    val newDate = date.minusMonths(month.toLong())
+                    val value = it.getOrDefault(newDate.year.toString(), mapOf()).getOrDefault(newDate.month.name, 0)
+                    map["${newDate.month} ${newDate.year}"] = value
                 }
+
                 map
             }
             .values
     }
 
-    fun getCriticalLevel(product: Product): Double {
-        val monthlySales = getMonthlySales(product)
+    fun getCriticalLevel(date: LocalDate, product: Product): Double {
+        val monthlySales = getMonthlySales(date = date, product = product)
         val safetyStock = ((monthlySales.maxOrNull() ?: 0).toDouble() - (monthlySales.let {
             if (it.minOrNull() != null) {
                 if (it.min() == it.max()) 0 else it.min()
             } else {
                 0
             }
-        })) / 2
+        }))
 
-        return ((monthlySales.sum().toDouble() / 12) + safetyStock)
+        return ((monthlySales.sum().toDouble() / 12) + safetyStock) / 2
     }
 
-    fun getReorderPoint(product: Product): Double {
-        val monthlySales = getMonthlySales(product)
+    fun getReorderPoint(date: LocalDate, product: Product): Double {
+        val monthlySales = getMonthlySales(date = date, product = product)
         val lastEditDate = Instant.ofEpochMilli(product.lastEdit as Long).atZone(ZoneId.systemDefault()).toLocalDate()
         val firstStep = monthlySales.sum().toDouble() / if (lastEditDate.isLeapYear) 366 else 365
         return (firstStep * product.leadTime) + ((monthlySales.maxOrNull() ?: 0) - (monthlySales.let {

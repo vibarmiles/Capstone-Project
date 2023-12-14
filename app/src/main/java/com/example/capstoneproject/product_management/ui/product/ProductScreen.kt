@@ -47,6 +47,9 @@ import com.example.capstoneproject.supplier_management.ui.contact.ContactViewMod
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import kotlinx.coroutines.CoroutineScope
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 enum class Direction {
     LEFT, RIGHT
@@ -73,6 +76,7 @@ fun ProductScreen(
     var page by rememberSaveable { mutableStateOf(0) }
     val loading = productViewModel.isLoading.value || branchViewModel.isLoading.value || categoryViewModel.isLoading.value
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
+    val date = Instant.ofEpochMilli(userAccountDetails.value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate()
 
     Scaffold(
         topBar = {
@@ -102,7 +106,8 @@ fun ProductScreen(
                         selectedTab = page,
                         products = products.values.toList(),
                         productUpdate = productViewModel.update.value,
-                        productViewModel = productViewModel
+                        productViewModel = productViewModel,
+                        date = date
                     ) { page = it }
                 }
 
@@ -143,7 +148,8 @@ fun ProductScreen(
                     productUpdate = productViewModel.update.value,
                     view = { view.invoke(it) },
                     numberOfBranches = branch.value.size.let { if (it == 0) 1 else it },
-                    productViewModel = productViewModel
+                    productViewModel = productViewModel,
+                    date = date
                 )
             }
         }
@@ -167,9 +173,10 @@ fun TabLayout(
     products: List<Product>,
     productViewModel: ProductViewModel,
     productUpdate: Boolean,
+    date: LocalDate,
     onClick: (Int) -> Unit
 ) {
-    val defaultMap = remember(tabs) { products.filter { product -> product.active }.filter { product -> product.stock.values.sum() <= productViewModel.getCriticalLevel(product = product) } }
+    val defaultMap = remember(tabs) { products.filter { product -> product.active }.filter { product -> product.stock.values.sum() <= productViewModel.getCriticalLevel(product = product, date = date) } }
 
     ScrollableTabRow(
         selectedTabIndex = selectedTab,
@@ -192,7 +199,7 @@ fun TabLayout(
         tabs.forEachIndexed { index, tab ->
             val map = remember(productUpdate) {
                 products.filter { product ->
-                    (product.stock[tab.id] ?: 0) <= (productViewModel.getCriticalLevel(product = product) / tabs.size)
+                    (product.stock[tab.id] ?: 0) <= (productViewModel.getCriticalLevel(product = product, date = date) / tabs.size)
                 }
             }
 
@@ -221,6 +228,7 @@ fun ProductScreenContent(
     suppliers: List<Contact>,
     productUpdate: Boolean,
     numberOfBranches: Int,
+    date: LocalDate,
     view: (String) -> Unit
 ) {
     val textFieldValue = remember { mutableStateOf("") }
@@ -249,19 +257,19 @@ fun ProductScreenContent(
 
     val critical = remember(productsFiltered, productUpdate, branchId) {
         productsFiltered.filterValues {
-            (productViewModel.getCriticalLevel(product = it) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
+            (productViewModel.getCriticalLevel(product = it, date = date) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0
         }.toList()
     }
 
     val reorder = remember(productsFiltered, productUpdate, branchId) {
         productsFiltered.filterValues {
-            ((productViewModel.getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0) && ((productViewModel.getCriticalLevel(product = it) / if (branchId == "Default") 1 else numberOfBranches) < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
+            ((productViewModel.getReorderPoint(product = it, date = date) / if (branchId == "Default") 1 else numberOfBranches) >= if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0) && ((productViewModel.getCriticalLevel(product = it, date = date) / if (branchId == "Default") 1 else numberOfBranches) < if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
         }.toList()
     }
 
     val productsInCategories = remember(productsFiltered, productUpdate, branchId) {
         productsFiltered.filterValues {
-            (productViewModel.getReorderPoint(product = it) / if (branchId == "Default") 1 else numberOfBranches) < (if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
+            (productViewModel.getReorderPoint(product = it, date = date) / if (branchId == "Default") 1 else numberOfBranches) < (if (branchId == "Default") it.stock.values.sum() else it.stock[branchId] ?: 0)
         }.toList().groupBy {
             categories.firstOrNull { category -> it.second.category == category.id }?.categoryName ?: "No Category"
         }

@@ -39,7 +39,7 @@ fun ReportsScreen(
     val productsWithInventoryTurnoverRatio = products
         .map {
             val averageStock = (it.value.transaction.openingStock + it.value.transaction.closingStock).toDouble() / 2
-            val sales = productViewModel.getMonthlySales(it.value).sum().toDouble()
+            val sales = productViewModel.getMonthlySales(Instant.ofEpochMilli(userAccountDetails.loginDate).atZone(ZoneId.systemDefault()).toLocalDate(), it.value).sum().toDouble()
             val turnoverRatio = if (averageStock != 0.0) sales / averageStock else 0.0
             turnoverRatio to it
         }

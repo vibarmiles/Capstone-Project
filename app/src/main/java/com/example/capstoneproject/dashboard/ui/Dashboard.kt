@@ -29,6 +29,8 @@ import com.example.capstoneproject.product_management.ui.product.ProductViewMode
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderViewModel
 import kotlinx.coroutines.CoroutineScope
+import java.time.Instant
+import java.time.ZoneId
 
 @Composable
 fun Dashboard(
@@ -37,6 +39,7 @@ fun Dashboard(
     branchViewModel: BranchViewModel,
     productViewModel: ProductViewModel,
     purchaseOrderViewModel: PurchaseOrderViewModel,
+    loginDate: Long,
     goToBranches: () -> Unit,
     goToProducts: () -> Unit,
     goToPO: () -> Unit,
@@ -59,7 +62,7 @@ fun Dashboard(
             }
         } else {
             val numberOfBranches = branches.value.size
-            val productsUnderCriticalLevel by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.count { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) <= productViewModel.getCriticalLevel(product = product) } }) }
+            val productsUnderCriticalLevel by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.count { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) <= productViewModel.getCriticalLevel(product = product, date = Instant.ofEpochMilli(loginDate).atZone(ZoneId.systemDefault()).toLocalDate()) } }) }
             val productsSold by remember(productViewModel.update.value) { mutableStateOf(products.values.sumOf { product -> product.transaction.soldThisYear }) }
             val productsPurchased by remember(productViewModel.update.value) { mutableStateOf(products.values.sumOf { product -> product.transaction.purchased }) }
             val stockInHand by remember(productViewModel.update.value, branches) { mutableStateOf(branches.value.sumOf { branch -> products.values.sumOf { product -> product.stock.getOrDefault(key = branch.id, defaultValue = 0) } }) }

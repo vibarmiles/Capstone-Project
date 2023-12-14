@@ -35,6 +35,9 @@ import com.example.capstoneproject.product_management.ui.category.CategoryViewMo
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -46,6 +49,7 @@ fun ViewProduct(
     categoryViewModel: CategoryViewModel,
     branchViewModel: BranchViewModel,
     userLevel: UserLevel,
+    loginDate: Long,
     productId: String,
     edit: () -> Unit,
     setBranchQuantity: () -> Unit,
@@ -105,7 +109,7 @@ fun ViewProduct(
 
             HorizontalPager(state = pagerState, pageCount = 2) {
                 when (it) {
-                    0 -> ViewProductDetails(product = product, supplier = contactViewModel.getAll().observeAsState(listOf()).value.firstOrNull { contact -> contact.id == product.supplier }?.name ?: "Unknown Supplier", category = categoryViewModel.getAll().observeAsState(listOf()).value.firstOrNull { category -> category.id == product.category }?.categoryName ?: "No Category", numberOfBranches = branches.value.size, productViewModel = productViewModel)
+                    0 -> ViewProductDetails(product = product, supplier = contactViewModel.getAll().observeAsState(listOf()).value.firstOrNull { contact -> contact.id == product.supplier }?.name ?: "Unknown Supplier", category = categoryViewModel.getAll().observeAsState(listOf()).value.firstOrNull { category -> category.id == product.category }?.categoryName ?: "No Category", numberOfBranches = branches.value.size, productViewModel = productViewModel, date = Instant.ofEpochMilli(loginDate).atZone(ZoneId.systemDefault()).toLocalDate())
                     1 -> ViewProductStock(stock = product.stock, branch = branches.value)
                 }
             }
@@ -147,6 +151,7 @@ fun ViewProductDetails(
     product: Product,
     supplier: String,
     category: String,
+    date: LocalDate,
     numberOfBranches: Int,
     productViewModel: ProductViewModel
 ) {
@@ -159,10 +164,10 @@ fun ViewProductDetails(
         Text(text = "Supplier: $supplier", maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(text = "Purchase Price: ${String.format("%,.2f", product.purchasePrice)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(text = "Selling Price: ${String.format("%,.2f", product.sellingPrice)} (${String.format("%.2f", ((product.sellingPrice/product.purchasePrice) - 1) * 100).trimEnd('0').trimEnd('.')}%)", maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "Reorder Point: ${String.format("%.2f", productViewModel.getReorderPoint(product = product))}", maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "Reorder Point per Branch: ${String.format("%.2f", productViewModel.getReorderPoint(product = product) / if (numberOfBranches == 0) 1 else numberOfBranches)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "Critical Level: ${String.format("%.2f", productViewModel.getCriticalLevel(product = product))}", maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "Critical Level per Branch: ${String.format("%.2f", productViewModel.getCriticalLevel(product = product) / if (numberOfBranches == 0) 1 else numberOfBranches)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Reorder Point: ${String.format("%.2f", productViewModel.getReorderPoint(product = product, date = date))}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Reorder Point per Branch: ${String.format("%.2f", productViewModel.getReorderPoint(product = product, date = date) / if (numberOfBranches == 0) 1 else numberOfBranches)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Critical Level: ${String.format("%.2f", productViewModel.getCriticalLevel(product = product, date = date))}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Critical Level per Branch: ${String.format("%.2f", productViewModel.getCriticalLevel(product = product, date = date) / if (numberOfBranches == 0) 1 else numberOfBranches)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

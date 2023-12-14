@@ -1,6 +1,5 @@
 package com.example.capstoneproject.reports_management.ui
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -49,7 +48,6 @@ fun FSNAnalysis(
             search.value.let {
                 val supplier = suppliers.firstOrNull { contact -> contact.id == product.second.value.supplier }?.name?.contains(it, true) ?: false
                 val name = product.second.value.productName.contains(it, true)
-                Log.e("SEARCH", "$name & $supplier & ${name || supplier}: ${product.second.value.productName}")
                 name || supplier
             }
         }

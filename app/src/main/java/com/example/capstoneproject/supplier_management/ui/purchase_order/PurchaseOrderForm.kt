@@ -30,6 +30,9 @@ import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 @Composable
 fun PurchaseOrderForm(
@@ -130,7 +133,7 @@ fun PurchaseOrderForm(
             AddProductDialog(onDismissRequest = { showProductDialog = false }, submit = {
                 id, price, quantity, supplier -> purchasedProductsViewModel.purchases.add(Product(id = id, price = price, quantity = quantity, supplier = supplier))
                 showProductDialog = false
-            }, products = products.filter { it.key !in purchasedProductsViewModel.purchases.map { products -> products.id } }, productViewModel = productViewModel)
+            }, products = products.filter { it.key !in purchasedProductsViewModel.purchases.map { products -> products.id } }, productViewModel = productViewModel, date = Instant.ofEpochMilli(userViewModel.userAccountDetails.collectAsState().value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate())
         }
 
         if (showDeleteDialog) {
@@ -176,6 +179,7 @@ fun ProductItem(
 fun AddProductDialog(
     onDismissRequest: () -> Unit,
     submit: (String, Double, Int, String) -> Unit,
+    date: LocalDate,
     products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>,
     productViewModel: ProductViewModel
 ) {
@@ -245,7 +249,7 @@ fun AddProductDialog(
                             DropdownMenuItem(text = {
                                 Column {
                                     Text(text = it.value.productName)
-                                    it.value.stock.count { stock -> stock.value < productViewModel.getCriticalLevel(product = it.value) }.let { count ->
+                                    it.value.stock.count { stock -> stock.value < productViewModel.getCriticalLevel(product = it.value, date = date) }.let { count ->
                                         Text(text = when (count) {
                                             0 -> return@let
                                             1 -> "Stock is critical in 1 branch"
