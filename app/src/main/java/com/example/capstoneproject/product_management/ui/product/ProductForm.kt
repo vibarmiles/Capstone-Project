@@ -73,7 +73,7 @@ fun ProductForm(
     var selectedCategory by remember { mutableStateOf(if (categoryId == null) "None" else category.value.firstOrNull { category -> categoryId == category.id }?.categoryName ?: "None") }
     var imageUri by remember { mutableStateOf(if (product.image == null) null else Uri.parse(product.image)) }
     var leadTime by remember { mutableStateOf(product.leadTime) }
-    var leadTimeText by remember { mutableStateOf(if (leadTime != 0) leadTime.toString() else "") }
+    var leadTimeText by remember { mutableStateOf(if (leadTime != 0) leadTime.toString() else "7") }
     var isLeadTimeValid by remember { mutableStateOf(true) }
     val imageUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument(), onResult = { imageUri = it })
     var showDialog by remember { mutableStateOf(false) }

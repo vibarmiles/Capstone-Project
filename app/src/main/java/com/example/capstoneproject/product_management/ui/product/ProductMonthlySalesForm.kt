@@ -43,7 +43,7 @@ fun ProductMonthlySalesFormScreen(
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val currentYear = Instant.ofEpochMilli(userAccountDetails.value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate().year
     val viewModel: ProductMonthlySalesViewModel = viewModel()
-    val year = LocalDate.now().year
+    var year = Instant.ofEpochMilli(userViewModel.userAccountDetails.collectAsState().value.loginDate).atZone(ZoneId.systemDefault()).year
     val localFocusManager = LocalFocusManager.current
 
     Scaffold(
@@ -65,11 +65,13 @@ fun ProductMonthlySalesFormScreen(
             item {
                 var text by remember { mutableStateOf(LocalDate.now().year.toString()) }
                 OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
                     value = text,
                     onValueChange = {
                         if (it.length <= 4) {
-                            it.toIntOrNull().let { _ ->
+                            it.toIntOrNull()?.let { y ->
                                 text = it
+                                year = y
                             }
                         }
                     },

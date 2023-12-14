@@ -109,20 +109,24 @@ class ProductViewModel : ViewModel() {
     }
 
     fun getMonthlySales(product: Product): MutableCollection<Int> {
+        var count = 1
         return product.transaction.monthlySales
             .toList()
-            .sortedBy { it.first }
+            .sortedByDescending { it.first }
             .let {
-                val list = it
                 val map = mutableMapOf<String, Int>()
+                it.forEach { currentMap ->
+                    if (count > 12) {
+                        return@forEach
+                    }
 
-                if (list.isNotEmpty() && list.size > 12) {
-                    list.slice(0..11)
-                }
-
-                list.forEach { currentMap ->
-                    for (entry in currentMap.second) {
-                        map["${entry.key} ${currentMap.first}"] = entry.value
+                    for (entry in currentMap.second.mapKeys { entry -> Month.values().first { month -> month.name == entry.key } }.toList().sortedBy { item -> item.first }) {
+                        if (count <= 12) {
+                            count += 1
+                        } else {
+                            break
+                        }
+                        map["${entry.first} ${currentMap.first}"] = entry.second
                     }
                 }
                 map
