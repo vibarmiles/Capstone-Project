@@ -12,8 +12,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ListItem
 import androidx.compose.runtime.*
@@ -33,8 +33,8 @@ import androidx.core.graphics.ColorUtils
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import java.time.LocalDate
 import java.time.Month
-import java.time.Period
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import kotlin.math.abs
 
 @Composable
@@ -45,8 +45,10 @@ fun MonthlySales(
 ) {
     val isFromDateValid = remember { mutableStateOf(true) }
     val isToDateValid = remember { mutableStateOf(true) }
-    val fromDate = remember { mutableStateOf(date) }
-    val toDate = remember { mutableStateOf(date.minusMonths(11)) }
+    val fromDate = remember { mutableStateOf(date.minusMonths(11)) }
+    val toDate = remember { mutableStateOf(date) }
+    val from = remember { mutableStateOf(date.minusMonths(11)) }
+    val to = remember { mutableStateOf(date) }
     val fromDateTextFieldValue = remember { mutableStateOf("${fromDate.value.month.value.toString().padStart(2, '0')}/${fromDate.value.year.toString().padStart(4, '0')}") }
     val toDateTextFieldValue = remember { mutableStateOf("${toDate.value.month.value.toString().padStart(2, '0')}/${toDate.value.year.toString().padStart(4, '0')}") }
     val focusRequester = remember { FocusRequester() }
@@ -86,11 +88,11 @@ fun MonthlySales(
                     placeholder = { Text(text = "mm/yyyy", color = MaterialTheme.colors.onSurface) },
                     maxLines = 1,
                     modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
+                    leadingIcon = { Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null) },
                     value = fromDateTextFieldValue.value,
                     isError = !isFromDateValid.value,
                     onValueChange = {
-                        if (it.length == 7 && it[2] == '/') {
+                        if (it.length <= 7) {
                             fromDateTextFieldValue.value = it
                         }
                     },
@@ -98,7 +100,7 @@ fun MonthlySales(
                     keyboardActions = KeyboardActions(onNext = {
                         val newDate = fromDateTextFieldValue.value
                         if (newDate[2] == '/' && newDate.length == 7) {
-                            val month = newDate.substring(0, 1).toIntOrNull()
+                            val month = newDate.substring(0, 2).toIntOrNull()
                             val year = newDate.substringAfter('/').toIntOrNull()
                             isFromDateValid.value = Month.values().any { it.value == month } && (2020..date.year).any { it == year }
                             if (isFromDateValid.value) {
@@ -125,10 +127,10 @@ fun MonthlySales(
                     maxLines = 1,
                     modifier = Modifier.fillMaxWidth(),
                     isError = !isToDateValid.value,
-                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
+                    leadingIcon = { Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null) },
                     value = toDateTextFieldValue.value,
                     onValueChange = {
-                        if (it.length == 7 && it[2] == '/') {
+                        if (it.length <= 7) {
                             toDateTextFieldValue.value = it
                         }
                     },
@@ -136,32 +138,39 @@ fun MonthlySales(
                     keyboardActions = KeyboardActions(onDone = {
                         val newDate = toDateTextFieldValue.value
                         if (newDate[2] == '/' && newDate.length == 7) {
-                            val month = newDate.substring(0, 1).toIntOrNull()
+                            val month = newDate.substring(0, 2).toIntOrNull()
                             val year = newDate.substringAfter('/').toIntOrNull()
                             isToDateValid.value = Month.values().any { it.value == month } && (2020..date.year).any { it == year }
                             if (isToDateValid.value) {
-                                toDate.value = LocalDate.of(year!!, month!!, 1)
+                                val currentDate = LocalDate.of(year!!, month!!, 1)
+                                toDate.value = currentDate
                                 localFocusManager.clearFocus()
+                                if (fromDate.value < currentDate) {
+                                    from.value = fromDate.value
+                                    to.value = toDate.value
+                                } else {
+                                    isFromDateValid.value = false
+                                    isToDateValid.value = false
+                                }
                             }
                         }
                     })
                 )
             }
         }
-
-        items (Period.between(fromDate.value, toDate.value).months) { month ->
-            val totalSales = if (month == 0 && date == fromDate.value) {
+        items (ChronoUnit.MONTHS.between(from.value.minusMonths(1), to.value).toInt()) { month ->
+            val totalSales = if (month == 0 && date == to.value) {
                 products.sumOf { it.sellingPrice * it.transaction.soldThisMonth }
             } else {
-                totalSalesInMonth(fromDate.value.minusMonths(month.toLong()), products)
+                totalSalesInMonth(to.value.minusMonths(month.toLong()), products)
             }
-            val previousTotalSales = totalSalesInMonth(fromDate.value.minusMonths(month.toLong() + 1), products)
+            val previousTotalSales = totalSalesInMonth(to.value.minusMonths(month.toLong() + 1), products)
             val percent = (((totalSales - previousTotalSales) / previousTotalSales)) * 100
 
             Column(
                 modifier = Modifier
                     .clickable {
-                        showData.invoke(date.minusMonths(month.toLong()).month.name, fromDate.value.minusMonths(month.toLong()).year)
+                        showData.invoke(date.minusMonths(month.toLong()).month.name, to.value.minusMonths(month.toLong()).year)
                     }
             ) {
                 ListItem(
@@ -172,7 +181,7 @@ fun MonthlySales(
                         )
                     },
                     supportingContent = {
-                        Text(text = date.minusMonths(month.toLong()).format(DateTimeFormatter.ofPattern("MMMM yyyy")))
+                        Text(text = to.value.minusMonths(month.toLong()).format(DateTimeFormatter.ofPattern("MMMM yyyy")))
                     },
                     trailingContent = {
                         if (previousTotalSales > 0) {

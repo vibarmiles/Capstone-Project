@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.time.LocalDate
 import java.time.Month
 import java.time.ZoneId
 
@@ -136,13 +135,13 @@ class ProductViewModel : ViewModel() {
 
     fun getCriticalLevel(product: Product): Double {
         val monthlySales = getMonthlySales(product)
-        val safetyStock = (monthlySales.maxOrNull() ?: 0).toDouble() - (monthlySales.let {
+        val safetyStock = ((monthlySales.maxOrNull() ?: 0).toDouble() - (monthlySales.let {
             if (it.minOrNull() != null) {
                 if (it.min() == it.max()) 0 else it.min()
             } else {
                 0
             }
-        }) / 2
+        })) / 2
 
         return ((monthlySales.sum().toDouble() / 12) + safetyStock)
     }

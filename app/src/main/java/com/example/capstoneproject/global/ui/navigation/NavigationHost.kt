@@ -98,7 +98,10 @@ fun NavigationHost(
                 }
             })
 
-            LoginScreen(loadLogin = appUi.value.loadLogin) {
+            LoginScreen(
+                scope = scope,
+                loadLogin = appUi.value.loadLogin
+            ) {
                 scope.launch {
                     val signIn = googleAuthUiClient.signIn()
                     launcher.launch(

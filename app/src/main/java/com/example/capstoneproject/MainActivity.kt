@@ -1,6 +1,7 @@
 package com.example.capstoneproject
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -22,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.capstoneproject.global.ui.AppViewModel
 import com.example.capstoneproject.global.ui.navigation.Drawer
 import com.example.capstoneproject.global.ui.navigation.NavigationHost
+import com.example.capstoneproject.global.ui.navigation.Routes
 import com.example.capstoneproject.ui.theme.CapstoneProjectTheme
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
@@ -45,7 +47,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.onSurface
                 ) {
-                    val permissions = arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.INTERNET, android.Manifest.permission.ACCESS_NETWORK_STATE, android.Manifest.permission.ACCESS_WIFI_STATE)
+                    val permissions = arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.INTERNET, android.Manifest.permission.ACCESS_NETWORK_STATE, android.Manifest.permission.ACCESS_WIFI_STATE)
                     val permissionState = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions(), onResult = {  })
 
                     LaunchedEffect(key1 = Unit) {
@@ -179,6 +181,7 @@ fun GlobalContent(
         }
 
         LaunchedEffect(key1 = userAccountDetails.value) {
+            Log.e("LOGIN", userAccountDetails.value.toString())
             userAccountDetails.value.let {
                 if (it.id.isNotBlank() && it.isActive && it.errorMessage == null) {
                     val previous = Instant.ofEpochMilli(userAccountDetails.value.previousLoginDate).atZone(ZoneId.systemDefault()).toLocalDate()
@@ -199,8 +202,12 @@ fun GlobalContent(
                     appViewModel.loadLogin(false)
                     appViewModel.updateMonthlyCounters(previous = previous, current = current)
                 } else if (it.id.isNotBlank() && !it.isActive && it.errorMessage == null) {
+                    appViewModel.loadLogin(false)
+                    navController.navigate(Routes.Logout.route)
                     scaffoldState.snackbarHostState.showSnackbar("Account Inactive!", duration = SnackbarDuration.Short)
                 } else if (it.errorMessage != null) {
+                    appViewModel.loadLogin(false)
+                    navController.navigate(Routes.Logout.route)
                     scaffoldState.snackbarHostState.showSnackbar(it.errorMessage, duration = SnackbarDuration.Short)
                 }
             }

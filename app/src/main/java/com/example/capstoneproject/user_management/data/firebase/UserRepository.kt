@@ -1,5 +1,6 @@
 package com.example.capstoneproject.user_management.data.firebase
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
@@ -71,6 +72,8 @@ class UserRepository : IUserRepository {
                         user.invoke(UserAccountDetails(errorMessage = exception.message))
                     }
                 }
+            } else {
+                user.invoke(UserAccountDetails(errorMessage = "Access Denied"))
             }
         }
     }

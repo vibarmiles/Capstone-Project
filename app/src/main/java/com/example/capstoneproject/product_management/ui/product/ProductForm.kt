@@ -73,7 +73,7 @@ fun ProductForm(
     var selectedCategory by remember { mutableStateOf(if (categoryId == null) "None" else category.value.firstOrNull { category -> categoryId == category.id }?.categoryName ?: "None") }
     var imageUri by remember { mutableStateOf(if (product.image == null) null else Uri.parse(product.image)) }
     var leadTime by remember { mutableStateOf(product.leadTime) }
-    var leadTimeText by remember { mutableStateOf(if (leadTime != 0) leadTime.toString() else "7") }
+    var leadTimeText by remember { mutableStateOf(if (leadTime != 0) leadTime.toString() else "") }
     var isLeadTimeValid by remember { mutableStateOf(true) }
     val imageUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument(), onResult = { imageUri = it })
     var showDialog by remember { mutableStateOf(false) }
@@ -243,8 +243,13 @@ fun ProductForm(
                         if (num >= 0) leadTimeText = value
                     } ?: run { if (value.isBlank()) leadTimeText = "" }
                 },
-                placeholder = { Text(text = "Enter Product's Lead Time (in days)") },
-                label = { Text(text = "Lead Time") },
+                placeholder = { Text(text = "Enter Product's Lead Time (Default value is 3 days)") },
+                label = { Text(text = buildAnnotatedString {
+                    append(text = "Lead Time")
+                    withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) {
+                        append(text = " *")
+                    }
+                }) },
                 isError = !isLeadTimeValid,
                 trailingIcon = { if (!isLeadTimeValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),

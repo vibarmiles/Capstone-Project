@@ -11,7 +11,7 @@ data class Product(
     val category: String? = null,
     val lastEdit: Any = ServerValue.TIMESTAMP,
     val supplier: String = "",
-    val leadTime: Int = 0,
+    val leadTime: Int = 3,
     val stock: Map<String, Int> = mapOf(),
     val transaction: Transaction = Transaction(),
     val isActive: Boolean = true
