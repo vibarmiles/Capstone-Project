@@ -68,7 +68,7 @@ fun ContactScreen(
         }
 
         if (showDeleteDialog) {
-            MakeInactiveDialog(item = contact!!.name, onCancel = { showDeleteDialog = false }) {
+            MakeInactiveDialog(item = contact!!.name, onCancel = { showDeleteDialog = false }, function = if (contact!!.active) "Inactive" else "Active") {
                 contactViewModel.delete(contact = contact!!)
                 showDeleteDialog = false
             }
@@ -119,7 +119,8 @@ fun ContactScreenContent(
                                 text = it.name,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = if (it.active) MaterialTheme.colors.onSurface else MaterialTheme.colors.error
                             )
                         },
                         supportingContent = {
@@ -143,7 +144,11 @@ fun ContactScreenContent(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false }
                             ) {
-                                androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Block, contentDescription = null) }, text = { Text(text = "Set Inactive") }, onClick = { expanded = false; delete.invoke(it) })
+                                androidx.compose.material3.DropdownMenuItem(
+                                    leadingIcon = { Icon(imageVector = if (it.active) Icons.Outlined.Block else Icons.Default.Add, contentDescription = null) },
+                                    text = { Text(text = if (it.active) "Set Inactive" else "Set Active") },
+                                    onClick = { expanded = false; delete.invoke(it) }
+                                )
                             }
                         }
                     )

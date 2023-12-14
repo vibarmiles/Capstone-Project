@@ -90,7 +90,7 @@ fun CategoryScreen(
                         }
                     ) { item ->
                         Column {
-                            CategoryListItem(item.categoryName, edit = {
+                            CategoryListItem(item, edit = {
                                 showDialog = true
                                 category = item
                             }) {
@@ -119,7 +119,7 @@ fun CategoryScreen(
         }
 
         if (showDeleteDialog) {
-            MakeInactiveDialog(item = category.categoryName, onCancel = { showDeleteDialog = false }) {
+            MakeInactiveDialog(item = category.categoryName, onCancel = { showDeleteDialog = false }, function = if (category.active) "Inactive" else "Active") {
                 viewModel.delete(category)
                 productViewModel.removeCategory(categoryId = category.id)
                 showDeleteDialog = false
@@ -140,7 +140,7 @@ fun CategoryScreen(
 
 @Composable
 fun CategoryListItem(
-    category: String = "Category",
+    category: Category,
     edit: () -> Unit,
     delete: () -> Unit
 ) {
@@ -162,7 +162,11 @@ fun CategoryListItem(
                 )
             }
         },
-        headlineContent = { Text(text = category, fontWeight = FontWeight.Bold) },
+        headlineContent = { Text(
+            text = category.categoryName,
+            fontWeight = FontWeight.Bold,
+            color = if (category.active) MaterialTheme.colors.onSurface else MaterialTheme.colors.error
+        ) },
         trailingContent = {
             IconButton(
                 onClick = { expanded = !expanded },
@@ -179,9 +183,9 @@ fun CategoryListItem(
             ) {
                 androidx.compose.material3.DropdownMenuItem(
                     leadingIcon = {
-                        Icon(imageVector = Icons.Outlined.Block, contentDescription = null)
+                        Icon(imageVector = if (category.active) Icons.Outlined.Block else Icons.Default.Add, contentDescription = null)
                     },
-                    text = { Text(text = "Set Inactive") },
+                    text = { Text(text = if (category.active) "Set Inactive" else "Set Active") },
                     onClick = { expanded = false; delete.invoke() }
                 )
             }

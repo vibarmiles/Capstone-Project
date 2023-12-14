@@ -9,12 +9,10 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.BarChart
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.StackedBarChart
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -80,7 +78,7 @@ fun ViewProduct(
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Product") }, onClick = { expanded = false; edit.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.BarChart, contentDescription = null) }, text = { Text(text = "Adjust Quantity") }, onClick = { expanded = false; setBranchQuantity.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.StackedBarChart, contentDescription = null) }, text = { Text(text = "Adjust Monthly Sales") }, onClick = { expanded = false; setMonthlySales.invoke() })
-                            DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) }, text = { Text(text = "Delete Product") }, onClick = { expanded = false; showDeleteDialog = true })
+                            DropdownMenuItem(leadingIcon = { Icon(imageVector = if (product.active) Icons.Outlined.Block else Icons.Default.Add, contentDescription = null) }, text = { Text(text = if (product.active) "Set Inactive" else "Set Active") }, onClick = { expanded = false; showDeleteDialog = true })
                         }
                     }
                 }
@@ -107,13 +105,13 @@ fun ViewProduct(
 
             HorizontalPager(state = pagerState, pageCount = 2) {
                 when (it) {
-                    0 -> ViewProductDetails(productId = productId, product = product, supplier = contactViewModel.getAll().observeAsState(listOf()).value.firstOrNull { contact -> contact.id == product.supplier }?.name ?: "Unknown Supplier", category = categoryViewModel.getAll().observeAsState(listOf()).value.firstOrNull { category -> category.id == product.category }?.categoryName ?: "No Category", numberOfBranches = branches.value.size, productViewModel = productViewModel)
+                    0 -> ViewProductDetails(product = product, supplier = contactViewModel.getAll().observeAsState(listOf()).value.firstOrNull { contact -> contact.id == product.supplier }?.name ?: "Unknown Supplier", category = categoryViewModel.getAll().observeAsState(listOf()).value.firstOrNull { category -> category.id == product.category }?.categoryName ?: "No Category", numberOfBranches = branches.value.size, productViewModel = productViewModel)
                     1 -> ViewProductStock(stock = product.stock, branch = branches.value)
                 }
             }
 
             if (showDeleteDialog) {
-                MakeInactiveDialog(item = product.productName, onCancel = { showDeleteDialog = false }) {
+                MakeInactiveDialog(item = product.productName, onCancel = { showDeleteDialog = false }, function = if (product.active) "Inactive" else "Active") {
                     productViewModel.delete(key = productId, product = product)
                     showDeleteDialog = false
                     delete.invoke()
@@ -146,7 +144,6 @@ fun ViewProductTabs(
 
 @Composable
 fun ViewProductDetails(
-    productId: String,
     product: Product,
     supplier: String,
     category: String,

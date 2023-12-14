@@ -8,5 +8,5 @@ interface IUserRepository {
     fun getAll(callback: () -> Unit, update: () -> Unit, result: (FirebaseResult) -> Unit): SnapshotStateMap<String, User>
     fun getUser(email: String, user: (UserAccountDetails) -> Unit)
     fun insert(key: String?, user: User, result: (FirebaseResult) -> Unit)
-    fun delete(key: String, result: (FirebaseResult) -> Unit)
+    fun delete(key: String, user: User, result: (FirebaseResult) -> Unit)
 }

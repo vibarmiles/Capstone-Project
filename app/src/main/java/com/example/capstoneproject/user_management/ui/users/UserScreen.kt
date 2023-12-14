@@ -9,8 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.runtime.*
@@ -92,8 +90,8 @@ fun UserScreen(
             }
 
             if (showDeleteDialog) {
-                MakeInactiveDialog(item = user.second.email, onCancel = { showDeleteDialog = false }) {
-                    userViewModel.delete(user.first)
+                MakeInactiveDialog(item = user.second.email, onCancel = { showDeleteDialog = false }, function = if (user.second.active) "Inactive" else "Active") {
+                    userViewModel.delete(user.first, user.second)
                     showDeleteDialog = false
                 }
             }
@@ -137,8 +135,15 @@ fun UserListItem(
             )
             }
         },
-        headlineContent = { Text(text = "${user.lastName}, ${user.firstName}") },
-        supportingContent = { Text(text = user.email, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        headlineContent = { Text(
+            text = "${user.lastName}, ${user.firstName}",
+            color = if (user.active) MaterialTheme.colors.onSurface else MaterialTheme.colors.error
+        ) },
+        supportingContent = { Text(
+            text = user.email,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        ) },
         trailingContent = {
             if (!isUser) {
                 IconButton(
@@ -156,9 +161,9 @@ fun UserListItem(
                 ) {
                     androidx.compose.material3.DropdownMenuItem(
                         leadingIcon = {
-                            Icon(imageVector = Icons.Outlined.Block, contentDescription = null)
+                            Icon(imageVector = if (user.active) Icons.Outlined.Block else Icons.Default.Add, contentDescription = null)
                         },
-                        text = { Text(text = "Set Inactive") },
+                        text = { Text(text = if (user.active) "Set Inactive" else "Set Active") },
                         onClick = { expanded = false; delete.invoke() }
                     )
                 }

@@ -201,13 +201,13 @@ fun TransferOrderItem(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = branchViewModel.getBranch(transferOrder.oldBranchId)?.name ?: "Unknown Branch")
+            Text(text = branchViewModel.getBranch(transferOrder.oldBranchId)?.name ?: "Unknown Branch", modifier = Modifier.width(IntrinsicSize.Min))
             Box(modifier = Modifier
                 .height(1.dp)
                 .padding(horizontal = 8.dp)
                 .background(color = Color.Black)
                 .weight(1f))
-            Text(text = branchViewModel.getBranch(transferOrder.destinationBranchId)?.name ?: "Unknown Branch")
+            Text(text = branchViewModel.getBranch(transferOrder.destinationBranchId)?.name ?: "Unknown Branch", modifier = Modifier.width(IntrinsicSize.Min))
         }
 
         Divider()

@@ -43,7 +43,7 @@ class ContactRepository : IContactRepository {
     }
 
     override fun delete(contact: Contact, result: (FirebaseResult) -> Unit) {
-        contactCollectionReference.document(contact.id).set(contact.copy(active = false)).addOnSuccessListener {
+        contactCollectionReference.document(contact.id).set(contact.copy(active = contact.active.not())).addOnSuccessListener {
             result.invoke(FirebaseResult(result = true))
         }.addOnFailureListener {
             result.invoke(FirebaseResult(result = false, errorMessage = it.message))

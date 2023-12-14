@@ -92,6 +92,7 @@ fun ViewTransferOrder(
 
             if (showDialog && action != null) {
                 DocumentDialog(action = action!!, type = Document.TO, onCancel = { showDialog = false }) {
+                    showDialog = false
                     transferOrderViewModel.transact(document = transferOrder.copy(status = action!!))
                 }
             }

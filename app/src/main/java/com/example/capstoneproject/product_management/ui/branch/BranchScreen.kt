@@ -95,7 +95,7 @@ fun BranchScreen(
         }
 
         if (showDeleteDialog) {
-            MakeInactiveDialog(item = branch.name, onCancel = { showDeleteDialog = false }) {
+            MakeInactiveDialog(item = branch.name, onCancel = { showDeleteDialog = false }, function = if (branch.active) "Inactive" else "Active") {
                 viewModel.delete(branch)
                 productViewModel.removeBranchStock(branchId = branch.id)
                 showDeleteDialog = false
@@ -129,7 +129,8 @@ fun BranchListItem(
                 text = branch.name,
                 fontWeight = FontWeight.Bold,
                 overflow = TextOverflow.Ellipsis,
-                maxLines = 1
+                maxLines = 1,
+                color = if (branch.active) MaterialTheme.colors.onSurface else MaterialTheme.colors.error
             )
         },
         supportingContent = {
@@ -155,9 +156,9 @@ fun BranchListItem(
             ) {
                 androidx.compose.material3.DropdownMenuItem(
                     leadingIcon = {
-                        Icon(imageVector = Icons.Outlined.Block, contentDescription = null)
+                        Icon(imageVector = if (branch.active) Icons.Outlined.Block else Icons.Default.Add, contentDescription = null)
                     },
-                    text = { Text(text = "Set Inactive") },
+                    text = { Text(text = if (branch.active) "Set Inactive" else "Set Active") },
                     onClick = { expanded = false; delete.invoke() }
                 )
             }

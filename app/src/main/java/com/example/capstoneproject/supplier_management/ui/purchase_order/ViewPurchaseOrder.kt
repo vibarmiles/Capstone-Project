@@ -130,6 +130,7 @@ fun ViewPurchaseOrder(
 
             if (showDialog && action != null) {
                 DocumentDialog(action = action!!, type = Document.PO, onCancel = { showDialog = false }) {
+                    showDialog = false
                     purchaseOrderViewModel.transact(document = purchaseOrder.copy(branchId = id, status = action!!))
                 }
             }

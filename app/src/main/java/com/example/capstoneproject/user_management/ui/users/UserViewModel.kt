@@ -74,9 +74,9 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    fun delete(id: String) {
+    fun delete(id: String, user: User) {
         viewModelScope.launch(Dispatchers.IO) {
-            userRepository.delete(key = id) {
+            userRepository.delete(key = id, user = user) {
                     result ->
                 resultState.update { result }
             }

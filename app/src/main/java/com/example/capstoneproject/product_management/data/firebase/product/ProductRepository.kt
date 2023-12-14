@@ -154,7 +154,7 @@ class ProductRepository : IProductRepository {
     }
 
     override fun delete(key: String, product: Product, result: (FirebaseResult) -> Unit) {
-        productCollectionReference.child(key).setValue(product.copy(active = false)).addOnSuccessListener {
+        productCollectionReference.child(key).setValue(product.copy(active = product.active.not())).addOnSuccessListener {
             result.invoke(FirebaseResult(result = true))
         }.addOnFailureListener {
             result.invoke(FirebaseResult(result = false, errorMessage = it.message))

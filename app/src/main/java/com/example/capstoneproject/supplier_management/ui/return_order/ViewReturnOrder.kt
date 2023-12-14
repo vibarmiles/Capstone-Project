@@ -92,6 +92,7 @@ fun ViewReturnOrder(
 
             if (showDialog && action != null) {
                 DocumentDialog(action = action!!, type = Document.RO, onCancel = { showDialog = false }) {
+                    showDialog = false
                     returnOrderViewModel.transact(document = returnOrder.copy(status = action!!))
                 }
             }

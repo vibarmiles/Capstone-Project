@@ -401,9 +401,38 @@ fun Products(
     supplier: String,
     view: () -> Unit
 ) {
-    androidx.compose.material3.ListItem(colors = ProjectListItemColors(), leadingContent = { SubcomposeAsyncImage(error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) },  model = product.image, contentScale = ContentScale.Crop, modifier = Modifier
-        .clip(RoundedCornerShape(5.dp))
-        .size(50.dp), loading = { CircularProgressIndicator() }, contentDescription = null) }, headlineContent = { Text(text = product.productName, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) }, supportingContent = { Text(text = supplier, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingContent = {
-            Text(text =  "$quantity Units", fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }, modifier = Modifier.clickable { view.invoke() })
+    androidx.compose.material3.ListItem(
+        colors = ProjectListItemColors(),
+        leadingContent = { SubcomposeAsyncImage(
+            error = { ImageNotAvailable(modifier = Modifier.background(Color.LightGray)) },
+            model = product.image,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .clip(RoundedCornerShape(5.dp))
+                .size(50.dp),
+            loading = { CircularProgressIndicator() },
+            contentDescription = null
+        ) },
+        headlineContent = { Text(
+            text = product.productName,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontWeight = FontWeight.Bold,
+            color = if (product.active) MaterialTheme.colors.onSurface else MaterialTheme.colors.error
+        ) },
+        supportingContent = { Text(
+            text = supplier,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        ) },
+        trailingContent = {
+            Text(
+                text =  "$quantity Units",
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        modifier = Modifier.clickable { view.invoke() }
+    )
 }
