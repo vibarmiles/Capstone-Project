@@ -41,14 +41,16 @@ class ReturnOrderRepository : IReturnOrderRepository {
                 }
 
                 for (queryDocumentSnapshot in it) {
-                    val new = queryDocumentSnapshot.toObject<ReturnOrder>()
-                    current.firstOrNull { returnOrder -> returnOrder.id == new.id }.let { found ->
-                        if (found != null) {
-                            current[current.indexOf(found)] = new
-                        } else {
-                            current.add(new)
+                    try {
+                        val new = queryDocumentSnapshot.toObject<ReturnOrder>()
+                        current.firstOrNull { returnOrder -> returnOrder.id == new.id }.let { found ->
+                            if (found != null) {
+                                current[current.indexOf(found)] = new
+                            } else {
+                                current.add(new)
+                            }
                         }
-                    }
+                    } catch (e: Exception) {  }
                 }
 
                 ro.value = current

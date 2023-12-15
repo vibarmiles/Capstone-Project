@@ -34,6 +34,7 @@ fun ViewReturnOrder(
     var showDialog by remember { mutableStateOf(false) }
     var action: Status? = null
     val state = returnOrderViewModel.result.collectAsState()
+    val confirm = remember { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -80,7 +81,7 @@ fun ViewReturnOrder(
                 }
             }
 
-            if (returnOrder.status == Status.WAITING) {
+            if (returnOrder.status == Status.WAITING && confirm.value) {
                 FormButtons(submitText = "Returned", cancel = {
                     action = Status.CANCELLED
                     showDialog = true
@@ -94,6 +95,7 @@ fun ViewReturnOrder(
                 DocumentDialog(action = action!!, type = Document.RO, onCancel = { showDialog = false }) {
                     returnOrderViewModel.transact(document = returnOrder.copy(status = action!!))
                     showDialog = false
+                    confirm.value = false
                 }
             }
 

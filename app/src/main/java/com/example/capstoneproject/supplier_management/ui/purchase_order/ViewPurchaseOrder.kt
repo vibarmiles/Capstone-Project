@@ -39,6 +39,7 @@ fun ViewPurchaseOrder(
     var id by remember { mutableStateOf("") }
     var action: Status? = null
     val state = purchaseOrderViewModel.result.collectAsState()
+    val confirm = remember { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -95,7 +96,7 @@ fun ViewPurchaseOrder(
                 }
             }
 
-            if (purchaseOrder.status == Status.WAITING) {
+            if (purchaseOrder.status == Status.WAITING && confirm.value) {
                 var expanded by remember { mutableStateOf(false) }
                 val branches = branchViewModel.getAll().observeAsState(listOf())
                 var selected by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches Entered") }
@@ -132,6 +133,7 @@ fun ViewPurchaseOrder(
                 DocumentDialog(action = action!!, type = Document.PO, onCancel = { showDialog = false }) {
                     purchaseOrderViewModel.transact(document = purchaseOrder.copy(branchId = id, status = action!!))
                     showDialog = false
+                    confirm.value = false
                 }
             }
             

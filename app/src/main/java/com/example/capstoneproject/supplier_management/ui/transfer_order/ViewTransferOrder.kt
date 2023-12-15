@@ -35,6 +35,7 @@ fun ViewTransferOrder(
     var showDialog by remember { mutableStateOf(false) }
     var action: Status? = null
     val state = transferOrderViewModel.result.collectAsState()
+    val confirm = remember { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -80,7 +81,7 @@ fun ViewTransferOrder(
                 }
             }
 
-            if (transferOrder.status == Status.WAITING) {
+            if (transferOrder.status == Status.WAITING && confirm.value) {
                 FormButtons(submitText = "Transferred", cancel = {
                     action = Status.CANCELLED
                     showDialog = true
@@ -94,6 +95,7 @@ fun ViewTransferOrder(
                 DocumentDialog(action = action!!, type = Document.TO, onCancel = { showDialog = false }) {
                     transferOrderViewModel.transact(document = transferOrder.copy(status = action!!))
                     showDialog = false
+                    confirm.value = false
                 }
             }
 

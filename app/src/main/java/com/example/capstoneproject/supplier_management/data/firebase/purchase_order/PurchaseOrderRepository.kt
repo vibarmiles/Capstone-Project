@@ -42,14 +42,16 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
                 }
 
                 for (queryDocumentSnapshot in it) {
-                    val new = queryDocumentSnapshot.toObject<PurchaseOrder>()
-                    current.firstOrNull { purchaseOrder -> purchaseOrder.id == new.id }.let { found ->
-                        if (found != null) {
-                            current[current.indexOf(found)] = new
-                        } else {
-                            current.add(new)
+                    try {
+                        val new = queryDocumentSnapshot.toObject<PurchaseOrder>()
+                        current.firstOrNull { purchaseOrder -> purchaseOrder.id == new.id }.let { found ->
+                            if (found != null) {
+                                current[current.indexOf(found)] = new
+                            } else {
+                                current.add(new)
+                            }
                         }
-                    }
+                    } catch (e: Exception) {  }
                 }
 
                 po.value = current

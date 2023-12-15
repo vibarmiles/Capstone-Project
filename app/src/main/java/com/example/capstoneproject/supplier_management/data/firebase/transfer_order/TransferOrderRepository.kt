@@ -42,14 +42,16 @@ class TransferOrderRepository : ITransferOrderRepository {
                 }
 
                 for (queryDocumentSnapshot in it) {
-                    val new = queryDocumentSnapshot.toObject<TransferOrder>()
-                    current.firstOrNull { transferOrder -> transferOrder.id == new.id }.let { found ->
-                        if (found != null) {
-                            current[current.indexOf(found)] = new
-                        } else {
-                            current.add(new)
+                    try {
+                        val new = queryDocumentSnapshot.toObject<TransferOrder>()
+                        current.firstOrNull { transferOrder -> transferOrder.id == new.id }.let { found ->
+                            if (found != null) {
+                                current[current.indexOf(found)] = new
+                            } else {
+                                current.add(new)
+                            }
                         }
-                    }
+                    } catch (e: Exception) {  }
                 }
 
                 to.value = current
