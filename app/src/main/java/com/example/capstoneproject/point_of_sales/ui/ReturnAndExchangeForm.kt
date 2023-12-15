@@ -264,7 +264,7 @@ fun ReturnAndExchangeForm(
                         }
 
                         returnOrderViewModel.insert(returnOrder = ReturnOrder(
-                            status = Status.WAITING,
+                            status = Status.COMPLETE,
                             reason = "Returned by customer",
                             branchId = branchId,
                             products = returnedProductsViewModel.returns.associateBy { product -> "Item ${returnedProductsViewModel.returns.indexOf(product)}" }
