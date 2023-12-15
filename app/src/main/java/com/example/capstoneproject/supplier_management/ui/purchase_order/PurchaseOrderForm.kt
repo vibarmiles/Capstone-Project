@@ -154,7 +154,7 @@ fun ProductItem(
 ) {
     androidx.compose.material3.ListItem(
         headlineContent = {
-            Text(text = (products[product.id])!!.productName, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = (products[product.id])?.productName ?: "Unknown Product", maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
         supportingContent = {
             Column(modifier = Modifier.fillMaxWidth()) {
