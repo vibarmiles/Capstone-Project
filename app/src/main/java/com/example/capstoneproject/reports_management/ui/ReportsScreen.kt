@@ -1,5 +1,6 @@
 package com.example.capstoneproject.reports_management.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,10 +9,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Report
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
@@ -32,10 +40,13 @@ fun ReportsScreen(
     userAccountDetails: UserAccountDetails,
     view: (String, Int) -> Unit
 ) {
+    val reportsViewModel: ReportsViewModel = viewModel()
     val pagerState = rememberPagerState(0)
     val date = Instant.ofEpochMilli(userAccountDetails.loginDate).atZone(ZoneId.systemDefault()).toLocalDate()
     val products = productViewModel.getAll()
     val suppliers = contactViewModel.getAll().observeAsState(listOf())
+    val context = LocalContext.current
+    var expanded by remember { mutableStateOf(false) }
     val productsWithInventoryTurnoverRatio = products
         .map {
             val averageStock = (it.value.transaction.openingStock + it.value.transaction.closingStock).toDouble() / 2
@@ -52,7 +63,15 @@ fun ReportsScreen(
                 scope = scope,
                 scaffoldState = scaffoldState,
                 actions = {
-
+                    IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Report, contentDescription = null) }, text = { Text(text = "Generate FSN Analysis") }, onClick = { expanded = false; reportsViewModel.generateFSNReport(products = productsWithInventoryTurnoverRatio) {
+                            Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                        } })
+                        androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.CalendarMonth, contentDescription = null) }, text = { Text(text = "Generate Monthly Sales Report") }, onClick = { expanded = false; reportsViewModel.generateMonthlySalesReport(products = products.values.toList(), date = date) {
+                            Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                        } })
+                    }
                 }
             )
         }

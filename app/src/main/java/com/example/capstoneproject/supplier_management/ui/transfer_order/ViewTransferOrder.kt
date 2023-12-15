@@ -39,7 +39,7 @@ fun ViewTransferOrder(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = ("View ${Document.RO.doc}").uppercase()) },
+                title = { Text(text = ("View ${Document.TO.doc}").uppercase()) },
                 navigationIcon = {
                     IconButton(onClick = dismissRequest) {
                         Icon(
@@ -92,8 +92,8 @@ fun ViewTransferOrder(
 
             if (showDialog && action != null) {
                 DocumentDialog(action = action!!, type = Document.TO, onCancel = { showDialog = false }) {
-                    showDialog = false
                     transferOrderViewModel.transact(document = transferOrder.copy(status = action!!))
+                    showDialog = false
                 }
             }
 
