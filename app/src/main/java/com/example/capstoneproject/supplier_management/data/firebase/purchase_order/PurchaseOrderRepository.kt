@@ -74,8 +74,10 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
             }
 
             value?.let {
-                waitingPO.value = value.toObjects()
-                result.invoke(FirebaseResult(result = true))
+                try {
+                    waitingPO.value = value.toObjects()
+                    result.invoke(FirebaseResult(result = true))
+                } catch (e: Exception) {  }
             }
         }
         return waitingPO
