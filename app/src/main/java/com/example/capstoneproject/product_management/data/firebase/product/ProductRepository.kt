@@ -266,7 +266,7 @@ class ProductRepository : IProductRepository {
                         for (product in document.products.values) {
                             currentProducts[product.id]!!.let { current ->
                                 currentData.child(product.id).value = current.copy(stock = current.stock.toMutableMap().let { stock ->
-                                    stock[document.oldBranchId] = stock.getOrDefault(document.destinationBranchId, 0) - product.quantity
+                                    stock[document.oldBranchId] = stock.getOrDefault(document.oldBranchId, 0) - product.quantity
                                     stock[document.destinationBranchId] = stock.getOrDefault(document.destinationBranchId, 0) + product.quantity
                                     stock
                                 })
