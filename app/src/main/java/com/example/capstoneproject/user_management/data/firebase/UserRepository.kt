@@ -5,11 +5,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.user_management.ui.users.UserAccountDetails
-import com.google.firebase.database.ChildEventListener
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ServerValue
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
@@ -81,11 +77,31 @@ class UserRepository : IUserRepository {
 
     override fun insert(key: String?, user: User, result: (FirebaseResult) -> Unit) {
         if (key != null) {
-            userCollectionReference.child(key).setValue(user).addOnSuccessListener {
-                result.invoke(FirebaseResult(result = true))
-            }.addOnFailureListener {
-                result.invoke(FirebaseResult(result = false, errorMessage = it.message))
-            }
+            userCollectionReference.runTransaction(object : Transaction.Handler {
+                override fun doTransaction(currentData: MutableData): Transaction.Result {
+                    val currentUsers = currentData.getValue<Map<String, User>>()?.filterKeys { it != key } ?: mapOf()
+
+                    if (currentUsers.any { it.value.email == user.email }) {
+                        return Transaction.abort()
+                    }
+
+                    currentData.child(key).value = user
+                    return Transaction.success(currentData)
+                }
+
+                override fun onComplete(
+                    error: DatabaseError?,
+                    committed: Boolean,
+                    currentData: DataSnapshot?
+                ) {
+                    if (!committed) {
+                        result.invoke(FirebaseResult(errorMessage = "Error has occurred. Please check current users then try again later!"))
+                    } else {
+                        result.invoke(FirebaseResult(result = true))
+                    }
+                }
+
+            })
         } else {
             userCollectionReference.push().setValue(user).addOnSuccessListener {
                 result.invoke(FirebaseResult(result = true))

@@ -44,6 +44,7 @@ fun UserForm(
     userId: String? = null,
     back: () -> Unit
 ) {
+    val users = userViewModel.getAll()
     val user = userViewModel.getUserDetails(userId = userId) ?: User()
     var expandedUsers by remember { mutableStateOf(false) }
     var expandedBranches by remember { mutableStateOf(false) }
@@ -188,7 +189,7 @@ fun UserForm(
                 FormButtons(cancel = back) {
                     isFirstNameValid = firstName.isNotBlank()
                     isLastNameValid = lastName.isNotBlank()
-                    isEmailValid = email.let { it.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(it).matches() }
+                    isEmailValid = email.let { it.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(it).matches() && users.filterKeys { key -> userId != key }.all { entry -> entry.value.email != it } }
                     val isBranchValid = if (userLevel == UserLevel.Employee) branchId != null else true
 
                     if (isFirstNameValid && isLastNameValid && isEmailValid && isBranchValid) {
