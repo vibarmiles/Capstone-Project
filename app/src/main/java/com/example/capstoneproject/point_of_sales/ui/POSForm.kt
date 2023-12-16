@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ConfirmationDialog
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
 import com.example.capstoneproject.point_of_sales.data.firebase.Payment
@@ -470,35 +471,6 @@ fun AddProductDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             }
-        }
-    )
-}
-
-@Composable
-fun ConfirmationDialog(
-    onCancel: () -> Unit,
-    onSubmit: () -> Unit
-) {
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onCancel,
-        title = {
-            Text(text = "Proceed with submission?")
-        },
-        text = {
-            Text(text = "Are you sure you want to make this transaction?")
-        },
-        confirmButton = {
-            Button(onClick = onSubmit) {
-                Text(text = stringResource(id = R.string.submit_button))
-            }
-        },
-        dismissButton = {
-            TextButton(colors = ButtonDefaults.buttonColors(contentColor = Color.Black, backgroundColor = Color.Transparent), onClick = onCancel) {
-                Text(text = stringResource(id = R.string.cancel_button))
-            }
-        },
-        icon = {
-            Icon(imageVector = Icons.Default.Send, contentDescription = null)
         }
     )
 }

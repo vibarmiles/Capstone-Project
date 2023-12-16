@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ConfirmationDialog
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
@@ -55,6 +56,7 @@ fun ReturnOrderForm(
     var branchId by remember { mutableStateOf(branches.value.firstOrNull()?.id) }
     var textFieldValue by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches Found") }
     var reason by remember { mutableStateOf("") }
+    val showConfirmationDialog = remember { mutableStateOf(false) }
     val localFocusManager = LocalFocusManager.current
 
     Scaffold(
@@ -69,16 +71,7 @@ fun ReturnOrderForm(
                 actions = {
                     IconButton(enabled = branches.value.isNotEmpty() && returnedProductsViewModel.returns.isNotEmpty(),
                         onClick = {
-                            returnOrderViewModel.insert(
-                                ReturnOrder(
-                                    status = Status.WAITING,
-                                    reason = reason,
-                                    branchId = branchId!!,
-                                    products = returnedProductsViewModel.returns.associateBy { product -> "Item ${returnedProductsViewModel.returns.indexOf(product)}" }
-                                )
-                            )
-                            userViewModel.log(event = "create_return_order")
-                            back.invoke()
+                            showConfirmationDialog.value = true
                         }
                     ) {
                         Icon(imageVector = Icons.Filled.Save, contentDescription = null)
@@ -188,6 +181,22 @@ fun ReturnOrderForm(
             RemoveProductDialog(productName = productViewModel.getProduct(productToRemove!!.id)!!.productName, dismissRequest = { showDeleteDialog = false }) {
                 returnedProductsViewModel.returns.remove(productToRemove)
                 showDeleteDialog = false
+            }
+        }
+
+        if (showConfirmationDialog.value) {
+            ConfirmationDialog(onCancel = { showConfirmationDialog.value = false }) {
+                returnOrderViewModel.insert(
+                    ReturnOrder(
+                        status = Status.WAITING,
+                        reason = reason,
+                        branchId = branchId!!,
+                        products = returnedProductsViewModel.returns.associateBy { product -> "Item ${returnedProductsViewModel.returns.indexOf(product)}" }
+                    )
+                )
+                showConfirmationDialog.value = false
+                userViewModel.log(event = "create_return_order")
+                back.invoke()
             }
         }
     }

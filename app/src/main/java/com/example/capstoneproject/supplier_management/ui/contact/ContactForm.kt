@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.capstoneproject.global.ui.misc.ConfirmationForAddingDialog
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
@@ -44,6 +45,7 @@ fun ContactFormScreen(
     var contact by remember { mutableStateOf(oldContact.contact) }
     var isContactValid by remember { mutableStateOf(true) }
     var isNameValid by remember { mutableStateOf(true) }
+    val showConfirmationDialog = remember { mutableStateOf(false) }
     val localFocusManager = LocalFocusManager.current
 
     Scaffold(
@@ -104,8 +106,15 @@ fun ContactFormScreen(
                 isNameValid = name.isNotBlank()
                 isContactValid = contact.let { it.isNotBlank() && Patterns.PHONE.matcher(it).matches() && it.length == 10 }
                 if (isContactValid && isNameValid) {
+                    showConfirmationDialog.value = true
+                }
+            }
+
+            if (showConfirmationDialog.value) {
+                ConfirmationForAddingDialog(onCancel = { showConfirmationDialog.value = false }) {
                     contactViewModel.insert(contact = oldContact.copy(name = name, contact = contact))
                     userViewModel.log(event = "${function.lowercase()}_supplier")
+                    showConfirmationDialog.value = false
                     back.invoke()
                 }
             }

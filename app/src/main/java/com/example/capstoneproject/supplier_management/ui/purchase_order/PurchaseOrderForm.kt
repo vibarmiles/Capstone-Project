@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ConfirmationDialog
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Product
@@ -47,6 +48,7 @@ fun PurchaseOrderForm(
     val suppliers = contactViewModel.getAll().observeAsState(listOf())
     var showProductDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showConfirmationDialog = remember { mutableStateOf(false) }
     var productToRemove: Product? = null
 
     Scaffold(
@@ -60,16 +62,7 @@ fun PurchaseOrderForm(
                 IconButton(
                     enabled = purchasedProductsViewModel.purchases.isNotEmpty(),
                     onClick = {
-                        purchaseOrderViewModel.insert(
-                            PurchaseOrder(
-                                status = Status.WAITING,
-                                products = purchasedProductsViewModel.purchases.associateBy { product ->
-                                    "Item ${purchasedProductsViewModel.purchases.indexOf(product)}"
-                                }
-                            )
-                        )
-                        userViewModel.log(event = "create_purchase_order")
-                        back.invoke()
+                        showConfirmationDialog.value = true
                     }
                 ) {
                     Icon(imageVector = Icons.Filled.Save, contentDescription = null)
@@ -140,6 +133,22 @@ fun PurchaseOrderForm(
             RemoveProductDialog(productName = productViewModel.getProduct(productToRemove!!.id)!!.productName, dismissRequest = { showDeleteDialog = false }) {
                 purchasedProductsViewModel.purchases.remove(productToRemove)
                 showDeleteDialog = false
+            }
+        }
+
+        if (showConfirmationDialog.value) {
+            ConfirmationDialog(onCancel = { showConfirmationDialog.value = false }) {
+                purchaseOrderViewModel.insert(
+                    PurchaseOrder(
+                        status = Status.WAITING,
+                        products = purchasedProductsViewModel.purchases.associateBy { product ->
+                            "Item ${purchasedProductsViewModel.purchases.indexOf(product)}"
+                        }
+                    )
+                )
+                showConfirmationDialog.value = false
+                userViewModel.log(event = "create_purchase_order")
+                back.invoke()
             }
         }
     }

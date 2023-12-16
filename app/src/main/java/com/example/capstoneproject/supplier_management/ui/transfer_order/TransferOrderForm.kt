@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ConfirmationDialog
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
@@ -52,6 +53,7 @@ fun TransferOrderForm(
     var destinationBranchId by remember { mutableStateOf(branches.value.filterNot { it.id == oldBranchId }.firstOrNull()?.id) }
     var firstTextFieldValue by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches Found") }
     var secondTextFieldValue by remember { mutableStateOf(branches.value.filterNot { it.id == oldBranchId }.firstOrNull()?.name ?: "No Branches Found") }
+    val showConfirmationDialog = remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -65,17 +67,7 @@ fun TransferOrderForm(
                 actions = {
                     IconButton(enabled = branches.value.size > 1 && transferredProductsViewModel.transfers.isNotEmpty(),
                         onClick = {
-                            transferOrderViewModel.insert(
-                                TransferOrder(
-                                    status = Status.WAITING,
-                                    oldBranchId = oldBranchId!!,
-                                    destinationBranchId = destinationBranchId!!,
-                                    products = transferredProductsViewModel.transfers.associateBy { product -> "Item ${transferredProductsViewModel.transfers.indexOf(product)}" }
-                                )
-                            )
-
-                            userViewModel.log(event = "create_transfer_order")
-                            back.invoke()
+                            showConfirmationDialog.value = true
                         }
                     ) {
                         Icon(imageVector = Icons.Filled.Save, contentDescription = null)
@@ -211,6 +203,22 @@ fun TransferOrderForm(
             RemoveProductDialog(productName = productViewModel.getProduct(productToRemove!!.id)!!.productName, dismissRequest = { showDeleteDialog = false }) {
                 transferredProductsViewModel.transfers.remove(productToRemove)
                 showDeleteDialog = false
+            }
+        }
+
+        if (showConfirmationDialog.value) {
+            ConfirmationDialog(onCancel = { showConfirmationDialog.value = false }) {
+                transferOrderViewModel.insert(
+                    TransferOrder(
+                        status = Status.WAITING,
+                        oldBranchId = oldBranchId!!,
+                        destinationBranchId = destinationBranchId!!,
+                        products = transferredProductsViewModel.transfers.associateBy { product -> "Item ${transferredProductsViewModel.transfers.indexOf(product)}" }
+                    )
+                )
+                showConfirmationDialog.value = false
+                userViewModel.log(event = "create_transfer_order")
+                back.invoke()
             }
         }
     }

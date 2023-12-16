@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import coil.compose.SubcomposeAsyncImage
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ConfirmationForAddingDialog
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.global.ui.misc.ImageNotAvailable
@@ -80,6 +81,7 @@ fun ProductForm(
     var newCategory = Category()
     val state by categoryViewModel.result.collectAsState()
     val localFocusManager = LocalFocusManager.current
+    val showConfirmationDialog = remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -319,6 +321,12 @@ fun ProductForm(
 
                 Log.d("PATH",imageUri.toString())
                 if (isNameValid && isPurchasePriceValid && contactId != null && isSellingPriceValid && isLeadTimeValid) {
+                    showConfirmationDialog.value = true
+                }
+            }
+
+            if (showConfirmationDialog.value) {
+                ConfirmationForAddingDialog(onCancel = { showConfirmationDialog.value = false }) {
                     productViewModel.insert(id = productId, product = product.copy(
                         image = if (imageUri != null) imageUri.toString() else null,
                         productName = name,
@@ -328,6 +336,7 @@ fun ProductForm(
                         supplier = contactId!!,
                         leadTime = leadTime
                     ))
+                    showConfirmationDialog.value = false
                     userViewModel.log(event = "${function.lowercase()}_product")
                     dismissRequest.invoke()
                 }

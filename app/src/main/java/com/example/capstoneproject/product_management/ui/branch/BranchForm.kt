@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.example.capstoneproject.global.ui.misc.ConfirmationForAddingDialog
 import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
@@ -36,6 +37,7 @@ fun BranchFormScreen(
 ) {
     val branch = viewModel.getBranch(id) ?: Branch()
     val localFocusManager = LocalFocusManager.current
+    val showConfirmationDialog = remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -103,8 +105,15 @@ fun BranchFormScreen(
                 isAddressValid = address.isNotBlank()
 
                 if (isNameValid && isAddressValid) {
+                    showConfirmationDialog.value = true
+                }
+            }
+
+            if (showConfirmationDialog.value) {
+                ConfirmationForAddingDialog(onCancel = { showConfirmationDialog.value = false }) {
                     viewModel.insert(branch.copy(name = name, address = address))
                     userViewModel.log(event = "${function.lowercase()}_branch")
+                    showConfirmationDialog.value = false
                     back.invoke()
                 }
             }
