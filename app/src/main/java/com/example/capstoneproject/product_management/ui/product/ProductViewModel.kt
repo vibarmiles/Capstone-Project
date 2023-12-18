@@ -10,11 +10,13 @@ import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.product_management.data.firebase.product.IProductRepository
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.data.firebase.product.ProductRepository
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.InputStream
 import java.time.Instant
 import java.time.LocalDate
 import java.time.Month
@@ -148,6 +150,24 @@ class ProductViewModel : ViewModel() {
                 0
             }
         }))
+    }
+
+    fun archiveItem(id: String, product: Product) {
+        productRepository.archiveItem(id = id, product = product) {
+            resultState.update { it }
+        }
+    }
+
+    fun readFromJson(file: InputStream): Product {
+        val gson = Gson()
+        val json: String
+        return try {
+            json = file.bufferedReader().use { it.readText() }
+            gson.fromJson(json, Product::class.java)
+        } catch (e: Exception) {
+            Log.e("Error", e.message.toString())
+            Product()
+        }
     }
 }
 

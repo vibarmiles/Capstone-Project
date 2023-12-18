@@ -16,4 +16,5 @@ interface IProductRepository {
     fun removeBranchStock(branchId: String, result: (FirebaseResult) -> Unit)
     fun transact(document: Any, result: (FirebaseResult) -> Unit)
     fun checkDate(date: LocalDate, callback: (Float) -> Unit)
+    fun archiveItem(id: String, product: Product, result: (FirebaseResult) -> Unit)
 }

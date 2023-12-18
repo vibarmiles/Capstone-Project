@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -57,7 +58,7 @@ fun ProductForm(
     contactViewModel: ContactViewModel,
     userViewModel: UserViewModel
 ) {
-    val product = productViewModel.getProduct(productId) ?: Product()
+    var product = productViewModel.getProduct(productId) ?: Product()
     val category = categoryViewModel.getAll().observeAsState(listOf())
     val supplier = contactViewModel.getAll().observeAsState(listOf())
     var name by remember { mutableStateOf(product.productName) }
@@ -76,7 +77,26 @@ fun ProductForm(
     var leadTime by remember { mutableStateOf(product.leadTime) }
     var leadTimeText by remember { mutableStateOf(if (leadTime != 0) leadTime.toString() else "") }
     var isLeadTimeValid by remember { mutableStateOf(true) }
+    val context = LocalContext.current
     val imageUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument(), onResult = { imageUri = it })
+    val jsonUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent(), onResult = {
+        if (it != null) {
+            val item = context.contentResolver.openInputStream(it)
+            if (item != null) {
+                product = productViewModel.readFromJson(item)
+                name = product.productName
+                purchasePrice = product.purchasePrice.toString()
+                sellingPrice = product.sellingPrice.toString()
+                contactId = product.supplier
+                selectedContact = supplier.value.firstOrNull { contact -> contact.id == contactId }?.name ?: supplier.value.firstOrNull()?.name ?: "No Suppliers Entered"
+                categoryId = product.category
+                selectedCategory = category.value.firstOrNull { category -> categoryId == category.id }?.categoryName ?: "None"
+                imageUri = if (product.image == null) null else Uri.parse(product.image)
+                leadTimeText = product.leadTime.toString()
+                item.close()
+            }
+        }
+    })
     var showDialog by remember { mutableStateOf(false) }
     var newCategory = Category()
     val state by categoryViewModel.result.collectAsState()
@@ -85,11 +105,21 @@ fun ProductForm(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(text = ("$function Product").uppercase()) }, navigationIcon = {
-                IconButton(onClick = dismissRequest) {
-                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)
+            TopAppBar(
+                title = { Text(text = ("$function Product").uppercase()) },
+                navigationIcon = {
+                    IconButton(onClick = dismissRequest) {
+                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        jsonUriLauncher.launch("application/json")
+                    }) {
+                        Icon(imageVector = Icons.Filled.Upload, contentDescription = null)
+                    }
                 }
-            })
+            )
         },
         scaffoldState = scaffoldState
     ) { paddingValues ->

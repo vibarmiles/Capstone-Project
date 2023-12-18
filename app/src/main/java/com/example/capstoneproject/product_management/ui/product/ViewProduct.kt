@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
+import com.example.capstoneproject.global.ui.misc.ArchiveEntry
 import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.ImageNotAvailable
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
@@ -57,7 +58,7 @@ fun ViewProduct(
     delete: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
-    val product = productViewModel.getProduct(productId)!!
+    val product = remember { productViewModel.getProduct(productId)!! }
     val pagerState = rememberPagerState(initialPage = 0)
     val coroutineScope = rememberCoroutineScope()
     val branches = branchViewModel.getAll().observeAsState(listOf())
@@ -83,6 +84,11 @@ fun ViewProduct(
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.BarChart, contentDescription = null) }, text = { Text(text = "Adjust Quantity") }, onClick = { expanded = false; setBranchQuantity.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.StackedBarChart, contentDescription = null) }, text = { Text(text = "Adjust Monthly Sales") }, onClick = { expanded = false; setMonthlySales.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = if (product.active) Icons.Outlined.Block else Icons.Default.Add, contentDescription = null) }, text = { Text(text = if (product.active) "Set Inactive" else "Set Active") }, onClick = { expanded = false; showDeleteDialog = true })
+                            ArchiveEntry(name = product.productName, isActive = product.active) {
+                                productViewModel.archiveItem(id = productId, product = product)
+                                expanded = false
+                                dismissRequest.invoke()
+                            }
                         }
                     }
                 }

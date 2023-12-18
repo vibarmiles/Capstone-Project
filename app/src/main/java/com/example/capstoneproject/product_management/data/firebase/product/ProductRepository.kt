@@ -1,6 +1,7 @@
 package com.example.capstoneproject.product_management.data.firebase.product
 
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
@@ -16,6 +17,9 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
+import com.google.gson.Gson
+import java.io.File
+import java.io.IOException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -32,6 +36,7 @@ class ProductRepository : IProductRepository {
         productCollectionReference.addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 products[snapshot.key!!] = snapshot.getValue<Product>()!!
+                update.invoke()
                 Log.d("Added", snapshot.value.toString())
             }
 
@@ -132,16 +137,34 @@ class ProductRepository : IProductRepository {
         } else {
             Log.d("ID is blank", product.toString())
             if (uri != null) {
-                productImageReference.child(uri.lastPathSegment!!).putFile(uri).addOnSuccessListener {
-                    productImageReference.child(uri.lastPathSegment!!).downloadUrl.addOnSuccessListener {
-                        product.image = it.toString()
-                        Log.d("Image", product.image.toString())
-                        productCollectionReference.push().setValue(product).addOnSuccessListener {
-                            result.invoke(FirebaseResult(result = true))
-                        }.addOnFailureListener { exception ->
-                            result.invoke(FirebaseResult(result = false, errorMessage = exception.message))
-                        }
+                firestorage.child(uri.lastPathSegment!!).downloadUrl.addOnSuccessListener {
+                    product.image = it.toString()
+                    Log.d("Image", product.image.toString())
+                    productCollectionReference.push().setValue(product).addOnSuccessListener {
+                        result.invoke(FirebaseResult(result = true))
+                    }.addOnFailureListener {
+                            e ->
+                        result.invoke(FirebaseResult(result = false, errorMessage = e.message))
                     }
+                }.addOnFailureListener {
+                    productImageReference.child(uri.lastPathSegment!!).putFile(uri)
+                        .addOnSuccessListener {
+                            productImageReference.child(uri.lastPathSegment!!).downloadUrl.addOnSuccessListener {
+                                product.image = it.toString()
+                                Log.d("Image", product.image.toString())
+                                productCollectionReference.push().setValue(product)
+                                    .addOnSuccessListener {
+                                        result.invoke(FirebaseResult(result = true))
+                                    }.addOnFailureListener { exception ->
+                                    result.invoke(
+                                        FirebaseResult(
+                                            result = false,
+                                            errorMessage = exception.message
+                                        )
+                                    )
+                                }
+                            }
+                        }
                 }
             } else {
                 productCollectionReference.push().setValue(product).addOnSuccessListener {
@@ -389,6 +412,24 @@ class ProductRepository : IProductRepository {
                     callback.invoke((index + 1).toFloat() / numberOfProducts)
                 }
             }
+        }
+    }
+
+    override fun archiveItem(id: String, product: Product, result: (FirebaseResult) -> Unit) {
+        val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),  "/${product.productName}.json")
+        val gson = Gson()
+        val json = gson.toJson(product)
+
+        try {
+            file.writeText(json)
+        } catch (e: IOException) {
+            result.invoke(FirebaseResult(errorMessage = e.message))
+        }
+
+        productCollectionReference.child(id).removeValue().addOnSuccessListener {
+            result.invoke(FirebaseResult(result = true))
+        }.addOnFailureListener {
+            result.invoke(FirebaseResult(errorMessage = it.message))
         }
     }
 }
