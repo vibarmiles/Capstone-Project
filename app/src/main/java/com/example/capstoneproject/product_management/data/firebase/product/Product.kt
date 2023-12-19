@@ -3,6 +3,7 @@ package com.example.capstoneproject.product_management.data.firebase.product
 import com.google.firebase.database.ServerValue
 
 data class Product(
+    val id: String? = null,
     var image: String? = null,
     val productName: String = "",
     val purchasePrice: Double = 0.0,

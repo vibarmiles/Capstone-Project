@@ -1,5 +1,6 @@
 package com.example.capstoneproject.product_management.ui.product
 
+import android.os.Environment
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -16,6 +17,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.IOException
 import java.io.InputStream
 import java.time.Instant
 import java.time.LocalDate
@@ -152,9 +155,23 @@ class ProductViewModel : ViewModel() {
         }))
     }
 
-    fun archiveItem(id: String, product: Product) {
-        productRepository.archiveItem(id = id, product = product) {
-            resultState.update { it }
+    fun archiveItem(id: String, remove: Boolean, product: Product) {
+        viewModelScope.launch {
+            val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),  "/${product.productName}.json")
+            val gson = Gson()
+            val json = gson.toJson(product.copy(id = id))
+
+            try {
+                file.writeText(json)
+            } catch (e: IOException) {
+                resultState.update { FirebaseResult(errorMessage = e.message) }
+            }
+
+            if (remove) {
+                productRepository.archiveItem(id = id) {
+                    resultState.update { it }
+                }
+            }
         }
     }
 

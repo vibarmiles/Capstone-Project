@@ -85,7 +85,7 @@ fun ViewProduct(
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.StackedBarChart, contentDescription = null) }, text = { Text(text = "Adjust Monthly Sales") }, onClick = { expanded = false; setMonthlySales.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = if (product.active) Icons.Outlined.Block else Icons.Default.Add, contentDescription = null) }, text = { Text(text = if (product.active) "Set Inactive" else "Set Active") }, onClick = { expanded = false; showDeleteDialog = true })
                             ArchiveEntry(name = product.productName, isActive = product.active) {
-                                productViewModel.archiveItem(id = productId, product = product)
+                                productViewModel.archiveItem(id = productId, remove = it, product = product)
                                 expanded = false
                                 dismissRequest.invoke()
                             }
@@ -94,8 +94,7 @@ fun ViewProduct(
                 }
             )
         }
-    ) {
-            paddingValues ->
+    ) { paddingValues ->
         Column(modifier = Modifier
             .padding(paddingValues)
             .fillMaxSize()) {

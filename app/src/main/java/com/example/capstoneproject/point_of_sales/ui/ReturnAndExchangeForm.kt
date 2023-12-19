@@ -431,7 +431,9 @@ fun ConfirmationDialogForReturnAndExchange(
             Column {
                 Text(text = "Are you sure you want to make this transaction?")
                 Spacer(modifier = Modifier.height(4.dp))
-                Row {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Checkbox(checked = checked, onCheckedChange = { checked = it })
                     Text(text = "Create a return order based on this document")
                 }

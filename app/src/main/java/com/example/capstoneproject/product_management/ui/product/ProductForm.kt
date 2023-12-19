@@ -45,6 +45,9 @@ import com.example.capstoneproject.product_management.ui.category.CategoryDialog
 import com.example.capstoneproject.product_management.ui.category.CategoryViewModel
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -58,6 +61,7 @@ fun ProductForm(
     contactViewModel: ContactViewModel,
     userViewModel: UserViewModel
 ) {
+    var id = productId
     var product = productViewModel.getProduct(productId) ?: Product()
     val category = categoryViewModel.getAll().observeAsState(listOf())
     val supplier = contactViewModel.getAll().observeAsState(listOf())
@@ -85,6 +89,7 @@ fun ProductForm(
             if (item != null) {
                 product = productViewModel.readFromJson(item)
                 name = product.productName
+                id = product.id
                 purchasePrice = product.purchasePrice.toString()
                 sellingPrice = product.sellingPrice.toString()
                 contactId = product.supplier
@@ -93,7 +98,12 @@ fun ProductForm(
                 selectedCategory = category.value.firstOrNull { category -> categoryId == category.id }?.categoryName ?: "None"
                 imageUri = if (product.image == null) null else Uri.parse(product.image)
                 leadTimeText = product.leadTime.toString()
-                item.close()
+
+                runBlocking {
+                    withContext(Dispatchers.IO) {
+                        item.close()
+                    }
+                }
             }
         }
     })
@@ -357,7 +367,7 @@ fun ProductForm(
 
             if (showConfirmationDialog.value) {
                 ConfirmationForAddingDialog(onCancel = { showConfirmationDialog.value = false }) {
-                    productViewModel.insert(id = productId, product = product.copy(
+                    productViewModel.insert(id = id, product = product.copy(
                         image = if (imageUri != null) imageUri.toString() else null,
                         productName = name,
                         purchasePrice = purchasePrice.toDouble(),

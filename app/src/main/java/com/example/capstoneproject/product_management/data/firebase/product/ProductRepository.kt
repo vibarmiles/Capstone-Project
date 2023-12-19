@@ -1,7 +1,6 @@
 package com.example.capstoneproject.product_management.data.firebase.product
 
 import android.net.Uri
-import android.os.Environment
 import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
@@ -17,9 +16,6 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
-import com.google.gson.Gson
-import java.io.File
-import java.io.IOException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -415,17 +411,7 @@ class ProductRepository : IProductRepository {
         }
     }
 
-    override fun archiveItem(id: String, product: Product, result: (FirebaseResult) -> Unit) {
-        val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),  "/${product.productName}.json")
-        val gson = Gson()
-        val json = gson.toJson(product)
-
-        try {
-            file.writeText(json)
-        } catch (e: IOException) {
-            result.invoke(FirebaseResult(errorMessage = e.message))
-        }
-
+    override fun archiveItem(id: String, result: (FirebaseResult) -> Unit) {
         productCollectionReference.child(id).removeValue().addOnSuccessListener {
             result.invoke(FirebaseResult(result = true))
         }.addOnFailureListener {
