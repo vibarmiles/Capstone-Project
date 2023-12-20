@@ -24,6 +24,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.Month
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 class ProductViewModel : ViewModel() {
     private lateinit var products: SnapshotStateMap<String, Product>
@@ -157,7 +158,7 @@ class ProductViewModel : ViewModel() {
 
     fun archiveItem(id: String, remove: Boolean, product: Product) {
         viewModelScope.launch {
-            val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),  "/${product.productName}.json")
+            val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),  "/${product.productName}_(${LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)}).json")
             val gson = Gson()
             val json = gson.toJson(product.copy(id = id))
 

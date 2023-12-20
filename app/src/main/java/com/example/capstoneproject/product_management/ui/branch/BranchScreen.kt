@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ArchiveEntry
 import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -79,6 +80,8 @@ fun BranchScreen(
                         Column {
                             BranchListItem(branch = item, edit = {
                                 edit.invoke(item)
+                            }, archive = {
+                                viewModel.archiveItem(branch = item, remove = it)
                             }) {
                                 branch = item
                                 showDeleteDialog = true
@@ -118,6 +121,7 @@ fun BranchScreen(
 fun BranchListItem(
     branch: Branch,
     edit: () -> Unit,
+    archive: (Boolean) -> Unit,
     delete: () -> Unit
 ) {
     var expanded: Boolean by remember { mutableStateOf(false) }
@@ -161,6 +165,10 @@ fun BranchListItem(
                     text = { Text(text = if (branch.active) "Set Inactive" else "Set Active") },
                     onClick = { expanded = false; delete.invoke() }
                 )
+                ArchiveEntry(name = branch.name, isActive = branch.active) {
+                    archive.invoke(it)
+                    expanded = false
+                }
             }
         },
         leadingContent = {

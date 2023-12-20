@@ -49,4 +49,12 @@ class BranchRepository : IBranchRepository {
             result.invoke(FirebaseResult(result = false, errorMessage = it.message))
         }
     }
+
+    override fun archiveItem(branch: Branch, result: (FirebaseResult) -> Unit) {
+        branchCollectionReference.document(branch.id).delete().addOnSuccessListener {
+            result.invoke(FirebaseResult(result = true))
+        }.addOnFailureListener {
+            result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+        }
+    }
 }
