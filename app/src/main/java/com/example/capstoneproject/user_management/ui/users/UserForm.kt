@@ -236,7 +236,7 @@ fun UserForm(
 
             if (showConfirmationDialog.value) {
                 ConfirmationForAddingDialog(onCancel = { showConfirmationDialog.value = false }) {
-                    userViewModel.insert(id = id, user = user.copy(lastName = lastName, firstName = firstName, active = true, email = email, userLevel = userLevel, branchId = if (userLevel == UserLevel.Employee) branchId else null))
+                    userViewModel.insert(id = id, user = user.copy(id = null, lastName = lastName, firstName = firstName, active = true, email = email, userLevel = userLevel, branchId = if (userLevel == UserLevel.Employee) branchId else null))
                     userViewModel.log("${decision}_user")
                     showConfirmationDialog.value = false
                     back.invoke()

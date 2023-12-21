@@ -375,7 +375,8 @@ fun ProductForm(
                         category = categoryId,
                         supplier = contactId!!,
                         leadTime = leadTime,
-                        active = true
+                        active = true,
+                        id = null
                     ))
                     showConfirmationDialog.value = false
                     userViewModel.log(event = "${function.lowercase()}_product")
