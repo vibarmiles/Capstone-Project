@@ -1,5 +1,6 @@
 package com.example.capstoneproject.user_management.ui.users
 
+import android.os.Environment
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
@@ -12,11 +13,17 @@ import com.example.capstoneproject.user_management.data.firebase.IUserRepository
 import com.example.capstoneproject.user_management.data.firebase.User
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.data.firebase.UserRepository
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 data class UserAccountDetails(
     val id: String = "",
@@ -102,5 +109,40 @@ class UserViewModel : ViewModel() {
 
     fun logout() {
         userAccountDetailsState.update { UserAccountDetails() }
+    }
+
+    fun archiveItem(id: String, remove: Boolean, user: User) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val file = File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),  "/${user.lastName}_${user.firstName}_(${
+                    LocalDate.now().format(
+                        DateTimeFormatter.ISO_LOCAL_DATE)}).json")
+            val gson = Gson()
+            val json = gson.toJson(user.copy(id = id))
+
+            try {
+                file.writeText(json)
+            } catch (e: IOException) {
+                resultState.update { FirebaseResult(errorMessage = e.message) }
+            }
+
+            if (remove) {
+                userRepository.archiveItem(id = id) {
+                    resultState.update { it }
+                }
+            }
+        }
+    }
+
+    fun readFromJson(file: InputStream): User {
+        val gson = Gson()
+        val json: String
+        return try {
+            json = file.bufferedReader().use { it.readText() }
+            gson.fromJson(json, User::class.java)
+        } catch (e: Exception) {
+            Log.e("Error", e.message.toString())
+            User()
+        }
     }
 }

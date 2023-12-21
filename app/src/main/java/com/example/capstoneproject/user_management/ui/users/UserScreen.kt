@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ArchiveEntry
 import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -78,7 +79,10 @@ fun UserScreen(
                             UserListItem(
                                 user = it.second,
                                 isUser = it.first == userAccountDetails.value.id,
-                                edit = { edit.invoke(it.first) }
+                                edit = { edit.invoke(it.first) },
+                                archive = { remove ->
+                                    userViewModel.archiveItem(it.first, remove, it.second)
+                                }
                             ) {
                                 user = it
                                 showDeleteDialog = true
@@ -114,6 +118,7 @@ fun UserListItem(
     user: User,
     isUser: Boolean,
     edit: () -> Unit,
+    archive: (Boolean) -> Unit,
     delete: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -124,8 +129,10 @@ fun UserListItem(
             Box(
                 modifier = Modifier
                     .size(50.dp)
-                    .background(color = Purple500,
-                        shape = CircleShape),
+                    .background(
+                        color = Purple500,
+                        shape = CircleShape
+                    ),
                 contentAlignment = Alignment.Center
             ) { Text(
                 text = user.email.first().uppercase(),
@@ -166,6 +173,10 @@ fun UserListItem(
                         text = { Text(text = if (user.active) "Set Inactive" else "Set Active") },
                         onClick = { expanded = false; delete.invoke() }
                     )
+                    ArchiveEntry(name = "${user.lastName}, ${user.firstName}", isActive = user.active) {
+                        archive.invoke(it)
+                        expanded = false
+                    }
                 }
             }
         }

@@ -157,7 +157,7 @@ class ProductViewModel : ViewModel() {
     }
 
     fun archiveItem(id: String, remove: Boolean, product: Product) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),  "/${product.productName}_(${LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)}).json")
             val gson = Gson()
             val json = gson.toJson(product.copy(id = id))

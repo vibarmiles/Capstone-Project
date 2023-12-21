@@ -7,4 +7,5 @@ interface ICategoryRepository {
     fun getAll(callback: () -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<Category>>
     fun insert(category: Category, result: (FirebaseResult) -> Unit)
     fun delete(category: Category, result: (FirebaseResult) -> Unit)
+    fun archiveItem(category: Category, result: (FirebaseResult) -> Unit)
 }

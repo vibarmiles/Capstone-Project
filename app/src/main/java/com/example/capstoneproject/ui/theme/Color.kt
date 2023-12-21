@@ -9,4 +9,5 @@ val secondaryColor = Color(0xfff39b6d)
 
 val darkText1 = Color(0xff83b9ff)
 val darkprimary1 = Color(0xff262626)
-val darkbg = Color(0xff070707)
+val pending = Color(0xFFFFC107)
+val success = Color(0xFF28A745)

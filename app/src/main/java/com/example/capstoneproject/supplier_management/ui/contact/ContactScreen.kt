@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ArchiveEntry
 import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -60,7 +61,10 @@ fun ContactScreen(
             ContactScreenContent(
                 paddingValues = paddingValues,
                 contacts = contacts.value.sortedBy { it.name.uppercase() },
-                edit = { edit.invoke(it) }
+                edit = { edit.invoke(it) },
+                archive = { contact, remove ->
+                    contactViewModel.archiveItem(contact = contact, remove = remove)
+                }
             ) {
                 contact = it
                 showDeleteDialog = true
@@ -91,6 +95,7 @@ fun ContactScreenContent(
     paddingValues: PaddingValues,
     contacts: List<Contact>,
     edit: (Contact) -> Unit,
+    archive: (Contact, Boolean) -> Unit,
     delete: (Contact) -> Unit
 ) {
     val size = contacts.count()
@@ -149,6 +154,11 @@ fun ContactScreenContent(
                                     text = { Text(text = if (it.active) "Set Inactive" else "Set Active") },
                                     onClick = { expanded = false; delete.invoke(it) }
                                 )
+
+                                ArchiveEntry(name = it.name, isActive = it.active) { remove ->
+                                    archive.invoke(it, remove)
+                                    expanded = false
+                                }
                             }
                         }
                     )

@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -29,8 +30,10 @@ import androidx.core.graphics.ColorUtils
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
-import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
 import com.example.capstoneproject.supplier_management.data.firebase.Status
+import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
+import com.example.capstoneproject.ui.theme.pending
+import com.example.capstoneproject.ui.theme.success
 import kotlinx.coroutines.CoroutineScope
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -153,19 +156,33 @@ fun PurchaseOrderItem(
         },
         trailingContent = {
             Column(modifier = Modifier.height(IntrinsicSize.Max), horizontalAlignment = Alignment.End) {
-                Text(text = when (purchaseOrder.status) {
-                    Status.WAITING -> "To Receive"
-                    Status.CANCELLED -> "Cancelled"
-                    Status.COMPLETE -> "Delivered"
-                    Status.PENDING -> "Updating"
-                    Status.FAILED -> "Failed"
-                }, fontSize = 12.sp, color = when (purchaseOrder.status) {
-                    Status.WAITING -> Color.Red
-                    Status.CANCELLED -> Color.Gray
-                    Status.COMPLETE -> Color(ColorUtils.blendARGB(Color.Green.toArgb(), Color.Black.toArgb(), 0.2f))
-                    Status.PENDING -> Color.Black
-                    Status.FAILED -> Color.Red
-                }, fontWeight = FontWeight.Bold)
+                Box(
+                    modifier = Modifier
+                        .background(
+                            color = when (purchaseOrder.status) {
+                                Status.WAITING -> pending
+                                Status.CANCELLED -> Color.Gray
+                                Status.COMPLETE -> success
+                                Status.PENDING -> Color.Black
+                                Status.FAILED -> Color.Red
+                            },
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .padding(4.dp)
+                ) {
+                    Text(
+                        text = when (purchaseOrder.status) {
+                            Status.WAITING -> "To Receive"
+                            Status.CANCELLED -> "Cancelled"
+                            Status.COMPLETE -> "Received"
+                            Status.PENDING -> "Updating"
+                            Status.FAILED -> "Failed"
+                        },
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (purchaseOrder.status == Status.WAITING) Color.Black else Color.White
+                    )
+                }
             }
         }
     )

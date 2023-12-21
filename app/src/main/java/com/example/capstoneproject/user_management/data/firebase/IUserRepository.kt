@@ -9,4 +9,5 @@ interface IUserRepository {
     fun getUser(email: String, user: (UserAccountDetails) -> Unit)
     fun insert(key: String?, user: User, result: (FirebaseResult) -> Unit)
     fun delete(key: String, user: User, result: (FirebaseResult) -> Unit)
+    fun archiveItem(id: String, result: (FirebaseResult) -> Unit)
 }

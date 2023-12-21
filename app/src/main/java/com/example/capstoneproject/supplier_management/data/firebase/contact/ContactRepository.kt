@@ -49,4 +49,12 @@ class ContactRepository : IContactRepository {
             result.invoke(FirebaseResult(result = false, errorMessage = it.message))
         }
     }
+
+    override fun archiveItem(contact: Contact, result: (FirebaseResult) -> Unit) {
+        contactCollectionReference.document(contact.id).delete().addOnSuccessListener {
+            result.invoke(FirebaseResult(result = true))
+        }.addOnFailureListener {
+            result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+        }
+    }
 }

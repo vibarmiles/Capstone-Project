@@ -146,7 +146,7 @@ fun BranchFormScreen(
 
             if (showConfirmationDialog.value) {
                 ConfirmationForAddingDialog(onCancel = { showConfirmationDialog.value = false }) {
-                    viewModel.insert(branch.copy(name = name, address = address))
+                    viewModel.insert(branch.copy(name = name, address = address, active = true))
                     userViewModel.log(event = "${function.lowercase()}_branch")
                     showConfirmationDialog.value = false
                     back.invoke()

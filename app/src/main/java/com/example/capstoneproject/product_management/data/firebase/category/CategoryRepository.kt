@@ -49,4 +49,12 @@ class CategoryRepository : ICategoryRepository {
             result.invoke(FirebaseResult(result = false, errorMessage = it.message))
         }
     }
+
+    override fun archiveItem(category: Category, result: (FirebaseResult) -> Unit) {
+        categoryCollectionReference.document(category.id).delete().addOnSuccessListener {
+            result.invoke(FirebaseResult(result = true))
+        }.addOnFailureListener {
+            result.invoke(FirebaseResult(result = false, errorMessage = it.message))
+        }
+    }
 }

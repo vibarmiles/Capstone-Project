@@ -1,6 +1,8 @@
 package com.example.capstoneproject.user_management.ui.users
 
 import android.util.Patterns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -11,11 +13,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -32,6 +36,9 @@ import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.user_management.data.firebase.User
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -42,8 +49,9 @@ fun UserForm(
     userId: String? = null,
     back: () -> Unit
 ) {
+    var id = userId
     val users = userViewModel.getAll()
-    val user = userViewModel.getUserDetails(userId = userId) ?: User()
+    var user = userViewModel.getUserDetails(userId = userId) ?: User()
     var expandedUsers by remember { mutableStateOf(false) }
     var expandedBranches by remember { mutableStateOf(false) }
     var firstName by remember { mutableStateOf(user.firstName) }
@@ -60,6 +68,28 @@ fun UserForm(
     val userLevels = if (userAccountDetails.value.userLevel == UserLevel.Admin) enumValues<UserLevel>().filter { it != UserLevel.Employee } else enumValues<UserLevel>().filter { it != UserLevel.Admin }
     val localFocusManager = LocalFocusManager.current
     val showConfirmationDialog = remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val jsonUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent(), onResult = {
+        if (it != null) {
+            val item = context.contentResolver.openInputStream(it)
+            if (item != null) {
+                user = userViewModel.readFromJson(item)
+                id = user.id
+                lastName = user.lastName
+                firstName = user.firstName
+                email = user.email
+                branchId = user.branchId
+                branchName = branches.value.firstOrNull()?.name ?: "No Branches"
+                userLevel = user.userLevel
+
+                runBlocking {
+                    withContext(Dispatchers.IO) {
+                        item.close()
+                    }
+                }
+            }
+        }
+    })
 
     Scaffold(
         topBar = {
@@ -70,6 +100,13 @@ fun UserForm(
                 navigationIcon = {
                     IconButton(onClick = back) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = null)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        jsonUriLauncher.launch("application/json")
+                    }) {
+                        Icon(imageVector = Icons.Filled.Upload, contentDescription = null)
                     }
                 }
             )
@@ -188,7 +225,7 @@ fun UserForm(
                 FormButtons(cancel = back) {
                     isFirstNameValid = firstName.isNotBlank()
                     isLastNameValid = lastName.isNotBlank()
-                    isEmailValid = email.let { it.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(it).matches() && users.filterKeys { key -> userId != key }.all { entry -> entry.value.email != it } }
+                    isEmailValid = email.let { it.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(it).matches() && users.filterKeys { key -> id != key }.all { entry -> entry.value.email != it } }
                     val isBranchValid = if (userLevel == UserLevel.Employee) branchId != null else true
 
                     if (isFirstNameValid && isLastNameValid && isEmailValid && isBranchValid) {
@@ -199,7 +236,7 @@ fun UserForm(
 
             if (showConfirmationDialog.value) {
                 ConfirmationForAddingDialog(onCancel = { showConfirmationDialog.value = false }) {
-                    userViewModel.insert(id = userId, user = user.copy(lastName = lastName, firstName = firstName, email = email, userLevel = userLevel, branchId = if (userLevel == UserLevel.Employee) branchId else null))
+                    userViewModel.insert(id = id, user = user.copy(lastName = lastName, firstName = firstName, active = true, email = email, userLevel = userLevel, branchId = if (userLevel == UserLevel.Employee) branchId else null))
                     userViewModel.log("${decision}_user")
                     showConfirmationDialog.value = false
                     back.invoke()

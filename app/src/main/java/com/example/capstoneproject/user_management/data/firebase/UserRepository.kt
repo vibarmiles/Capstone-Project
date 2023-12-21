@@ -118,4 +118,12 @@ class UserRepository : IUserRepository {
             result.invoke(FirebaseResult(result = false, errorMessage = it.message))
         }
     }
+
+    override fun archiveItem(id: String, result: (FirebaseResult) -> Unit) {
+        userCollectionReference.child(id).removeValue().addOnSuccessListener {
+            result.invoke(FirebaseResult(result = true))
+        }.addOnFailureListener {
+            result.invoke(FirebaseResult(errorMessage = it.message))
+        }
+    }
 }

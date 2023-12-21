@@ -7,4 +7,5 @@ interface IContactRepository {
     fun getAll(callback: () -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<Contact>>
     fun insert(contact: Contact, result: (FirebaseResult) -> Unit)
     fun delete(contact: Contact, result: (FirebaseResult) -> Unit)
+    fun archiveItem(contact: Contact, result: (FirebaseResult) -> Unit)
 }

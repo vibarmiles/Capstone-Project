@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
 import com.example.capstoneproject.product_management.data.firebase.product.Product
+import com.example.capstoneproject.ui.theme.success
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
@@ -187,7 +188,7 @@ fun MonthlySales(
                         if (previousTotalSales > 0) {
                             Text(
                                 text = String.format("%,.2f", abs(percent)) + "%",
-                                color = if (percent < 0) MaterialTheme.colors.error else if (percent > 0) Color(ColorUtils.blendARGB(Color.Green.toArgb(), Color.Black.toArgb(), 0.2f)) else MaterialTheme.colors.onSurface,
+                                color = if (percent < 0) MaterialTheme.colors.error else if (percent > 0) success else MaterialTheme.colors.onSurface,
                                 fontWeight = FontWeight.Bold
                             )
                         }

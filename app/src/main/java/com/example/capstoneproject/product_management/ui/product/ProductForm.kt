@@ -374,7 +374,8 @@ fun ProductForm(
                         sellingPrice = sellingPrice.toDouble(),
                         category = categoryId,
                         supplier = contactId!!,
-                        leadTime = leadTime
+                        leadTime = leadTime,
+                        active = true
                     ))
                     showConfirmationDialog.value = false
                     userViewModel.log(event = "${function.lowercase()}_product")

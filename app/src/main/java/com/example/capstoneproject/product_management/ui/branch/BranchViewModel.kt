@@ -72,7 +72,7 @@ class BranchViewModel : ViewModel() {
     }
 
     fun archiveItem(branch: Branch, remove: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val file = File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),  "/${branch.name}_(${LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)}).json")
             val gson = Gson()

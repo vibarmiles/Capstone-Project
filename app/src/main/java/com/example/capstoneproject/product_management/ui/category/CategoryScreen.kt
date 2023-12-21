@@ -1,5 +1,7 @@
 package com.example.capstoneproject.product_management.ui.category
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,6 +20,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -26,6 +29,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.ArchiveEntry
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.global.ui.misc.MakeInactiveDialog
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
@@ -35,6 +39,9 @@ import com.example.capstoneproject.product_management.ui.product.ProductViewMode
 import com.example.capstoneproject.ui.theme.Purple500
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 @Composable
 fun CategoryScreen(
@@ -57,18 +64,40 @@ fun CategoryScreen(
     var showDeleteDialog by remember {
         mutableStateOf(false)
     }
+    val context = LocalContext.current
+    val jsonUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent(), onResult = {
+        if (it != null) {
+            val item = context.contentResolver.openInputStream(it)
+            if (item != null) {
+                category = viewModel.readFromJson(item)
+
+                runBlocking {
+                    withContext(Dispatchers.IO) {
+                        item.close()
+                    }
+                }
+
+                showDialog = true
+            }
+        }
+    })
 
     Scaffold(
         topBar = {
-            BaseTopAppBar(title = stringResource(id = R.string.category), scope = scope, scaffoldState = scaffoldState)
+            BaseTopAppBar(title = stringResource(id = R.string.category), scope = scope, scaffoldState = scaffoldState) {
+                IconButton(onClick = {
+                    jsonUriLauncher.launch("application/json")
+                }) {
+                    Icon(imageVector = Icons.Filled.Upload, contentDescription = null)
+                }
+            }
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showDialog = true; category = Category() }) {
                 Icon(Icons.Filled.Add, null)
             }
         }
-    ) {
-            paddingValues ->
+    ) { paddingValues ->
         if (viewModel.isLoading.value) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -93,6 +122,8 @@ fun CategoryScreen(
                             CategoryListItem(item, edit = {
                                 showDialog = true
                                 category = item
+                            }, archive = {
+                                viewModel.archiveItem(category = item, remove = it)
                             }) {
                                 showDeleteDialog = true
                                 category = item
@@ -110,7 +141,7 @@ fun CategoryScreen(
 
         if (showDialog) {
             CategoryDialog(category = category, onConfirm = {
-                viewModel.insert(it)
+                viewModel.insert(it.copy(active = true))
                 userViewModel.log(event = "${if (category.id == "") "add" else "edit"}_product")
                 showDialog = false
             }) {
@@ -142,6 +173,7 @@ fun CategoryScreen(
 fun CategoryListItem(
     category: Category,
     edit: () -> Unit,
+    archive: (Boolean) -> Unit,
     delete: () -> Unit
 ) {
     var expanded: Boolean by remember { mutableStateOf(false) }
@@ -188,6 +220,10 @@ fun CategoryListItem(
                     text = { Text(text = if (category.active) "Set Inactive" else "Set Active") },
                     onClick = { expanded = false; delete.invoke() }
                 )
+                ArchiveEntry(name = category.categoryName, isActive = category.active) {
+                    archive.invoke(it)
+                    expanded = false
+                }
             }
         }
     )
