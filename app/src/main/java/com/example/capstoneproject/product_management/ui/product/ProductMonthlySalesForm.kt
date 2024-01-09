@@ -63,7 +63,7 @@ fun ProductMonthlySalesFormScreen(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             item {
-                var text by remember { mutableStateOf(LocalDate.now().year.toString()) }
+                var text by remember { mutableStateOf(year.toString()) }
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = text,
@@ -95,8 +95,8 @@ fun ProductMonthlySalesFormScreen(
                     ) }
                     val isValid by remember { mutableStateOf(true) }
 
-                    if (text.isNotBlank() && text.toIntOrNull() != null) {
-                        viewModel.salesPerMonth[it] = text
+                    if (text.isNotBlank()) {
+                        viewModel.salesPerMonth[it] = if (text.toIntOrNull() != null) text else ""
                     }
 
                     OutlinedTextField(
@@ -146,7 +146,7 @@ fun ProductMonthlySalesFormScreen(
                     val newMap = mutableMapOf<Month, Int>()
                     if (check) {
                         for (pair in viewModel.salesPerMonth) {
-                            newMap[pair.key] = pair.value.toInt()
+                            newMap[pair.key] = pair.value.toIntOrNull() ?: 0
                         }
 
                         productViewModel.setMonthlySales(productId, newMap, year)
