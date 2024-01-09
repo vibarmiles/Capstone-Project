@@ -95,7 +95,7 @@ fun ProductMonthlySalesFormScreen(
                     ) }
                     val isValid by remember { mutableStateOf(true) }
 
-                    if (text.isNotBlank()) {
+                    if (text.isNotBlank() && text.toIntOrNull() != null) {
                         viewModel.salesPerMonth[it] = text
                     }
 
@@ -104,7 +104,8 @@ fun ProductMonthlySalesFormScreen(
                         colors = GlobalTextFieldColors(),
                         isError = !isValid,
                         modifier = Modifier.fillMaxWidth(),
-                        value = text, label = {
+                        value = if (text.toIntOrNull() != null) text else "",
+                        label = {
                             Text(text = it.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         },
                         placeholder = { Text(text = "Insert Current Quantity") },

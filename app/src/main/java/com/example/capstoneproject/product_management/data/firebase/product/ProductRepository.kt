@@ -380,7 +380,11 @@ class ProductRepository : IProductRepository {
                             val yearSale = transaction.monthlySales.toMutableMap().let { monthlySale ->
                                 monthlySale[date.year.toString()].let { _ ->
                                     if (!monthlySale.containsKey(date.year.toString())) {
-                                        monthlySale.putIfAbsent(date.year.toString(), mapOf(Pair(date.minusMonths(1).month.name, transaction.soldThisMonth)))
+                                        if (!didYearChange) {
+                                            monthlySale.putIfAbsent(lastEditDate.year.toString(), mapOf(Pair(date.minusMonths(1).month.name, transaction.soldThisMonth)))
+                                        } else {
+                                            monthlySale.putIfAbsent(date.year.toString(), mapOf(Pair(date.minusMonths(1).month.name, transaction.soldThisMonth)))
+                                        }
                                     } else {
                                         val map = monthlySale[date.year.toString()]!!.toMutableMap()
                                         map[date.minusMonths(1).month.name] = transaction.soldThisMonth
