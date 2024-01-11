@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.user_management.ui.users.UserAccountDetails
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
@@ -13,6 +14,7 @@ import com.google.firebase.ktx.Firebase
 class UserRepository : IUserRepository {
     private val firebase = Firebase.database.reference
     private val userCollectionReference = firebase.child("users")
+    private val auth = FirebaseAuth.getInstance()
 
     override fun getAll(callback: () -> Unit, update: () -> Unit, result: (FirebaseResult) -> Unit): SnapshotStateMap<String, User> {
         val users = mutableStateMapOf<String, User>()
@@ -63,7 +65,7 @@ class UserRepository : IUserRepository {
                 userCollectionReference.child(found.key).setValue(found.value.copy(lastLogin = ServerValue.TIMESTAMP)).addOnSuccessListener {
                     userCollectionReference.child(found.key).get().addOnSuccessListener { u ->
                         u.getValue<User>()!!.let { thisUser ->
-                            user.invoke(UserAccountDetails(id = found.key, branchId = thisUser.branchId, previousLoginDate = found.value.lastLogin as Long, loginDate = thisUser.lastLogin as Long, userLevel = thisUser.userLevel, isActive = thisUser.active))
+                            user.invoke(UserAccountDetails(id = found.key, branchId = thisUser.branchId, previousLoginDate = found.value.lastLogin as Long, loginDate = thisUser.lastLogin as Long, firstLogin = thisUser.firstLogin, userLevel = thisUser.userLevel, isActive = thisUser.active))
                         }
                     }.addOnFailureListener { exception ->
                         user.invoke(UserAccountDetails(errorMessage = exception.message))
@@ -75,13 +77,23 @@ class UserRepository : IUserRepository {
         }
     }
 
+    override fun updatePassword(key: String, password: String, result: (FirebaseResult) -> Unit) {
+        userCollectionReference.child(key).child("firstLogin").setValue(false)
+        userCollectionReference.child(key).child("password").setValue(password).addOnSuccessListener {
+            auth.currentUser?.updatePassword(password)
+            result.invoke(FirebaseResult(result = true))
+        }.addOnFailureListener {
+            result.invoke(FirebaseResult(errorMessage = it.message))
+        }
+    }
+
     override fun insert(key: String?, user: User, result: (FirebaseResult) -> Unit) {
         if (key != null) {
             userCollectionReference.runTransaction(object : Transaction.Handler {
                 override fun doTransaction(currentData: MutableData): Transaction.Result {
                     val currentUsers = currentData.getValue<Map<String, User>>()?.filterKeys { it != key } ?: mapOf()
 
-                    if (currentUsers.any { it.value.email == user.email }) {
+                    if (currentUsers.any { it.value.email == user.email || it.value.phoneNumber == user.phoneNumber }) {
                         return Transaction.abort()
                     }
 
@@ -97,6 +109,14 @@ class UserRepository : IUserRepository {
                     if (!committed) {
                         result.invoke(FirebaseResult(errorMessage = "Error has occurred. Please check current users then try again later!"))
                     } else {
+                        auth.currentUser?.run {
+                            updateEmail(user.email).addOnCompleteListener {
+                                Log.e("User", "Email")
+                            }
+                            updatePassword(user.password!!).addOnCompleteListener {
+                                Log.e("User", "Password")
+                            }
+                        }
                         result.invoke(FirebaseResult(result = true))
                     }
                 }
@@ -104,6 +124,7 @@ class UserRepository : IUserRepository {
             })
         } else {
             userCollectionReference.push().setValue(user).addOnSuccessListener {
+                auth.createUserWithEmailAndPassword(user.email, user.password!!)
                 result.invoke(FirebaseResult(result = true))
             }.addOnFailureListener {
                 result.invoke(FirebaseResult(result = false, errorMessage = it.message))

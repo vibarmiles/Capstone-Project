@@ -117,7 +117,7 @@ fun TransferOrderForm(
                     } else {
                         OutlinedTextField(modifier = Modifier.fillMaxWidth(), label = {
                             Text(
-                                text = "Transfer Items from this branch"
+                                text = "Transfer Items to this branch"
                             )
                         }, value = firstTextFieldValue, enabled = false, readOnly = true, onValueChange = {  })
                     }
@@ -125,7 +125,7 @@ fun TransferOrderForm(
                     var expanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                         OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, colors = GlobalTextFieldColors(), label = {
-                            Text(text = "Transfer Items from this branch")
+                            Text(text = "Transfer Items to this branch")
                         }, modifier = Modifier.fillMaxWidth(), value = secondTextFieldValue, readOnly = true, onValueChange = {  })
                         DropdownMenu(modifier = Modifier
                             .exposedDropdownSize()

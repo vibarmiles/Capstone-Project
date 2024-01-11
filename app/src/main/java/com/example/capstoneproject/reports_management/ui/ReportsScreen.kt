@@ -1,5 +1,7 @@
 package com.example.capstoneproject.reports_management.ui
 
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
@@ -66,10 +68,14 @@ fun ReportsScreen(
                     IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Report, contentDescription = null) }, text = { Text(text = "Generate FSN Analysis") }, onClick = { expanded = false; reportsViewModel.generateFSNReport(products = productsWithInventoryTurnoverRatio) {
-                            Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                            Handler(Looper.getMainLooper()).post {
+                                Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                            }
                         } })
                         androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.CalendarMonth, contentDescription = null) }, text = { Text(text = "Generate Monthly Sales Report") }, onClick = { expanded = false; reportsViewModel.generateMonthlySalesReport(products = products.values.toList(), date = date) {
-                            Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                            Handler(Looper.getMainLooper()).post {
+                                Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                            }
                         } })
                     }
                 }

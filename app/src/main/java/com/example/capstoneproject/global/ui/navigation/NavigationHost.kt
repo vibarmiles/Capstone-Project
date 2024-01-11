@@ -86,13 +86,13 @@ fun NavigationHost(
     ) {
         composable(Routes.LoginScreen.route) {
             val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartIntentSenderForResult(), onResult = { result ->
-                viewModel.loadLogin(true)
                 if (result.resultCode == Activity.RESULT_OK) {
                     scope.launch {
                         val signInResult = googleAuthUiClient.getSignInResult(
                             intent = result.data ?: return@launch
                         )
 
+                        viewModel.loadLogin(true)
                         viewModel.updateUser(signInResult)
                     }
                 }
@@ -100,7 +100,14 @@ fun NavigationHost(
 
             LoginScreen(
                 scope = scope,
-                loadLogin = appUi.value.loadLogin
+                loadLogin = appUi.value.loadLogin,
+                login = { email, password ->
+                    scope.launch {
+                        googleAuthUiClient.getSignInResultFromEmail(email, password) {
+                            viewModel.updateUser(it)
+                        }
+                    }
+                }
             ) {
                 scope.launch {
                     val signIn = googleAuthUiClient.signIn()

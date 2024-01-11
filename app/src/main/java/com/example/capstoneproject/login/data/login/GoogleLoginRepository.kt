@@ -7,10 +7,14 @@ import com.example.capstoneproject.R
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.BeginSignInRequest.GoogleIdTokenRequestOptions
 import com.google.android.gms.auth.api.identity.SignInClient
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.tasks.await
 
+enum class Provider {
+    Google, Email, Phone
+}
 
 class GoogleLoginRepository(
     private val context: Context,
@@ -44,16 +48,35 @@ class GoogleLoginRepository(
         }
     }
 
+    fun getSignInResultFromEmail(email: String, password: String, callback: (SignInResult) -> Unit) {
+        auth.signInWithEmailAndPassword(email, password).addOnSuccessListener {
+            val user = auth.currentUser
+            try {
+                callback.invoke(SignInResult(
+                    data = user?.run {
+                        User(
+                            id = uid,
+                            username = email,
+                            profilePicture = null,
+                            email = email
+                        )
+                    },
+                    errorMessage = null
+                ))
+            } catch (e: Exception) {
+                callback.invoke(SignInResult(data = null, errorMessage = e.message))
+            }
+        }
+    }
+
     suspend fun signOut() {
         try {
             oneTapClient.signOut().await()
             auth.signOut()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
 
         }
     }
-
-    fun getSignedInUser(): User? = auth.currentUser?.run { User(id = uid, username = displayName ?: "", profilePicture = photoUrl.toString(), email = email ?: "") }
 
     private fun buildSignInRequest(): BeginSignInRequest {
         return BeginSignInRequest.builder()

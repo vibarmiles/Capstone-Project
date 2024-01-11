@@ -27,6 +27,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.R
@@ -60,6 +61,10 @@ fun UserForm(
     var isLastNameValid by remember { mutableStateOf(true) }
     var email by remember { mutableStateOf(user.email) }
     var isEmailValid by remember { mutableStateOf(true) }
+    var phoneNumber by remember { mutableStateOf(user.phoneNumber.let { if (it.length > 10) it.removeRange(0, 1) else "" }) }
+    var isPhoneNumber by remember { mutableStateOf(true) }
+    val password by remember { mutableStateOf(user.password) }
+    var setToDefaultPassword = true
     val branches = branchViewModel.getAll().observeAsState(listOf())
     var branchId by remember { mutableStateOf(branches.value.firstOrNull()?.id)}
     var branchName by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches")}
@@ -213,22 +218,49 @@ fun UserForm(
                 },
                 placeholder = { Text(text = "Enter Email") },
                 isError = !isEmailValid, trailingIcon = { if (!isEmailValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = {
-                    localFocusManager.clearFocus()
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = {
+                    localFocusManager.moveFocus(FocusDirection.Down)
                 }),
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth()
             )
+            OutlinedTextField(
+                value = phoneNumber,
+                colors = GlobalTextFieldColors(),
+                onValueChange = { value -> if (value.length <= 10) phoneNumber = value.filter { it.isDigit() } },
+                label = {
+                    Text(text = buildAnnotatedString {
+                        append(text = "Phone Number")
+                        withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") }
+                    })
+                },
+                placeholder = { Text(text = "Enter Phone Number") },
+                isError = !isPhoneNumber, trailingIcon = { if (!isPhoneNumber) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    localFocusManager.clearFocus()
+                }),
+                leadingIcon = { Text(text = "+63") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Checkbox(checked = setToDefaultPassword, onCheckedChange = { setToDefaultPassword = !setToDefaultPassword })
+                Text("Set to Default Password? (Phone Number)", maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 FormButtons(cancel = back) {
                     isFirstNameValid = firstName.isNotBlank()
                     isLastNameValid = lastName.isNotBlank()
                     isEmailValid = email.let { it.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(it).matches() && users.filterKeys { key -> id != key }.all { entry -> entry.value.email != it } }
+                    isPhoneNumber = phoneNumber.let { it.isNotBlank() && Patterns.PHONE.matcher(it).matches() && it.length == 10 && users.filterKeys { key -> id != key }.all { entry -> entry.value.phoneNumber != "0$it" } }
                     val isBranchValid = if (userLevel == UserLevel.Employee) branchId != null else true
 
-                    if (isFirstNameValid && isLastNameValid && isEmailValid && isBranchValid) {
+                    if (isFirstNameValid && isLastNameValid && isEmailValid && isBranchValid && isPhoneNumber) {
                         showConfirmationDialog.value = true
                     }
                 }
@@ -236,7 +268,7 @@ fun UserForm(
 
             if (showConfirmationDialog.value) {
                 ConfirmationForAddingDialog(onCancel = { showConfirmationDialog.value = false }) {
-                    userViewModel.insert(id = id, user = user.copy(id = null, lastName = lastName, firstName = firstName, active = true, email = email, userLevel = userLevel, branchId = if (userLevel == UserLevel.Employee) branchId else null))
+                    userViewModel.insert(id = id, user = user.copy(id = null, lastName = lastName, firstName = firstName, phoneNumber = "0$phoneNumber", password = if (setToDefaultPassword || id == null) "0$phoneNumber" else password, active = true, email = email, userLevel = userLevel, branchId = if (userLevel == UserLevel.Employee) branchId else null))
                     userViewModel.log("${decision}_user")
                     showConfirmationDialog.value = false
                     back.invoke()

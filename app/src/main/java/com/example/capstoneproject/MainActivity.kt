@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.capstoneproject.global.ui.AppViewModel
+import com.example.capstoneproject.global.ui.misc.FirstLoginDialog
 import com.example.capstoneproject.global.ui.navigation.Drawer
 import com.example.capstoneproject.global.ui.navigation.NavigationHost
 import com.example.capstoneproject.global.ui.navigation.Routes
@@ -72,6 +73,7 @@ fun GlobalContent(
     val navController = rememberNavController()
     var selectedItem by remember { mutableStateOf(R.string.dashboard) }
     var canExit by remember { mutableStateOf(false) }
+    var firstLogin by remember { mutableStateOf(false) }
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val appUi = appViewModel.uiState.collectAsState()
     val users = userViewModel.getAll()
@@ -108,6 +110,13 @@ fun GlobalContent(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(color = Color.White)
+            }
+        }
+
+        if (firstLogin) {
+            FirstLoginDialog {
+                userViewModel.updatePassword(id = userAccountDetails.value.id, password = it)
+                firstLogin = false
             }
         }
 
@@ -202,6 +211,7 @@ fun GlobalContent(
                         scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully!", duration = SnackbarDuration.Short)
                     }
 
+                    firstLogin = userAccountDetails.value.firstLogin
                     selectedItem = if (userAccountDetails.value.userLevel == UserLevel.Admin) R.string.user else R.string.dashboard
 
                     navController.navigate(selectedItem.toString()) {

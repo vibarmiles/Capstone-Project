@@ -30,6 +30,7 @@ data class UserAccountDetails(
     val branchId: String? = null,
     val previousLoginDate: Long = 0,
     val loginDate: Long = 0,
+    val firstLogin: Boolean = true,
     val userLevel: UserLevel = UserLevel.Employee,
     val isActive: Boolean = false,
     val errorMessage: String? = null
@@ -76,6 +77,14 @@ class UserViewModel : ViewModel() {
     fun insert(id: String?, user: User) {
         viewModelScope.launch(Dispatchers.IO) {
             userRepository.insert(key = id, user = user) { result ->
+                resultState.update { result }
+            }
+        }
+    }
+
+    fun updatePassword(id: String, password: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            userRepository.updatePassword(key = id, password = password) { result ->
                 resultState.update { result }
             }
         }

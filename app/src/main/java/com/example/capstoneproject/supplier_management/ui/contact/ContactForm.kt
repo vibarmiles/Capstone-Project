@@ -97,10 +97,10 @@ fun ContactFormScreen(
                 colors = GlobalTextFieldColors(),
                 value = name,
                 onValueChange = { value -> name = value },
-                placeholder = { Text(text = "Enter Contact's Name") },
+                placeholder = { Text(text = "Enter Supplier Name") },
                 label = {
                     Text(text = buildAnnotatedString {
-                        append("Contact's Name")
+                        append("Supplier Name")
                         withStyle( style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") }
                     })
                 },
