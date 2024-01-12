@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -88,11 +89,12 @@ fun NavigationHost(
             val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartIntentSenderForResult(), onResult = { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
                     scope.launch {
+                        viewModel.loadLogin(true)
+
                         val signInResult = googleAuthUiClient.getSignInResult(
                             intent = result.data ?: return@launch
                         )
 
-                        viewModel.loadLogin(true)
                         viewModel.updateUser(signInResult)
                     }
                 }
@@ -100,11 +102,20 @@ fun NavigationHost(
 
             LoginScreen(
                 scope = scope,
-                loadLogin = appUi.value.loadLogin,
-                login = { email, password ->
+                login = { username, password ->
                     scope.launch {
-                        googleAuthUiClient.getSignInResultFromEmail(email, password) {
-                            viewModel.updateUser(it)
+                        viewModel.loadLogin(true)
+
+                        if (username.length == 11 && username.isDigitsOnly()) {
+                            userViewModel.getEmail(phoneNumber = username) { email ->
+                                googleAuthUiClient.getSignInResultFromEmail(email, password) {
+                                    viewModel.updateUser(it)
+                                }
+                            }
+                        } else {
+                            googleAuthUiClient.getSignInResultFromEmail(username, password) {
+                                viewModel.updateUser(it)
+                            }
                         }
                     }
                 }

@@ -78,8 +78,7 @@ class UserRepository : IUserRepository {
     }
 
     override fun updatePassword(key: String, password: String, result: (FirebaseResult) -> Unit) {
-        userCollectionReference.child(key).child("firstLogin").setValue(false)
-        userCollectionReference.child(key).child("password").setValue(password).addOnSuccessListener {
+        userCollectionReference.child(key).child("firstLogin").setValue(false).addOnSuccessListener {
             auth.currentUser?.updatePassword(password)
             result.invoke(FirebaseResult(result = true))
         }.addOnFailureListener {
@@ -97,7 +96,7 @@ class UserRepository : IUserRepository {
                         return Transaction.abort()
                     }
 
-                    currentData.child(key).value = user
+                    currentData.child(key).value = user.copy(password = null)
                     return Transaction.success(currentData)
                 }
 
@@ -123,7 +122,7 @@ class UserRepository : IUserRepository {
 
             })
         } else {
-            userCollectionReference.push().setValue(user).addOnSuccessListener {
+            userCollectionReference.push().setValue(user.copy(password = null)).addOnSuccessListener {
                 auth.createUserWithEmailAndPassword(user.email, user.password!!)
                 result.invoke(FirebaseResult(result = true))
             }.addOnFailureListener {
@@ -145,6 +144,13 @@ class UserRepository : IUserRepository {
             result.invoke(FirebaseResult(result = true))
         }.addOnFailureListener {
             result.invoke(FirebaseResult(errorMessage = it.message))
+        }
+    }
+
+    override fun getEmail(phoneNumber: String, function: (String) -> Unit) {
+        userCollectionReference.get().addOnSuccessListener {
+            val found = it.getValue<Map<String, User>>()?.entries?.firstOrNull { foundUser -> foundUser.value.phoneNumber == phoneNumber }
+            function.invoke(found?.value?.email ?: "")
         }
     }
 }

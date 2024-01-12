@@ -3,6 +3,7 @@ package com.example.capstoneproject.login.data.login
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import androidx.core.text.isDigitsOnly
 import com.example.capstoneproject.R
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.BeginSignInRequest.GoogleIdTokenRequestOptions
@@ -66,6 +67,8 @@ class GoogleLoginRepository(
             } catch (e: Exception) {
                 callback.invoke(SignInResult(data = null, errorMessage = e.message))
             }
+        }.addOnFailureListener {
+            callback.invoke(SignInResult(data = null, errorMessage = it.message))
         }
     }
 

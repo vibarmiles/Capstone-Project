@@ -70,6 +70,14 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    fun getEmail(phoneNumber: String, email: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            userRepository.getEmail(phoneNumber = phoneNumber) {
+                email.invoke(it)
+            }
+        }
+    }
+
     fun getUserDetails(userId: String?): User? {
         return userId?.let { users.getValue(userId) }
     }

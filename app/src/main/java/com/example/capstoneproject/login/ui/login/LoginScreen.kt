@@ -42,7 +42,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     scope: CoroutineScope,
-    loadLogin: Boolean,
     login: (String, String) -> Unit,
     onClick: () -> Unit
 ) {
@@ -68,138 +67,136 @@ fun LoginScreen(
             .fillMaxHeight(),
         contentAlignment = Alignment.Center
     ) {
-        if (!loadLogin) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.25f)
+                    .aspectRatio(ratio = 1f)
+                    .background(color = MaterialTheme.colors.primary, shape = CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(painter = painterResource(id = R.mipmap.app_icon_foreground), contentDescription = null, modifier = Modifier.fillMaxSize())
+            }
+
+            Spacer(modifier = Modifier.height(25.dp))
+
+            OutlinedTextField(
+                leadingIcon = { Icon(imageVector = Icons.Default.Person, contentDescription = null) },
+                colors = GlobalTextFieldColors(),
+                modifier = Modifier.fillMaxWidth(0.8f),
+                value = username,
+                onValueChange = { username = it },
+                placeholder = { Text(text = "Enter Email/Phone Number", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                label = {
+                    Text(text = buildAnnotatedString {
+                        append("Email/Phone Number")
+                        withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") }
+                    }, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                },
+                isError = !isValid,
+                trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = {
+                    localFocusManager.moveFocus(FocusDirection.Down)
+                })
+            )
+
+            OutlinedTextField(
+                leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = null) },
+                colors = GlobalTextFieldColors(),
+                modifier = Modifier.fillMaxWidth(0.8f),
+                value = password,
+                onValueChange = { password = it },
+                visualTransformation = PasswordVisualTransformation(),
+                placeholder = { Text(text = "Enter Password") },
+                label = {
+                    Text(text = buildAnnotatedString {
+                        append("Password")
+                        withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") }
+                    })
+                },
+                isError = !isValid,
+                trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    localFocusManager.clearFocus()
+                })
+            )
+
+            Button(
+                onClick = {
+                    isValid = username.isNotBlank() && password.isNotEmpty()
+
+                    if (isValid) {
+                        login.invoke(username, password)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(IntrinsicSize.Min),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(ColorUtils.blendARGB(Color.LightGray.toArgb(), Color.White.toArgb(), 0.5f)))
+            ) {
+                Text(text = "Login")
+            }
+
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp, horizontal = 4.dp)
+            ) {
+                Divider()
+                Text(text = "or", modifier = Modifier
+                    .background(MaterialTheme.colors.surface)
+                    .padding(horizontal = 4.dp))
+            }
+
+            Button(
+                onClick = {
+                    if (permissions.all {
+                            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+                        }) {
+                        onClick.invoke()
+                    } else {
+                        scope.launch {
+                            Toast.makeText(context, "Permissions Required", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(IntrinsicSize.Min),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(ColorUtils.blendARGB(Color.LightGray.toArgb(), Color.White.toArgb(), 0.5f)))
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.25f)
-                        .aspectRatio(ratio = 1f)
-                        .background(color = MaterialTheme.colors.primary, shape = CircleShape),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    Icon(painter = painterResource(id = R.mipmap.app_icon_foreground), contentDescription = null, modifier = Modifier.fillMaxSize())
-                }
-                
-                Spacer(modifier = Modifier.height(25.dp))
-
-                OutlinedTextField(
-                    leadingIcon = { Icon(imageVector = Icons.Default.Person, contentDescription = null) },
-                    colors = GlobalTextFieldColors(),
-                    modifier = Modifier.fillMaxWidth(0.8f),
-                    value = username,
-                    onValueChange = { username = it },
-                    placeholder = { Text(text = "Enter Email/Phone Number", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    label = {
-                        Text(text = buildAnnotatedString {
-                            append("Email/Phone Number")
-                            withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") }
-                        }, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    },
-                    isError = !isValid,
-                    trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(onNext = {
-                        localFocusManager.moveFocus(FocusDirection.Down)
-                    })
-                )
-
-                OutlinedTextField(
-                    leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = null) },
-                    colors = GlobalTextFieldColors(),
-                    modifier = Modifier.fillMaxWidth(0.8f),
-                    value = password,
-                    onValueChange = { password = it },
-                    visualTransformation = PasswordVisualTransformation(),
-                    placeholder = { Text(text = "Enter Password") },
-                    label = {
-                        Text(text = buildAnnotatedString {
-                            append("Password")
-                            withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") }
-                        })
-                    },
-                    isError = !isValid,
-                    trailingIcon = { if (!isValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = {
-                        localFocusManager.clearFocus()
-                    })
-                )
-
-                Button(
-                    onClick = {
-                        isValid = username.isNotBlank() && password.isNotEmpty()
-
-                        if (isValid) {
-                            login.invoke(username, password)
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .height(IntrinsicSize.Min),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(ColorUtils.blendARGB(Color.LightGray.toArgb(), Color.White.toArgb(), 0.5f)))
-                ) {
-                    Text(text = "Login")
-                }
-
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp, horizontal = 4.dp)
-                ) {
-                    Divider()
-                    Text(text = "or", modifier = Modifier
-                        .background(MaterialTheme.colors.surface)
-                        .padding(horizontal = 4.dp))
-                }
-
-                Button(
-                    onClick = {
-                        if (permissions.all {
-                                ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-                            }) {
-                            onClick.invoke()
-                        } else {
-                            scope.launch {
-                                Toast.makeText(context, "Permissions Required", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .height(IntrinsicSize.Min),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(ColorUtils.blendARGB(Color.LightGray.toArgb(), Color.White.toArgb(), 0.5f)))
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Icon(
-                            modifier = Modifier.height(30.dp),
-                            painter = painterResource(R.mipmap.google_icon_foreground),
-                            contentDescription = null,
-                            tint = Color.Unspecified
-                        )
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = "Login with Google",
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-                
-                TextButton(
-                    onClick = { context.startActivity(Intent(Settings.ACTION_ADD_ACCOUNT)) },
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = Color.Unspecified,
-                        contentColor = Color.Blue
+                    Icon(
+                        modifier = Modifier.height(30.dp),
+                        painter = painterResource(R.mipmap.google_icon_foreground),
+                        contentDescription = null,
+                        tint = Color.Unspecified
                     )
-                ) {
-                    Text(text = "Manage Accounts")
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Login with Google",
+                        textAlign = TextAlign.Center
+                    )
                 }
+            }
+
+            TextButton(
+                onClick = { context.startActivity(Intent(Settings.ACTION_ADD_ACCOUNT)) },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color.Unspecified,
+                    contentColor = Color.Blue
+                )
+            ) {
+                Text(text = "Manage Accounts")
             }
         }
     }

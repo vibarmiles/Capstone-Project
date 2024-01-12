@@ -94,44 +94,22 @@ fun GlobalContent(
                 scaffoldState.drawerState.close()
             }
         }}
-    ) { paddingValues ->
+    ) { paddingValues -> paddingValues
         LaunchedEffect(key1 = appUi.value.user) {
             if (appUi.value.user.data != null) {
+                appViewModel.loadLogin(false)
                 userViewModel.getUser(appUi.value.user.data!!.email)
-            }
-        }
-
-        if (appUi.value.loadLogin) {
-            Box(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize()
-                    .background(color = Color.Black.copy(alpha = 0.7f)),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Color.White)
+            } else if (appUi.value.user.errorMessage != null) {
+                scaffoldState.snackbarHostState.showSnackbar("Invalid Login Credentials")
+                appViewModel.loadLogin(false)
+                appViewModel.resetUiState()
             }
         }
 
         if (firstLogin) {
-            FirstLoginDialog {
+            FirstLoginDialog(changePassword = false) {
                 userViewModel.updatePassword(id = userAccountDetails.value.id, password = it)
                 firstLogin = false
-            }
-        }
-
-        if (appUi.value.showProgress) {
-            Column(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize()
-                    .background(color = Color.Black.copy(alpha = 0.7f)),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(text = "Updating Records...", fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(4.dp))
-                CircularProgressIndicator(color = Color.White, progress = appUi.value.loadingProgress)
             }
         }
 
@@ -206,11 +184,6 @@ fun GlobalContent(
                     val previous = Instant.ofEpochMilli(userAccountDetails.value.previousLoginDate).atZone(ZoneId.systemDefault()).toLocalDate()
                     val current = Instant.ofEpochMilli(userAccountDetails.value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate()
 
-                    scope.launch {
-                        userViewModel.log("user_logged_in")
-                        scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully!", duration = SnackbarDuration.Short)
-                    }
-
                     firstLogin = userAccountDetails.value.firstLogin
                     selectedItem = if (userAccountDetails.value.userLevel == UserLevel.Admin) R.string.user else R.string.dashboard
 
@@ -220,6 +193,12 @@ fun GlobalContent(
 
                     delay(500)
                     appViewModel.loadLogin(false)
+
+                    scope.launch {
+                        userViewModel.log("user_logged_in")
+                        scaffoldState.snackbarHostState.showSnackbar("Logged In Successfully!", duration = SnackbarDuration.Short)
+                    }
+
                     appViewModel.updateMonthlyCounters(previous = previous, current = current)
                 } else if (it.id.isNotBlank() && !it.isActive && it.errorMessage == null) {
                     appViewModel.loadLogin(false)
@@ -231,6 +210,31 @@ fun GlobalContent(
                     scaffoldState.snackbarHostState.showSnackbar(it.errorMessage, duration = SnackbarDuration.Short)
                 }
             }
+        }
+    }
+
+    if (appUi.value.showProgress) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color.Black.copy(alpha = 0.7f)),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(text = "Updating Records...", fontSize = 16.sp)
+            Spacer(modifier = Modifier.height(4.dp))
+            CircularProgressIndicator(color = Color.White, progress = appUi.value.loadingProgress)
+        }
+    }
+
+    if (appUi.value.loadLogin) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color.Black.copy(alpha = 0.7f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = Color.White)
         }
     }
 }
