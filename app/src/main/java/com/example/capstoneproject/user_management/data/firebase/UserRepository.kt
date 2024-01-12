@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.example.capstoneproject.user_management.ui.users.UserAccountDetails
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.database.ktx.database
@@ -83,6 +84,25 @@ class UserRepository : IUserRepository {
             result.invoke(FirebaseResult(result = true))
         }.addOnFailureListener {
             result.invoke(FirebaseResult(errorMessage = it.message))
+        }
+    }
+
+    override fun authenticate(
+        key: String,
+        password: String,
+        newPassword: String,
+        result: (FirebaseResult) -> Unit
+    ) {
+        auth.currentUser.also {
+            if (it != null) {
+                it.reauthenticate(EmailAuthProvider.getCredential(it.email!!, password)).addOnSuccessListener {
+                    updatePassword(key = key, password = newPassword, result = result)
+                }.addOnFailureListener { e ->
+                    result.invoke(FirebaseResult(errorMessage = e.message))
+                }
+            } else {
+                result.invoke(FirebaseResult(errorMessage = "Not Logged In!"))
+            }
         }
     }
 

@@ -74,6 +74,8 @@ fun GlobalContent(
     var selectedItem by remember { mutableStateOf(R.string.dashboard) }
     var canExit by remember { mutableStateOf(false) }
     var firstLogin by remember { mutableStateOf(false) }
+    var openDialog by remember { mutableStateOf(false) }
+    var authenticate by remember { mutableStateOf(false) }
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val appUi = appViewModel.uiState.collectAsState()
     val users = userViewModel.getAll()
@@ -84,7 +86,10 @@ fun GlobalContent(
         scaffoldState = scaffoldState,
         drawerScrimColor = Color.Black.copy(0.7f),
         drawerGesturesEnabled = !appUi.value.lockMenu,
-        drawerContent = { Drawer(user = appUi.value.user, currentItem = selectedItem, userViewModel = userViewModel) {
+        drawerContent = { Drawer(user = appUi.value.user, currentItem = selectedItem, userViewModel = userViewModel, updatePassword = {
+            openDialog = true
+            authenticate = true
+        }) {
             selectedItem = it
             navController.navigate(selectedItem.toString()) {
                 popUpTo(0)
@@ -100,16 +105,32 @@ fun GlobalContent(
                 appViewModel.loadLogin(false)
                 userViewModel.getUser(appUi.value.user.data!!.email)
             } else if (appUi.value.user.errorMessage != null) {
-                scaffoldState.snackbarHostState.showSnackbar("Invalid Login Credentials")
                 appViewModel.loadLogin(false)
+                scaffoldState.snackbarHostState.showSnackbar("Invalid Login Credentials")
                 appViewModel.resetUiState()
             }
         }
 
-        if (firstLogin) {
-            FirstLoginDialog(changePassword = false) {
+        if (firstLogin || openDialog) {
+            FirstLoginDialog(
+                changePassword = authenticate,
+                onSubmitWithOldPassword = { old, new ->
+                    userViewModel.updateOldPassword(old, new)
+                    firstLogin = false
+                    openDialog = false
+                    authenticate = false
+                },
+                onDismiss = {
+                    if (!firstLogin) {
+                        openDialog = false
+                        authenticate = false
+                    }
+                }
+            ) {
                 userViewModel.updatePassword(id = userAccountDetails.value.id, password = it)
                 firstLogin = false
+                openDialog = false
+                authenticate = false
             }
         }
 

@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +34,7 @@ fun Drawer(
     user: SignInResult,
     currentItem: Int,
     userViewModel: UserViewModel,
+    updatePassword: () -> Unit,
     onClick: (Int) -> Unit
 ) {
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
@@ -87,6 +87,10 @@ fun Drawer(
                 subNavigationList.removeAll { true }
                 navigationList.addAll(listOf(NavigationItems.Users, NavigationItems.ActivityLogs))
             }
+
+            UserLevel.Manager -> {
+
+            }
         }
     }
 
@@ -103,6 +107,20 @@ fun Drawer(
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = user.data?.username.toString(), color = Color.Black, fontSize = 24.sp)
             Text(text = userAccountDetails.value.userLevel.name, color = Color.Black, fontSize = 14.sp)
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            IconButton(
+                onClick = updatePassword,
+                modifier = Modifier.size(25.dp)
+            ) {
+                Icon(imageVector = Icons.Default.Edit, contentDescription = null)
+            }
         }
     }
     LazyColumn(modifier = Modifier.padding(8.dp)) {

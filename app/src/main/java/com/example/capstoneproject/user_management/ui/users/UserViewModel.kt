@@ -98,6 +98,14 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    fun updateOldPassword(password: String, newPassword: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            userRepository.authenticate(key = userAccountDetails.value.id, password = password, newPassword = newPassword) { result ->
+                resultState.update { result }
+            }
+        }
+    }
+
     fun delete(id: String, user: User) {
         viewModelScope.launch(Dispatchers.IO) {
             userRepository.delete(key = id, user = user) {

@@ -8,6 +8,7 @@ interface IUserRepository {
     fun getAll(callback: () -> Unit, update: () -> Unit, result: (FirebaseResult) -> Unit): SnapshotStateMap<String, User>
     fun getUser(email: String, user: (UserAccountDetails) -> Unit)
     fun updatePassword(key: String, password: String, result: (FirebaseResult) -> Unit)
+    fun authenticate(key: String, password: String, newPassword: String, result: (FirebaseResult) -> Unit)
     fun insert(key: String?, user: User, result: (FirebaseResult) -> Unit)
     fun delete(key: String, user: User, result: (FirebaseResult) -> Unit)
     fun archiveItem(id: String, result: (FirebaseResult) -> Unit)
