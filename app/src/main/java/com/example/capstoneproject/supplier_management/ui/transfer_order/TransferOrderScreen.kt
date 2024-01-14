@@ -17,14 +17,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.ColorUtils
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -33,6 +31,8 @@ import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.data.firebase.transfer_order.TransferOrder
 import com.example.capstoneproject.ui.theme.pending
 import com.example.capstoneproject.ui.theme.success
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
+import com.example.capstoneproject.user_management.ui.users.UserAccountDetails
 import kotlinx.coroutines.CoroutineScope
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -45,12 +45,13 @@ fun TransferOrderScreen(
     scaffoldState: ScaffoldState,
     transferOrderViewModel: TransferOrderViewModel,
     branchViewModel: BranchViewModel,
+    userAccountDetails: UserAccountDetails,
     add: () -> Unit,
     view: (String) -> Unit
 ) {
     val transferOrders = transferOrderViewModel.getAll().observeAsState(listOf())
     val transferOrdersList = remember(transferOrders.value) {
-        transferOrders.value.groupBy {
+        transferOrders.value.filter { if (userAccountDetails.userLevel != UserLevel.Owner) it.destinationBranchId == userAccountDetails.branchId else true }.groupBy {
             val localDate = if (it.date != null) Instant.ofEpochMilli(it.date.time).atZone(ZoneId.systemDefault()).toLocalDate() else LocalDate.now()
             localDate!!
         }
@@ -64,8 +65,10 @@ fun TransferOrderScreen(
             BaseTopAppBar(title = stringResource(id = R.string.transfer_order), scope = scope, scaffoldState = scaffoldState)
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = add) {
-                Icon(Icons.Filled.Add, null)
+            if (userAccountDetails.userLevel == UserLevel.Owner) {
+                FloatingActionButton(onClick = add) {
+                    Icon(Icons.Filled.Add, null)
+                }
             }
         }
     ) {

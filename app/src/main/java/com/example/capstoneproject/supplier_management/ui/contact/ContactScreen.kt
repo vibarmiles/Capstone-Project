@@ -1,5 +1,7 @@
 package com.example.capstoneproject.supplier_management.ui.contact
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,12 +11,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContactPhone
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material3.ListItem
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,6 +43,7 @@ fun ContactScreen(
     var contact: Contact? = null
     var showDeleteDialog by remember { mutableStateOf(false) }
     val state by contactViewModel.result.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -62,6 +67,7 @@ fun ContactScreen(
                 paddingValues = paddingValues,
                 contacts = contacts.value.sortedBy { it.name.uppercase() },
                 edit = { edit.invoke(it) },
+                dialNumber = { context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:0${it.contact}"))) },
                 archive = { contact, remove ->
                     contactViewModel.archiveItem(contact = contact, remove = remove)
                 }
@@ -95,6 +101,7 @@ fun ContactScreenContent(
     paddingValues: PaddingValues,
     contacts: List<Contact>,
     edit: (Contact) -> Unit,
+    dialNumber: (Contact) -> Unit,
     archive: (Contact, Boolean) -> Unit,
     delete: (Contact) -> Unit
 ) {
@@ -149,6 +156,11 @@ fun ContactScreenContent(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false }
                             ) {
+                                androidx.compose.material3.DropdownMenuItem(
+                                    leadingIcon = { Icon(imageVector = Icons.Default.ContactPhone, contentDescription = null) },
+                                    text = { Text(text = "Dial Number") },
+                                    onClick = { dialNumber.invoke(it) }
+                                )
                                 androidx.compose.material3.DropdownMenuItem(
                                     leadingIcon = { Icon(imageVector = if (it.active) Icons.Outlined.Block else Icons.Default.Add, contentDescription = null) },
                                     text = { Text(text = if (it.active) "Set Inactive" else "Set Active") },

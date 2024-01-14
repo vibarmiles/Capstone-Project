@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -21,6 +23,7 @@ import com.example.capstoneproject.product_management.ui.product.ProductViewMode
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.Document
 import com.example.capstoneproject.supplier_management.ui.DocumentDialog
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -31,9 +34,11 @@ fun ViewPurchaseOrder(
     productViewModel: ProductViewModel,
     userViewModel: UserViewModel,
     branchViewModel: BranchViewModel,
+    edit: () -> Unit,
     dismissRequest: () -> Unit
 ) {
     val purchaseOrder = purchaseOrderViewModel.getDocument(id = purchaseOrderId)!!
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState().value
     val products = remember { purchaseOrder.products.map { (productViewModel.getProduct(it.value.id)?.productName ?: "Unknown Item") to it.value } }
     var showDialog by remember { mutableStateOf(false) }
     var id by remember { mutableStateOf("") }
@@ -51,6 +56,24 @@ fun ViewPurchaseOrder(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = null
                         )
+                    }
+                },
+                actions = {
+                    if (userAccountDetails.userLevel == UserLevel.Owner && purchaseOrder.status == Status.WAITING) {
+                        var expanded: Boolean by remember { mutableStateOf(false) }
+                        IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
+                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                            androidx.compose.material3.DropdownMenuItem(
+                                leadingIcon = {
+                                    Icon(imageVector = Icons.Outlined.Edit, contentDescription = null)
+                                },
+                                text = { Text(text = "Edit Document") },
+                                onClick = {
+                                    expanded = false
+                                    edit.invoke()
+                                }
+                            )
+                        }
                     }
                 }
             )
@@ -99,19 +122,23 @@ fun ViewPurchaseOrder(
             if (purchaseOrder.status == Status.WAITING && confirm.value) {
                 var expanded by remember { mutableStateOf(false) }
                 val branches = branchViewModel.getAll().observeAsState(listOf())
-                var selected by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches Entered") }
+                var selected by remember { mutableStateOf(if (userAccountDetails.userLevel == UserLevel.Owner) branches.value.firstOrNull()?.name ?: "No Branches Entered" else branches.value.firstOrNull { userAccountDetails.branchId == it.id }?.name ?: "No Branches Entered") }
 
-                ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                    OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = selected, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.branch)) })
+                if (userAccountDetails.userLevel == UserLevel.Owner) {
+                    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                        OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = selected, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.branch)) })
 
-                    DropdownMenu(modifier = Modifier
-                        .exposedDropdownSize()
-                        .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
+                        DropdownMenu(modifier = Modifier
+                            .exposedDropdownSize()
+                            .fillMaxWidth(), expanded = expanded, onDismissRequest = { expanded = false }) {
 
-                        branches.value.forEach {
-                            androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.name) }, onClick = { id = it.id; selected = it.name; expanded = false })
+                            branches.value.forEach {
+                                androidx.compose.material3.DropdownMenuItem(text = { Text(text = it.name) }, onClick = { id = it.id; selected = it.name; expanded = false })
+                            }
                         }
                     }
+                } else {
+                    id = userAccountDetails.branchId ?: ""
                 }
 
                 if (branches.value.isNotEmpty()) {

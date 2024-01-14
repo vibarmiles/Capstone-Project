@@ -50,6 +50,7 @@ fun ContactFormScreen(
     var name by remember { mutableStateOf(oldContact.name) }
     var contact by remember { mutableStateOf(oldContact.contact) }
     var isContactValid by remember { mutableStateOf(true) }
+    var person by remember { mutableStateOf(oldContact.person ?: "") }
     var isNameValid by remember { mutableStateOf(true) }
     val showConfirmationDialog = remember { mutableStateOf(false) }
     val localFocusManager = LocalFocusManager.current
@@ -97,15 +98,32 @@ fun ContactFormScreen(
                 colors = GlobalTextFieldColors(),
                 value = name,
                 onValueChange = { value -> name = value },
-                placeholder = { Text(text = "Enter Supplier Name") },
+                placeholder = { Text(text = "Enter Company Name") },
                 label = {
                     Text(text = buildAnnotatedString {
-                        append("Supplier Name")
+                        append("Company Name")
                         withStyle( style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") }
                     })
                 },
                 isError = !isNameValid,
                 trailingIcon = { if (!isNameValid) Icon(imageVector = Icons.Filled.Error, contentDescription = null, tint = Color.Red) },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = {
+                    localFocusManager.moveFocus(FocusDirection.Down)
+                })
+            )
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                colors = GlobalTextFieldColors(),
+                value = person,
+                onValueChange = { value -> person = value.filter { it.isLetter() || it.isWhitespace() || it == '.' } },
+                placeholder = { Text(text = "Enter Contact Person's Name") },
+                label = {
+                    Text(text = buildAnnotatedString {
+                        append("Contact Person's Name")
+                        withStyle( style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") }
+                    })
+                },
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(onNext = {
                     localFocusManager.moveFocus(FocusDirection.Down)
@@ -141,7 +159,7 @@ fun ContactFormScreen(
 
             if (showConfirmationDialog.value) {
                 ConfirmationForAddingDialog(onCancel = { showConfirmationDialog.value = false }) {
-                    contactViewModel.insert(contact = oldContact.copy(name = name, contact = contact, active = true))
+                    contactViewModel.insert(contact = oldContact.copy(name = name, person = person.ifBlank { null }, contact = contact, active = true))
                     userViewModel.log(event = "${function.lowercase()}_supplier")
                     showConfirmationDialog.value = false
                     back.invoke()

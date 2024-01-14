@@ -89,7 +89,10 @@ fun Drawer(
             }
 
             UserLevel.Manager -> {
-
+                navigationList.removeAll { true }
+                subNavigationList.removeAll { true }
+                navigationList.addAll(listOf(NavigationItems.Dashboard, NavigationItems.Inventory, NavigationItems.Supplier, NavigationItems.POS))
+                subNavigationList.addAll(listOf(NavigationItems.Inventory.Product, NavigationItems.Supplier.PurchaseOrder, NavigationItems.Supplier.ReturnOrder, NavigationItems.Supplier.TransferOrder))
             }
         }
     }

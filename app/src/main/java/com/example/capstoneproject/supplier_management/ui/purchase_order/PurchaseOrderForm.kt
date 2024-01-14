@@ -12,6 +12,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,9 +26,10 @@ import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ConfirmationDialog
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
+import com.example.capstoneproject.supplier_management.data.firebase.Status
+import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.Product
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
-import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
@@ -41,14 +43,17 @@ fun PurchaseOrderForm(
     purchaseOrderViewModel: PurchaseOrderViewModel,
     userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
+    purchaseOrderId: String? = null,
+    productId: String? = null,
     back: () -> Unit
 ) {
     val purchasedProductsViewModel: PurchasedProductsViewModel = viewModel()
     val products = productViewModel.getAll()
     val suppliers = contactViewModel.getAll().observeAsState(listOf())
+    var showInitialProductDialog by remember { mutableStateOf(productId != null) }
     var showProductDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var showConfirmationDialog = remember { mutableStateOf(false) }
+    val showConfirmationDialog = remember { mutableStateOf(false) }
     var productToRemove: Product? = null
 
     Scaffold(
@@ -74,8 +79,16 @@ fun PurchaseOrderForm(
                 Icon(Icons.Filled.Add, null)
             }
         }
-    ) {
-            paddingValues ->
+    ) { paddingValues ->
+        rememberSaveable {
+            purchaseOrderId.let {
+                if (it != null) {
+                    purchasedProductsViewModel.purchases.addAll(purchaseOrderViewModel.getDocument(it)?.products?.values ?: listOf())
+
+                } else ""
+            }
+        }
+
         Column(
             modifier = Modifier.padding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -96,8 +109,7 @@ fun PurchaseOrderForm(
                 Divider()
 
                 LazyColumn {
-                    itemsIndexed(purchasedProductsViewModel.purchases) {
-                            _, product ->
+                    itemsIndexed(purchasedProductsViewModel.purchases) { _, product ->
                         ProductItem(products = products, supplier = suppliers.value.firstOrNull { contact -> contact.id == product.supplier }?.name ?: "Unknown Supplier", product = product) {
                             productToRemove = it
                             showDeleteDialog = true
@@ -123,14 +135,34 @@ fun PurchaseOrderForm(
         }
 
         if (showProductDialog) {
-            AddProductDialog(onDismissRequest = { showProductDialog = false }, submit = {
-                id, price, quantity, supplier -> purchasedProductsViewModel.purchases.add(Product(id = id, price = price, quantity = quantity, supplier = supplier))
-                showProductDialog = false
-            }, products = products.filter { it.key !in purchasedProductsViewModel.purchases.map { products -> products.id } }, productViewModel = productViewModel, date = Instant.ofEpochMilli(userViewModel.userAccountDetails.collectAsState().value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate())
+            AddProductDialog(
+                onDismissRequest = { showProductDialog = false },
+                submit = { id, price, quantity, supplier ->
+                    purchasedProductsViewModel.purchases.add(Product(id = id, price = price, quantity = quantity, supplier = supplier))
+                    showProductDialog = false
+                },
+                products = products.filter { it.key !in purchasedProductsViewModel.purchases.map { products -> products.id } },
+                productViewModel = productViewModel, date = Instant.ofEpochMilli(userViewModel.userAccountDetails.collectAsState().value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate(),
+                suppliers = suppliers.value
+            )
+        }
+
+        if (showInitialProductDialog) {
+            AddProductDialog(
+                onDismissRequest = { showInitialProductDialog = false },
+                submit = { id, price, quantity, supplier ->
+                    purchasedProductsViewModel.purchases.add(Product(id = id, price = price, quantity = quantity, supplier = supplier))
+                    showInitialProductDialog = false
+                },
+                products = products.filter { it.key !in purchasedProductsViewModel.purchases.map { products -> products.id } },
+                productViewModel = productViewModel, date = Instant.ofEpochMilli(userViewModel.userAccountDetails.collectAsState().value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate(),
+                initial = productId,
+                suppliers = suppliers.value
+            )
         }
 
         if (showDeleteDialog) {
-            RemoveProductDialog(productName = productViewModel.getProduct(productToRemove!!.id)!!.productName, dismissRequest = { showDeleteDialog = false }) {
+            RemoveProductDialog(productName = productViewModel.getProduct(productToRemove?.id)?.productName ?: "Unknown Product", dismissRequest = { showDeleteDialog = false }) {
                 purchasedProductsViewModel.purchases.remove(productToRemove)
                 showDeleteDialog = false
             }
@@ -140,6 +172,7 @@ fun PurchaseOrderForm(
             ConfirmationDialog(onCancel = { showConfirmationDialog.value = false }) {
                 purchaseOrderViewModel.insert(
                     PurchaseOrder(
+                        id = purchaseOrderId ?: "",
                         status = Status.WAITING,
                         products = purchasedProductsViewModel.purchases.associateBy { product ->
                             "Item ${purchasedProductsViewModel.purchases.indexOf(product)}"
@@ -187,21 +220,25 @@ fun ProductItem(
 @Composable
 fun AddProductDialog(
     onDismissRequest: () -> Unit,
+    initial: String? = null,
     submit: (String, Double, Int, String) -> Unit,
     date: LocalDate,
     products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>,
-    productViewModel: ProductViewModel
+    productViewModel: ProductViewModel,
+    suppliers: List<Contact>
 ) {
     var search = products
     var expanded by remember { mutableStateOf(false) }
     var isQuantityValid by remember { mutableStateOf(true) }
     var quantityText by remember { mutableStateOf("") }
     var quantity = 0
-    var selectedProduct by remember { mutableStateOf("") }
+    var selectedProduct by remember { mutableStateOf(if (initial != null) products[initial]?.productName ?: "" else "") }
     var price = 0.0
-    var productId = ""
+    var productId = initial ?: ""
     var supplier = ""
     var canSubmit by remember { mutableStateOf(false) }
+    val supplierValue = remember(supplier) { mutableStateOf(suppliers.firstOrNull { it.id == supplier }?.name ?: "") }
+    var supplierExpanded by remember { mutableStateOf(false) }
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -273,6 +310,46 @@ fun AddProductDialog(
                                 price = it.value.purchasePrice
                                 supplier = it.value.supplier
                                 expanded = false
+                            })
+                        }
+                    }
+                }
+
+                ExposedDropdownMenuBox(expanded = supplierExpanded, onExpandedChange = { supplierExpanded = !supplierExpanded }) {
+                    OutlinedTextField(
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = supplierExpanded) },
+                        colors = GlobalTextFieldColors(),
+                        readOnly = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        value = supplierValue.value,
+                        onValueChange = {  },
+                        label = { Text(text = stringResource(id = R.string.supplier)) }
+                    )
+
+                    DropdownMenu(
+                        modifier = Modifier
+                            .exposedDropdownSize()
+                            .requiredHeightIn(max = 300.dp)
+                            .fillMaxWidth(),
+                        expanded = supplierExpanded,
+                        onDismissRequest = { supplierExpanded = false },
+                        properties = PopupProperties(focusable = false)
+                    ) {
+                        suppliers.filter {
+                            it.id in products.filter { product -> product.value.productName == selectedProduct }.map { product -> product.value.supplier }
+                        }.forEach {
+                            DropdownMenuItem(text = {
+                                Column {
+                                    Text(text = it.name)
+                                }
+                            }, onClick = {
+                                supplier = it.id
+                                supplierValue.value = it.name
+                                productId = products.toList().first { product ->
+                                    product.second.productName == selectedProduct && product.second.supplier == it.id
+                                }.first
+                                price = products[productId]?.purchasePrice ?: 0.0
+                                supplierExpanded = false
                             })
                         }
                     }

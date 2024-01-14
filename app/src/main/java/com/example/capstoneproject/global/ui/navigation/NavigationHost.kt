@@ -75,7 +75,6 @@ fun NavigationHost(
     val activityLogsRepository: ActivityLogsViewModel = viewModel()
     val context = LocalContext.current
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
-    val appUi = viewModel.uiState.collectAsState()
 
     val googleAuthUiClient by lazy {
         GoogleLoginRepository(context = context, oneTapClient = Identity.getSignInClient(context))
@@ -166,16 +165,17 @@ fun NavigationHost(
             ViewProduct(
                 dismissRequest = { navController.popBackStack() },
                 productViewModel = productViewModel,
-                contactViewModel = contactViewModel,
                 categoryViewModel = categoryViewModel,
                 branchViewModel = branchViewModel,
+                contactViewModel = contactViewModel,
                 userLevel = userAccountDetails.value.userLevel,
                 productId = productId,
                 loginDate = userAccountDetails.value.loginDate,
                 edit = { navController.navigate(Routes.Product.Edit.createRoute(productId)) },
                 setBranchQuantity = { navController.navigate(Routes.Product.SetBranchQuantity.createRoute(productId)) },
                 setMonthlySales = { navController.navigate(Routes.Product.SetMonthlySales.createRoute(productId)) },
-                delete = { navController.popBackStack() }
+                delete = { navController.popBackStack() },
+                createPO = { navController.navigate(Routes.PurchaseOrder.CreateFromInventory.createRoute(productId)) }
             )
         }
 
@@ -312,6 +312,7 @@ fun NavigationHost(
                 scope = scope,
                 scaffoldState = scaffoldState,
                 purchaseOrderViewModel = purchaseOrderViewModel,
+                userAccountDetails = userAccountDetails.value,
                 add = { navController.navigate(Routes.PurchaseOrder.Add.route) },
                 view = { navController.navigate(Routes.PurchaseOrder.View.createRoute(it)) }
             )
@@ -328,6 +329,20 @@ fun NavigationHost(
             }
         }
 
+        composable(Routes.PurchaseOrder.Edit.route) {
+            val id = it.arguments?.getString("POID")!!
+
+            PurchaseOrderForm(
+                contactViewModel = contactViewModel,
+                purchaseOrderViewModel = purchaseOrderViewModel,
+                productViewModel = productViewModel,
+                userViewModel = userViewModel,
+                purchaseOrderId = id
+            ) {
+                navController.popBackStack()
+            }
+        }
+
         composable(Routes.PurchaseOrder.View.route) {
             val id = it.arguments?.getString("POID")!!
 
@@ -336,7 +351,22 @@ fun NavigationHost(
                 purchaseOrderViewModel = purchaseOrderViewModel,
                 productViewModel = productViewModel,
                 branchViewModel = branchViewModel,
-                userViewModel = userViewModel
+                userViewModel = userViewModel,
+                edit = { navController.navigate(Routes.PurchaseOrder.Edit.createRoute(id)) }
+            ) {
+                navController.popBackStack()
+            }
+        }
+
+        composable(Routes.PurchaseOrder.CreateFromInventory.route) {
+            val id = it.arguments?.getString("productId")!!
+
+            PurchaseOrderForm(
+                contactViewModel = contactViewModel,
+                purchaseOrderViewModel = purchaseOrderViewModel,
+                productViewModel = productViewModel,
+                userViewModel = userViewModel,
+                productId = id
             ) {
                 navController.popBackStack()
             }
@@ -347,6 +377,7 @@ fun NavigationHost(
                 scope = scope,
                 scaffoldState = scaffoldState,
                 returnOrderViewModel = returnOrderViewModel,
+                userAccountDetails = userAccountDetails.value,
                 add = { navController.navigate(Routes.ReturnOrder.Add.route) },
                 view = { navController.navigate(Routes.ReturnOrder.View.createRoute(it)) }
             )
@@ -384,6 +415,7 @@ fun NavigationHost(
                 scaffoldState = scaffoldState,
                 transferOrderViewModel = transferOrderViewModel,
                 branchViewModel = branchViewModel,
+                userAccountDetails = userAccountDetails.value,
                 add = { navController.navigate(Routes.TransferOrder.Add.route) },
                 view = { navController.navigate(Routes.TransferOrder.View.createRoute(it)) }
             )

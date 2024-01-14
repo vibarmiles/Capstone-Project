@@ -31,6 +31,8 @@ import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.data.firebase.return_order.ReturnOrder
 import com.example.capstoneproject.ui.theme.pending
 import com.example.capstoneproject.ui.theme.success
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
+import com.example.capstoneproject.user_management.ui.users.UserAccountDetails
 import kotlinx.coroutines.CoroutineScope
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -42,6 +44,7 @@ fun ReturnOrderScreen(
     scope: CoroutineScope,
     scaffoldState: ScaffoldState,
     returnOrderViewModel: ReturnOrderViewModel,
+    userAccountDetails: UserAccountDetails,
     add: () -> Unit,
     view: (String) -> Unit
 ) {
@@ -49,7 +52,7 @@ fun ReturnOrderScreen(
     val firstLaunch = remember { mutableStateOf(true) }
     val state = returnOrderViewModel.result.collectAsState()
     val returnOrdersList = remember(returnOrders.value) {
-        returnOrders.value.groupBy {
+        returnOrders.value.filter { if (userAccountDetails.userLevel != UserLevel.Owner) it.branchId == userAccountDetails.branchId else true }.groupBy {
             val localDate = if (it.date != null) Instant.ofEpochMilli(it.date.time).atZone(ZoneId.systemDefault()).toLocalDate() else LocalDate.now()
             localDate!!
         }
@@ -61,8 +64,10 @@ fun ReturnOrderScreen(
             BaseTopAppBar(title = stringResource(id = R.string.return_order), scope = scope, scaffoldState = scaffoldState)
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = add) {
-                Icon(Icons.Filled.Add, null)
+            if (userAccountDetails.userLevel == UserLevel.Owner) {
+                FloatingActionButton(onClick = add) {
+                    Icon(Icons.Filled.Add, null)
+                }
             }
         }
     ) {

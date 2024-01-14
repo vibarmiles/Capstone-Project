@@ -55,7 +55,8 @@ fun ViewProduct(
     edit: () -> Unit,
     setBranchQuantity: () -> Unit,
     setMonthlySales: () -> Unit,
-    delete: () -> Unit
+    delete: () -> Unit,
+    createPO: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val product = remember { productViewModel.getProduct(productId)!! }
@@ -83,6 +84,7 @@ fun ViewProduct(
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Product") }, onClick = { expanded = false; edit.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.BarChart, contentDescription = null) }, text = { Text(text = "Adjust Quantity") }, onClick = { expanded = false; setBranchQuantity.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.StackedBarChart, contentDescription = null) }, text = { Text(text = "Adjust Monthly Sales") }, onClick = { expanded = false; setMonthlySales.invoke() })
+                            DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Create, contentDescription = null) }, text = { Text(text = "Restock") }, onClick = { expanded = false; createPO.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = if (product.active) Icons.Outlined.Block else Icons.Default.Add, contentDescription = null) }, text = { Text(text = if (product.active) "Set Inactive" else "Set Active") }, onClick = { expanded = false; showDeleteDialog = true })
                             ArchiveEntry(name = product.productName, isActive = product.active) {
                                 productViewModel.archiveItem(id = productId, remove = it, product = product)

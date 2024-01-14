@@ -60,8 +60,8 @@ fun POSForm(
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val context = LocalContext.current
     var productToRemove: Product? = null
-    var branchId by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Employee) userAccountDetails.value.branchId else branches.value.firstOrNull()?.id) }
-    var textFieldValue by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Employee) branchViewModel.getBranch(userAccountDetails.value.branchId)?.name ?: "Unknown Branch" else branches.value.firstOrNull()?.name ?: "No Branches Found") }
+    var branchId by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Employee || userAccountDetails.value.userLevel == UserLevel.Manager) userAccountDetails.value.branchId else branches.value.firstOrNull()?.id) }
+    var textFieldValue by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Employee || userAccountDetails.value.userLevel == UserLevel.Manager) branchViewModel.getBranch(userAccountDetails.value.branchId)?.name ?: "Unknown Branch" else branches.value.firstOrNull()?.name ?: "No Branches Found") }
     var payment by remember { mutableStateOf(Payment.CASH) }
     var paymentTextFieldValue by remember { mutableStateOf(Payment.CASH.name) }
     var discount by remember { mutableStateOf(0.0) }
@@ -103,7 +103,7 @@ fun POSForm(
                 ) {
                     var expandedPayment by remember { mutableStateOf(false) }
 
-                    if (soldProductsViewModel.sales.isEmpty() && userAccountDetails.value.userLevel != UserLevel.Employee) {
+                    if (soldProductsViewModel.sales.isEmpty() && userAccountDetails.value.userLevel != UserLevel.Employee && userAccountDetails.value.userLevel != UserLevel.Manager) {
                         var expanded by remember { mutableStateOf(false) }
                         ExposedDropdownMenuBox(
                             expanded = expanded,

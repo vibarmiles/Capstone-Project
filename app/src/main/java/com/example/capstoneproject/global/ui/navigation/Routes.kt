@@ -35,8 +35,14 @@ sealed class Routes(val route: String) {
     }
     object PurchaseOrder : Routes((R.string.purchase_order).toString()) {
         object Add : Routes(this.route + "/Add")
+        object Edit : Routes(this.route + "/Edit/{POID}") {
+            fun createRoute(POID: String) = PurchaseOrder.route + "/Edit/$POID"
+        }
         object View : Routes(this.route + "/View/{POID}") {
             fun createRoute(POID: String) = PurchaseOrder.route + "/View/$POID"
+        }
+        object CreateFromInventory : Routes(this.route + "/Create/{productId}") {
+            fun createRoute(productId: String) = PurchaseOrder.route + "/Create/$productId"
         }
     }
     object ReturnOrder : Routes((R.string.return_order).toString()) {

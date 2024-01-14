@@ -19,14 +19,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.ColorUtils
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -34,6 +32,8 @@ import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.data.firebase.purchase_order.PurchaseOrder
 import com.example.capstoneproject.ui.theme.pending
 import com.example.capstoneproject.ui.theme.success
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
+import com.example.capstoneproject.user_management.ui.users.UserAccountDetails
 import kotlinx.coroutines.CoroutineScope
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -45,12 +45,13 @@ fun PurchaseOrderScreen(
     scope: CoroutineScope,
     scaffoldState: ScaffoldState,
     purchaseOrderViewModel: PurchaseOrderViewModel,
+    userAccountDetails: UserAccountDetails,
     add: () -> Unit,
     view: (String) -> Unit
 ) {
     val purchaseOrders = purchaseOrderViewModel.getAll().observeAsState(listOf())
     val purchaseOrdersList = remember(purchaseOrders.value) {
-        purchaseOrders.value.groupBy {
+        purchaseOrders.value.filter { if (userAccountDetails.userLevel != UserLevel.Owner) it.status == Status.WAITING else true }.groupBy {
             val localDate = if (it.date != null) Instant.ofEpochMilli(it.date.time).atZone(ZoneId.systemDefault()).toLocalDate() else LocalDate.now()
             localDate!!
         }
@@ -64,8 +65,10 @@ fun PurchaseOrderScreen(
             BaseTopAppBar(title = stringResource(id = R.string.purchase_order), scope = scope, scaffoldState = scaffoldState)
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = add) {
-                Icon(Icons.Filled.Add, null)
+            if (userAccountDetails.userLevel == UserLevel.Owner) {
+                FloatingActionButton(onClick = add) {
+                    Icon(Icons.Filled.Add, null)
+                }
             }
         }
     ) {

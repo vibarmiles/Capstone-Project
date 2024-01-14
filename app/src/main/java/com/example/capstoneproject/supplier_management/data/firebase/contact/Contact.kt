@@ -6,5 +6,6 @@ data class Contact(
     @DocumentId val id: String = "",
     val name: String = "",
     val contact: String = "",
+    val person: String? = null,
     val active: Boolean = true
 )
