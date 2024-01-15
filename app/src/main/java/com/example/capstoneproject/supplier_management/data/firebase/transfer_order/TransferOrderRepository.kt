@@ -74,6 +74,11 @@ class TransferOrderRepository : ITransferOrderRepository {
                 if (snapshot != null) {
                     if (snapshot.status == Status.WAITING || fail) {
                         check = true
+
+                        if (snapshot.products != transferOrder.products) {
+                            it.delete(transferOrderCollectionReference.document(transferOrder.id))
+                        }
+
                         it.set(transferOrderCollectionReference.document(transferOrder.id), transferOrder, SetOptions.merge())
                     } else {
                         result.invoke(FirebaseResult(result = false, errorMessage = "Document waiting to be unlocked..."))

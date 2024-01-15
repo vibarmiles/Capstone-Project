@@ -22,6 +22,7 @@ import androidx.compose.ui.window.PopupProperties
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.supplier_management.data.firebase.Product
+import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 
 @Composable
 fun ProductItem(
@@ -54,7 +55,8 @@ fun AddProductDialog(
     onDismissRequest: () -> Unit,
     submit: (String, Int, String) -> Unit,
     branchId: String?,
-    products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>
+    products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>,
+    suppliers: List<Contact>
 ) {
     var search = products
     var expanded by remember { mutableStateOf(false) }
@@ -66,6 +68,8 @@ fun AddProductDialog(
     var productId = ""
     var supplier = ""
     var canSubmit by remember { mutableStateOf(false) }
+    val supplierValue = remember { mutableStateOf("") }
+    var supplierExpanded by remember { mutableStateOf(false) }
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -135,7 +139,47 @@ fun AddProductDialog(
                                 quantityText = ""
                                 maxQuantity = it.value.stock.getOrDefault(key = branchId, defaultValue = 0)
                                 supplier = it.value.supplier
+                                supplierValue.value = suppliers.firstOrNull { s -> it.value.supplier == s.id }?.name ?: ""
                                 expanded = false
+                            })
+                        }
+                    }
+                }
+
+                ExposedDropdownMenuBox(expanded = supplierExpanded, onExpandedChange = { supplierExpanded = !supplierExpanded }) {
+                    OutlinedTextField(
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = supplierExpanded) },
+                        colors = GlobalTextFieldColors(),
+                        readOnly = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        value = supplierValue.value,
+                        onValueChange = {  },
+                        label = { androidx.compose.material.Text(text = stringResource(id = R.string.supplier)) }
+                    )
+
+                    DropdownMenu(
+                        modifier = Modifier
+                            .exposedDropdownSize()
+                            .requiredHeightIn(max = 300.dp)
+                            .fillMaxWidth(),
+                        expanded = supplierExpanded,
+                        onDismissRequest = { supplierExpanded = false },
+                        properties = PopupProperties(focusable = false)
+                    ) {
+                        suppliers.filter {
+                            it.id in products.filter { product -> product.value.productName == selectedProduct }.map { product -> product.value.supplier }
+                        }.forEach {
+                            DropdownMenuItem(text = {
+                                Column {
+                                    androidx.compose.material.Text(text = it.name)
+                                }
+                            }, onClick = {
+                                supplier = it.id
+                                supplierValue.value = it.name
+                                productId = products.toList().first { product ->
+                                    product.second.productName == selectedProduct && product.second.supplier == it.id
+                                }.first
+                                supplierExpanded = false
                             })
                         }
                     }

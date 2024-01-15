@@ -92,6 +92,11 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
                     if (snapshot.status == Status.WAITING || fail) {
                         check = true
                         Log.e("SETTING", "SETTING")
+
+                        if (snapshot.products != purchaseOrder.products) {
+                            it.delete(purchaseOrderCollectionReference.document(purchaseOrder.id))
+                        }
+
                         it.set(purchaseOrderCollectionReference.document(purchaseOrder.id), purchaseOrder, SetOptions.merge())
                     } else {
                         result.invoke(FirebaseResult(result = false, errorMessage = "Document waiting to be unlocked..."))

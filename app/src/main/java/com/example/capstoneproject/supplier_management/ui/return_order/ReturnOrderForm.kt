@@ -12,6 +12,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -34,7 +35,6 @@ import com.example.capstoneproject.supplier_management.ui.ProductItem
 import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
-import java.time.LocalDate
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -44,6 +44,7 @@ fun ReturnOrderForm(
     branchViewModel: BranchViewModel,
     userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
+    returnOrderId: String? = null,
     back: () -> Unit
 ) {
     val returnedProductsViewModel: ReturnedProductsViewModel = viewModel()
@@ -85,6 +86,14 @@ fun ReturnOrderForm(
             }
         }
     ) { paddingValues ->
+        rememberSaveable {
+            returnOrderId.let {
+                if (it != null) {
+                    returnedProductsViewModel.returns.addAll(returnOrderViewModel.getDocument(it)?.products?.values ?: listOf())
+                } else ""
+            }
+        }
+
         Column(
             modifier = Modifier
                 .padding(paddingValues),
@@ -164,16 +173,24 @@ fun ReturnOrderForm(
             AddProductDialog(
                 onDismissRequest = { showProductDialog = false },
                 submit = { id, quantity, supplier ->
-                    returnedProductsViewModel.returns.add(
-                        Product(
-                            id = id,
-                            quantity = quantity,
-                            supplier = supplier
-                        )
-                    ); showProductDialog = false
+                    returnedProductsViewModel.returns.find { it.id == id }.let { product ->
+                        if (product == null) {
+                            returnedProductsViewModel.returns.add(
+                                Product(
+                                    id = id,
+                                    quantity = quantity,
+                                    supplier = supplier
+                                )
+                            )
+                        } else {
+                            returnedProductsViewModel.returns.set(returnedProductsViewModel.returns.indexOf(product), product.copy(quantity = product.quantity + quantity))
+                        }
+                    }
+                    showProductDialog = false
                 },
                 branchId = branchId,
-                products = products.filter { it.key !in returnedProductsViewModel.returns.map { products -> products.id } }
+                products = products.mapValues { product -> product.value.copy(stock = product.value.stock.mapValues { stock -> stock.value - (returnedProductsViewModel.returns.find { it.id == product.key }?.quantity ?: 0) }) },
+                suppliers = suppliers.value
             )
         }
 
@@ -188,6 +205,7 @@ fun ReturnOrderForm(
             ConfirmationDialog(onCancel = { showConfirmationDialog.value = false }) {
                 returnOrderViewModel.insert(
                     ReturnOrder(
+                        id = returnOrderId ?: "",
                         status = Status.WAITING,
                         reason = reason,
                         branchId = branchId!!,

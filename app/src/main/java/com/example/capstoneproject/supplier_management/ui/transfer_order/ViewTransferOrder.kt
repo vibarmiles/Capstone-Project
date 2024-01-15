@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,6 +19,7 @@ import com.example.capstoneproject.product_management.ui.product.ProductViewMode
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.Document
 import com.example.capstoneproject.supplier_management.ui.DocumentDialog
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 
 @Composable
@@ -26,10 +29,12 @@ fun ViewTransferOrder(
     productViewModel: ProductViewModel,
     branchViewModel: BranchViewModel,
     userViewModel: UserViewModel,
+    edit: () -> Unit,
     dismissRequest: () -> Unit
 ) {
     val transferOrder = transferOrderViewModel.getDocument(id = transferOrderId)!!
     val oldBranch = branchViewModel.getBranch(transferOrder.oldBranchId)
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState().value
     val destinationBranch = branchViewModel.getBranch(transferOrder.destinationBranchId)
     val products = remember { transferOrder.products.map { (productViewModel.getProduct(it.value.id)?.productName ?: "Unknown Item") to it.value } }
     var showDialog by remember { mutableStateOf(false) }
@@ -47,6 +52,24 @@ fun ViewTransferOrder(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = null
                         )
+                    }
+                },
+                actions = {
+                    if (userAccountDetails.userLevel == UserLevel.Owner && transferOrder.status == Status.WAITING) {
+                        var expanded: Boolean by remember { mutableStateOf(false) }
+                        IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
+                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                            androidx.compose.material3.DropdownMenuItem(
+                                leadingIcon = {
+                                    Icon(imageVector = Icons.Outlined.Edit, contentDescription = null)
+                                },
+                                text = { Text(text = "Edit Document") },
+                                onClick = {
+                                    expanded = false
+                                    edit.invoke()
+                                }
+                            )
+                        }
                     }
                 }
             )

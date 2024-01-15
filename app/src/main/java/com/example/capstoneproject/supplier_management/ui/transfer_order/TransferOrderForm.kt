@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -30,7 +31,6 @@ import com.example.capstoneproject.supplier_management.ui.ProductItem
 import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
-import java.time.LocalDate
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -40,6 +40,7 @@ fun TransferOrderForm(
     branchViewModel: BranchViewModel,
     userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
+    transferOrderId: String? = null,
     back: () -> Unit
 ) {
     val transferredProductsViewModel: TransferredProductsViewModel = viewModel()
@@ -72,7 +73,8 @@ fun TransferOrderForm(
                     ) {
                         Icon(imageVector = Icons.Filled.Save, contentDescription = null)
                     }
-                })
+                }
+            )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showProductDialog = true }) {
@@ -80,6 +82,14 @@ fun TransferOrderForm(
             }
         }
     ) { paddingValues ->
+        rememberSaveable {
+            transferOrderId.let {
+                if (it != null) {
+                    transferredProductsViewModel.transfers.addAll(transferOrderViewModel.getDocument(it)?.products?.values ?: listOf())
+                } else ""
+            }
+        }
+
         Column(
             modifier = Modifier
                 .padding(paddingValues),
@@ -187,16 +197,25 @@ fun TransferOrderForm(
             AddProductDialog(
                 onDismissRequest = { showProductDialog = false },
                 submit = { id, quantity, supplier ->
-                    transferredProductsViewModel.transfers.add(
-                        Product(
-                            id = id,
-                            quantity = quantity,
-                            supplier = supplier
-                        )
-                    ); showProductDialog = false
+                    transferredProductsViewModel.transfers.find { it.id == id }.let { product ->
+                        if (product == null) {
+                            transferredProductsViewModel.transfers.add(
+                                Product(
+                                    id = id,
+                                    quantity = quantity,
+                                    supplier = supplier
+                                )
+                            )
+                        } else {
+                            transferredProductsViewModel.transfers.set(transferredProductsViewModel.transfers.indexOf(product), product.copy(quantity = product.quantity + quantity))
+                        }
+                    }
+                    showProductDialog = false
                 },
                 branchId = oldBranchId,
-                products = products.filter { it.key !in transferredProductsViewModel.transfers.map { products -> products.id } })
+                products = products.mapValues { product -> product.value.copy(stock = product.value.stock.mapValues { stock -> stock.value - (transferredProductsViewModel.transfers.find { it.id == product.key }?.quantity ?: 0) }) },
+                suppliers = suppliers.value
+            )
         }
 
         if (showDeleteDialog) {
@@ -210,6 +229,7 @@ fun TransferOrderForm(
             ConfirmationDialog(onCancel = { showConfirmationDialog.value = false }) {
                 transferOrderViewModel.insert(
                     TransferOrder(
+                        id = transferOrderId ?: "",
                         status = Status.WAITING,
                         oldBranchId = oldBranchId!!,
                         destinationBranchId = destinationBranchId!!,

@@ -395,6 +395,21 @@ fun NavigationHost(
             }
         }
 
+        composable(Routes.ReturnOrder.Edit.route) {
+            val id = it.arguments?.getString("ROID")!!
+
+            ReturnOrderForm(
+                contactViewModel = contactViewModel,
+                returnOrderViewModel = returnOrderViewModel,
+                productViewModel = productViewModel,
+                branchViewModel = branchViewModel,
+                userViewModel = userViewModel,
+                returnOrderId = id
+            ) {
+                navController.popBackStack()
+            }
+        }
+
         composable(Routes.ReturnOrder.View.route) {
             val id = it.arguments?.getString("ROID")!!
 
@@ -403,7 +418,8 @@ fun NavigationHost(
                 returnOrderViewModel = returnOrderViewModel,
                 productViewModel = productViewModel,
                 branchViewModel = branchViewModel,
-                userViewModel = userViewModel
+                userViewModel = userViewModel,
+                edit = { navController.navigate(Routes.ReturnOrder.Edit.createRoute(id)) }
             ) {
                 navController.popBackStack()
             }
@@ -433,6 +449,21 @@ fun NavigationHost(
             }
         }
 
+        composable(Routes.TransferOrder.Edit.route) {
+            val id = it.arguments?.getString("TOID")!!
+
+            TransferOrderForm(
+                contactViewModel = contactViewModel,
+                transferOrderViewModel = transferOrderViewModel,
+                productViewModel = productViewModel,
+                userViewModel = userViewModel,
+                branchViewModel = branchViewModel,
+                transferOrderId = id
+            ) {
+                navController.popBackStack()
+            }
+        }
+
         composable(Routes.TransferOrder.View.route) {
             val id = it.arguments?.getString("TOID")!!
 
@@ -441,7 +472,8 @@ fun NavigationHost(
                 transferOrderViewModel = transferOrderViewModel,
                 productViewModel = productViewModel,
                 branchViewModel = branchViewModel,
-                userViewModel = userViewModel
+                userViewModel = userViewModel,
+                edit = { navController.navigate(Routes.TransferOrder.Edit.createRoute(id)) }
             ) {
                 navController.popBackStack()
             }

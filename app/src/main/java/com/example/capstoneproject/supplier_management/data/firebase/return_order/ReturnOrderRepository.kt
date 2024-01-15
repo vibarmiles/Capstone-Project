@@ -73,6 +73,11 @@ class ReturnOrderRepository : IReturnOrderRepository {
                 if (snapshot != null) {
                     if (snapshot.status == Status.WAITING || fail) {
                         check = true
+
+                        if (snapshot.products != returnOrder.products) {
+                            it.delete(returnOrderCollectionReference.document(returnOrder.id))
+                        }
+
                         it.set(returnOrderCollectionReference.document(returnOrder.id), returnOrder, SetOptions.merge())
                     } else {
                         result.invoke(FirebaseResult(result = false, errorMessage = "Document waiting to be unlocked..."))

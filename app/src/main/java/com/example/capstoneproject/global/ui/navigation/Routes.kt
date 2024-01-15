@@ -47,12 +47,18 @@ sealed class Routes(val route: String) {
     }
     object ReturnOrder : Routes((R.string.return_order).toString()) {
         object Add : Routes(this.route + "/Add")
+        object Edit : Routes(this.route + "/Edit/{ROID}") {
+            fun createRoute(ROID: String) = ReturnOrder.route + "/Edit/$ROID"
+        }
         object View : Routes(this.route + "/View/{ROID}") {
             fun createRoute(ROID: String) = ReturnOrder.route + "/View/$ROID"
         }
     }
     object TransferOrder : Routes((R.string.transfer_order).toString()) {
         object Add : Routes(this.route + "/Add")
+        object Edit : Routes(this.route + "/Edit/{TOID}") {
+            fun createRoute(TOID: String) = TransferOrder.route + "/Edit/$TOID"
+        }
         object View : Routes(this.route + "/View/{TOID}") {
             fun createRoute(TOID: String) = TransferOrder.route + "/View/$TOID"
         }

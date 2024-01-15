@@ -84,7 +84,6 @@ fun PurchaseOrderForm(
             purchaseOrderId.let {
                 if (it != null) {
                     purchasedProductsViewModel.purchases.addAll(purchaseOrderViewModel.getDocument(it)?.products?.values ?: listOf())
-
                 } else ""
             }
         }
@@ -138,10 +137,16 @@ fun PurchaseOrderForm(
             AddProductDialog(
                 onDismissRequest = { showProductDialog = false },
                 submit = { id, price, quantity, supplier ->
-                    purchasedProductsViewModel.purchases.add(Product(id = id, price = price, quantity = quantity, supplier = supplier))
+                    purchasedProductsViewModel.purchases.find { it.id == id }.let { product ->
+                        if (product == null) {
+                            purchasedProductsViewModel.purchases.add(Product(id = id, price = price, quantity = quantity, supplier = supplier))
+                        } else {
+                            purchasedProductsViewModel.purchases.set(purchasedProductsViewModel.purchases.indexOf(product), product.copy(quantity = product.quantity + quantity))
+                        }
+                    }
                     showProductDialog = false
                 },
-                products = products.filter { it.key !in purchasedProductsViewModel.purchases.map { products -> products.id } },
+                products = products,
                 productViewModel = productViewModel, date = Instant.ofEpochMilli(userViewModel.userAccountDetails.collectAsState().value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate(),
                 suppliers = suppliers.value
             )
@@ -154,7 +159,7 @@ fun PurchaseOrderForm(
                     purchasedProductsViewModel.purchases.add(Product(id = id, price = price, quantity = quantity, supplier = supplier))
                     showInitialProductDialog = false
                 },
-                products = products.filter { it.key !in purchasedProductsViewModel.purchases.map { products -> products.id } },
+                products = products,
                 productViewModel = productViewModel, date = Instant.ofEpochMilli(userViewModel.userAccountDetails.collectAsState().value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate(),
                 initial = productId,
                 suppliers = suppliers.value
@@ -237,7 +242,7 @@ fun AddProductDialog(
     var productId = initial ?: ""
     var supplier = ""
     var canSubmit by remember { mutableStateOf(false) }
-    val supplierValue = remember(supplier) { mutableStateOf(suppliers.firstOrNull { it.id == supplier }?.name ?: "") }
+    val supplierValue = remember { mutableStateOf("") }
     var supplierExpanded by remember { mutableStateOf(false) }
 
     androidx.compose.material3.AlertDialog(
@@ -309,6 +314,7 @@ fun AddProductDialog(
                                 selectedProduct = it.value.productName
                                 price = it.value.purchasePrice
                                 supplier = it.value.supplier
+                                supplierValue.value = suppliers.firstOrNull { s -> it.value.supplier == s.id }?.name ?: ""
                                 expanded = false
                             })
                         }
