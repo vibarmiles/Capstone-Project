@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
@@ -64,7 +65,7 @@ fun UserForm(
     var phoneNumber by remember { mutableStateOf(user.phoneNumber.let { if (it.length > 10) it.removeRange(0, 1) else "" }) }
     var isPhoneNumber by remember { mutableStateOf(true) }
     val password by remember { mutableStateOf(user.password) }
-    var setToDefaultPassword = true
+    var setToDefaultPassword by remember { mutableStateOf(true) }
     val branches = branchViewModel.getAll().observeAsState(listOf())
     var branchId by remember { mutableStateOf(branches.value.firstOrNull()?.id)}
     var branchName by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches")}
@@ -247,6 +248,7 @@ fun UserForm(
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Checkbox(checked = setToDefaultPassword, onCheckedChange = { setToDefaultPassword = !setToDefaultPassword })
                 Text("Set to Default Password? (Phone Number)", maxLines = 1, overflow = TextOverflow.Ellipsis)

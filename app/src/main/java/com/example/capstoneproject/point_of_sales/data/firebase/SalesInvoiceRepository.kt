@@ -79,6 +79,11 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
                     if (!snapshot.lock || access) {
                         check = true
                         Log.d("SNAPSHOT", snapshot.toString())
+
+                        if (snapshot.products != invoice.products) {
+                            it.delete(salesInvoiceCollectionReference.document(invoice.id))
+                        }
+
                         it.set(salesInvoiceCollectionReference.document(invoice.id), invoice.copy(lock = false), SetOptions.merge())
                     } else {
                         result.invoke(FirebaseResult(result = false, errorMessage = "Document waiting to be unlocked..."))

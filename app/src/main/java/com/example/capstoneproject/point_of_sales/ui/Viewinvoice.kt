@@ -13,9 +13,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.capstoneproject.global.ui.misc.FormButtons
 import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
+import com.example.capstoneproject.supplier_management.data.firebase.Status
+import com.example.capstoneproject.supplier_management.ui.Document
+import com.example.capstoneproject.supplier_management.ui.DocumentDialog
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 
 @Composable
@@ -30,6 +34,10 @@ fun ViewInvoice(
 ) {
     val invoice = posViewModel.getDocument(id = invoiceId)!!
     val products = remember { invoice.products.map { (productViewModel.getProduct(it.value.id)?.productName ?: "Unknown Item") to it.value } }
+    val confirm = remember { mutableStateOf(true) }
+    var action: Status? = null
+    var showDialog by remember { mutableStateOf(false) }
+    val state = posViewModel.result.collectAsState()
 
     Scaffold(
         topBar = {
@@ -121,6 +129,34 @@ fun ViewInvoice(
                         Text(text = "Total Price:", modifier = Modifier.weight(1f))
                         Text(text = (products.sumOf { it.second.price * it.second.quantity } - invoice.discount).toString())
                     }
+                }
+            }
+
+            if (showDialog && action != null) {
+                DocumentDialog(action = action!!, type = Document.RO, onCancel = { showDialog = false }) {
+                    posViewModel.transactFromWaiting(document = invoice.copy(status = action!!))
+                    showDialog = false
+                    confirm.value = false
+                }
+            }
+
+            if (invoice.status == Status.WAITING && confirm.value) {
+                FormButtons(submitText = "Complete", cancel = {
+                    action = Status.CANCELLED
+                    showDialog = true
+                }) {
+                    action = Status.COMPLETE
+                    showDialog = true
+                }
+            }
+
+            LaunchedEffect(key1 = state.value) {
+                if (state.value.result) {
+                    userViewModel.log(event = "${if (action == Status.COMPLETE) "complete" else "cancel"}_sales_invoice")
+                    dismissRequest.invoke()
+                } else if (!state.value.result && state.value.errorMessage != null) {
+                    userViewModel.log(event = "fail_sales_invoice")
+                    dismissRequest.invoke()
                 }
             }
         }

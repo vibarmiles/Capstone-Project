@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -14,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -29,6 +31,9 @@ import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
 import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
 import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
+import com.example.capstoneproject.supplier_management.data.firebase.Status
+import com.example.capstoneproject.ui.theme.pending
+import com.example.capstoneproject.ui.theme.success
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -176,10 +181,41 @@ fun POSItem(
                 )
             },
             supportingContent = {
-                Text(text = "${(time ?: LocalTime.now()).format(DateTimeFormatter.ofPattern("hh:mm a"))} in ${branchViewModel.getBranch(invoice.branchId)?.name ?: "Unknown Branch"}")
+                Column {
+                    Text(text = "${(time ?: LocalTime.now()).format(DateTimeFormatter.ofPattern("hh:mm a"))} in ${branchViewModel.getBranch(invoice.branchId)?.name ?: "Unknown Branch"}")
+                    Text(text = "(${invoice.payment})", fontWeight = FontWeight.Bold)
+                }
             },
             trailingContent = {
-                Text(text = "(${invoice.payment})", fontWeight = FontWeight.Bold)
+                Column(modifier = Modifier.height(IntrinsicSize.Max), horizontalAlignment = Alignment.End) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = when (invoice.status) {
+                                    Status.WAITING -> pending
+                                    Status.CANCELLED -> Color.Gray
+                                    Status.COMPLETE -> success
+                                    Status.PENDING -> Color.Black
+                                    Status.FAILED -> Color.Red
+                                },
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(4.dp)
+                    ) {
+                        androidx.compose.material3.Text(
+                            text = when (invoice.status) {
+                                Status.WAITING -> "Pending"
+                                Status.CANCELLED -> "Cancelled"
+                                Status.COMPLETE -> "Complete"
+                                Status.PENDING -> "Updating"
+                                Status.FAILED -> "Failed"
+                            },
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (invoice.status == Status.WAITING) Color.Black else Color.White
+                        )
+                    }
+                }
             }
         )
         Divider()

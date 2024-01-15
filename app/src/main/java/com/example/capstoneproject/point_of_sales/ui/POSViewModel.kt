@@ -13,6 +13,7 @@ import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.point_of_sales.data.firebase.SalesInvoiceRepository
 import com.example.capstoneproject.product_management.data.firebase.product.IProductRepository
 import com.example.capstoneproject.product_management.data.firebase.product.ProductRepository
+import com.example.capstoneproject.supplier_management.data.firebase.Status
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -80,15 +81,30 @@ class POSViewModel : ViewModel() {
             productRepository.transact(document = document) { result ->
                 viewModelScope.launch {
                     if (!result.result) {
+                        insert(invoice = document.copy(status = Status.FAILED))
                         Log.e("TRANSACTION", "FAILED")
                     } else {
-                        insert(invoice = document)
+                        insert(invoice = document.copy(status = Status.COMPLETE))
                         Log.e("TRANSACTION", "FINISHED")
                     }
                 }.let {
                     if (it.isCompleted) {
                         resultState.update { result }
                     }
+                }
+            }
+        }
+    }
+
+    fun transactFromWaiting(document: Invoice) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (document.status == Status.CANCELLED) {
+                insert(invoice = document)
+            } else {
+                if (document.invoiceType == InvoiceType.SALE) {
+                    transact(document = document.copy(status = Status.PENDING))
+                } else {
+                    returnAndExchange(document = document.copy(status = Status.PENDING))
                 }
             }
         }
@@ -101,7 +117,7 @@ class POSViewModel : ViewModel() {
 
         viewModelScope.launch(Dispatchers.IO) {
             Log.e("TRANSACTION", "BEGIN ${document.toString().uppercase()}")
-            insert(invoice = document, returnResult = false) { current ->
+            insert(invoice = document.copy(status = Status.COMPLETE), returnResult = false) { current ->
                 Log.e("TRANSACTION", "ORIGINAL INVOICE ${current.result.toString().uppercase()}")
                 if (current.result) {
                     productRepository.transact(document = document) { result ->
@@ -120,7 +136,7 @@ class POSViewModel : ViewModel() {
                                 }) }, access = true)
                                 Log.e("TRANSACTION", "FINISHED")
                             } else {
-                                insert(invoice = document, access = true)
+                                insert(invoice = document.copy(status = Status.FAILED), access = true)
                                 Log.e("TRANSACTION", "FAILED")
                             }
                         }.let { job ->

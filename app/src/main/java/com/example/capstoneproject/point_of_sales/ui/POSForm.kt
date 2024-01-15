@@ -33,6 +33,7 @@ import com.example.capstoneproject.point_of_sales.data.firebase.Payment
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.point_of_sales.data.firebase.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
+import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
@@ -66,6 +67,7 @@ fun POSForm(
     var paymentTextFieldValue by remember { mutableStateOf(Payment.CASH.name) }
     var discount by remember { mutableStateOf(0.0) }
     var discountTextFieldValue by remember { mutableStateOf("") }
+    var delayedPayment by remember { mutableStateOf(false) }
     val localFocusManager = LocalFocusManager.current
 
     Scaffold(
@@ -215,6 +217,15 @@ fun POSForm(
                     }
                 }
 
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 0.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(checked = delayedPayment, onCheckedChange = { delayedPayment = !delayedPayment })
+                    Text("Payment is delayed?", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+
                 androidx.compose.material3.ListItem(
                     headlineContent = {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -285,10 +296,11 @@ fun POSForm(
 
         if (showConfirmationDialog) {
             ConfirmationDialog(onCancel = { showConfirmationDialog = false }) {
-                posViewModel.transact(
-                    document = Invoice(
+                if (delayedPayment) {
+                    posViewModel.insert(invoice = Invoice(
                         branchId = branchId!!,
                         userId = userId,
+                        status = Status.WAITING,
                         payment = payment,
                         discount = discount,
                         products = soldProductsViewModel.sales.let {
@@ -296,8 +308,22 @@ fun POSForm(
                                 "Item ${soldProductsViewModel.sales.indexOf(product)}"
                             }
                         }
+                    ))
+                } else {
+                    posViewModel.transact(
+                        document = Invoice(
+                            branchId = branchId!!,
+                            userId = userId,
+                            payment = payment,
+                            discount = discount,
+                            products = soldProductsViewModel.sales.let {
+                                it.associateBy { product ->
+                                    "Item ${soldProductsViewModel.sales.indexOf(product)}"
+                                }
+                            }
+                        )
                     )
-                )
+                }
             }
         }
 

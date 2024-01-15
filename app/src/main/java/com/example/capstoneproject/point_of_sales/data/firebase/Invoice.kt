@@ -1,5 +1,6 @@
 package com.example.capstoneproject.point_of_sales.data.firebase
 
+import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ServerTimestamp
 import java.util.Date
@@ -11,6 +12,7 @@ data class Invoice(
     @ServerTimestamp val date: Date? = null,
     val branchId: String = "",
     val userId: String = "",
+    val status: Status = Status.COMPLETE,
     val lock: Boolean = false,
     val payment: Payment = Payment.CASH,
     val discount: Double = 0.0,
