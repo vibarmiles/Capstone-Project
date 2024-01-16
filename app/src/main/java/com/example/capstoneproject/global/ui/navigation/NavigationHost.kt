@@ -36,6 +36,7 @@ import com.example.capstoneproject.supplier_management.ui.purchase_order.Purchas
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderScreen
 import com.example.capstoneproject.supplier_management.ui.purchase_order.PurchaseOrderViewModel
 import com.example.capstoneproject.login.ui.login.LoginScreen
+import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.point_of_sales.ui.*
 import com.example.capstoneproject.reports_management.ui.ReportsScreen
 import com.example.capstoneproject.reports_management.ui.ViewMonthScreen
@@ -552,6 +553,27 @@ fun NavigationHost(
             }
         }
 
+        composable(Routes.POS.Edit.route) {
+            val id = it.arguments?.getString("SIID")!!
+            val type = it.arguments?.getString("type")!!
+
+            if (type == InvoiceType.SALE.name) {
+                POSForm(
+                    userId = userAccountDetails.value.id,
+                    contactViewModel = contactViewModel,
+                    posViewModel = posViewModel,
+                    productViewModel = productViewModel,
+                    userViewModel = userViewModel,
+                    branchViewModel = branchViewModel,
+                    invoiceId = id
+                ) {
+                    navController.popBackStack()
+                }
+            } else {
+
+            }
+        }
+
         composable(Routes.POS.View.route) {
             val id = it.arguments?.getString("SIID")!!
 
@@ -561,6 +583,9 @@ fun NavigationHost(
                 userViewModel = userViewModel,
                 productViewModel = productViewModel,
                 branchViewModel = branchViewModel,
+                edit = { type ->
+                    navController.navigate(Routes.POS.Edit.createRoute(id, type))
+                },
                 returnAndExchange = {
                     navController.navigate(Routes.POS.RnE.createRoute(id))
                 }

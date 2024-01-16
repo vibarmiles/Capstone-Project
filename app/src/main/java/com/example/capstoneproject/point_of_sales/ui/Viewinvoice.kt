@@ -7,6 +7,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.KeyboardReturn
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +21,7 @@ import com.example.capstoneproject.product_management.ui.product.ProductViewMode
 import com.example.capstoneproject.supplier_management.data.firebase.Status
 import com.example.capstoneproject.supplier_management.ui.Document
 import com.example.capstoneproject.supplier_management.ui.DocumentDialog
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 
 @Composable
@@ -29,6 +31,7 @@ fun ViewInvoice(
     userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
     branchViewModel: BranchViewModel,
+    edit: (InvoiceType) -> Unit,
     returnAndExchange: () -> Unit,
     dismissRequest: () -> Unit,
 ) {
@@ -38,6 +41,7 @@ fun ViewInvoice(
     var action: Status? = null
     var showDialog by remember { mutableStateOf(false) }
     val state = posViewModel.result.collectAsState()
+    val userAccountDetails = userViewModel.userAccountDetails.collectAsState().value
 
     Scaffold(
         topBar = {
@@ -52,7 +56,7 @@ fun ViewInvoice(
                     }
                 },
                 actions = {
-                    if (invoice.invoiceType != InvoiceType.REFUND) {
+                    if ((invoice.invoiceType != InvoiceType.REFUND) || (userAccountDetails.userLevel == UserLevel.Owner && invoice.status == Status.WAITING)) {
                         var expanded by remember { mutableStateOf(false) }
 
                         IconButton(onClick = { expanded = true }) {
@@ -60,14 +64,29 @@ fun ViewInvoice(
                         }
 
                         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                            androidx.compose.material3.DropdownMenuItem(
-                                leadingIcon = { Icon(imageVector = Icons.Outlined.KeyboardReturn, contentDescription = null) },
-                                text = { Text(text = "Issue Return And Exchange") },
-                                onClick = {
-                                    expanded = false
-                                    returnAndExchange.invoke()
-                                }
-                            )
+                            if (invoice.invoiceType != InvoiceType.REFUND && invoice.status != Status.WAITING) {
+                                androidx.compose.material3.DropdownMenuItem(
+                                    leadingIcon = { Icon(imageVector = Icons.Outlined.KeyboardReturn, contentDescription = null) },
+                                    text = { Text(text = "Issue Return And Exchange") },
+                                    onClick = {
+                                        expanded = false
+                                        returnAndExchange.invoke()
+                                    }
+                                )
+                            }
+
+                            if (userAccountDetails.userLevel == UserLevel.Owner && invoice.status == Status.WAITING) {
+                                androidx.compose.material3.DropdownMenuItem(
+                                    leadingIcon = {
+                                        Icon(imageVector = Icons.Outlined.Edit, contentDescription = null)
+                                    },
+                                    text = { Text(text = "Edit Document") },
+                                    onClick = {
+                                        expanded = false
+                                        edit.invoke(invoice.invoiceType)
+                                    }
+                                )
+                            }
                         }
                     }
                 }

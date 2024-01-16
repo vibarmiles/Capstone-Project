@@ -1,6 +1,7 @@
 package com.example.capstoneproject.global.ui.navigation
 
 import com.example.capstoneproject.R
+import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 
 sealed class Routes(val route: String) {
     object LoginScreen : Routes((R.string.login).toString())
@@ -77,6 +78,9 @@ sealed class Routes(val route: String) {
     }
     object POS : Routes((R.string.pos).toString()) {
         object Add : Routes(this.route + "/Add")
+        object Edit : Routes(this.route + "/Edit/{SIID}/{type}") {
+            fun createRoute(SIID: String, type: InvoiceType) = POS.route + "/Edit/$SIID/$type"
+        }
         object View : Routes(this.route + "/View/{SIID}") {
             fun createRoute(SIID: String) = POS.route + "/View/$SIID"
         }

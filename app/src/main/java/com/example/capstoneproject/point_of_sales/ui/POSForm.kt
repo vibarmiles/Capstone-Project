@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,6 +35,7 @@ import com.example.capstoneproject.product_management.ui.product.ProductViewMode
 import com.example.capstoneproject.point_of_sales.data.firebase.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.supplier_management.data.firebase.Status
+import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 import com.example.capstoneproject.supplier_management.ui.RemoveProductDialog
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
@@ -48,6 +50,7 @@ fun POSForm(
     branchViewModel: BranchViewModel,
     userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
+    invoiceId: String? = null,
     back: () -> Unit
 ) {
     val soldProductsViewModel: SoldProductsViewModel = viewModel()
@@ -67,7 +70,7 @@ fun POSForm(
     var paymentTextFieldValue by remember { mutableStateOf(Payment.CASH.name) }
     var discount by remember { mutableStateOf(0.0) }
     var discountTextFieldValue by remember { mutableStateOf("") }
-    var delayedPayment by remember { mutableStateOf(false) }
+    var delayedPayment by remember { mutableStateOf(invoiceId != null) }
     val localFocusManager = LocalFocusManager.current
 
     Scaffold(
@@ -93,6 +96,17 @@ fun POSForm(
             }
         }
     ) { paddingValues ->
+        rememberSaveable {
+            invoiceId.let {
+                if (it != null) {
+                    val invoice = posViewModel.getDocument(it)
+                    branchId = invoice?.branchId
+                    textFieldValue = branchViewModel.getBranch(invoice?.branchId)?.name ?: "Unknown Branch"
+                    soldProductsViewModel.sales.addAll(posViewModel.getDocument(it)?.products?.values ?: listOf())
+                } else ""
+            }
+        }
+
         Column(
             modifier = Modifier
                 .padding(paddingValues),
@@ -272,18 +286,25 @@ fun POSForm(
             AddProductDialog(
                 onDismissRequest = { showProductDialog = false },
                 submit = { id, price, quantity, supplier ->
-                    soldProductsViewModel.sales.add(
-                        Product(
-                            id = id,
-                            price = price,
-                            quantity = quantity,
-                            supplier = supplier
-                        )
-                    )
+                    soldProductsViewModel.sales.find { it.id == id }.let { product ->
+                        if (product == null) {
+                            soldProductsViewModel.sales.add(
+                                Product(
+                                    id = id,
+                                    price = price,
+                                    quantity = quantity,
+                                    supplier = supplier
+                                )
+                            )
+                        } else {
+                            soldProductsViewModel.sales.set(soldProductsViewModel.sales.indexOf(product), product.copy(quantity = product.quantity + quantity))
+                        }
+                    }
                     showProductDialog = false
                 },
-                products = products.filter { it.key !in soldProductsViewModel.sales.map { products -> products.id } },
-                branchId = branchId!!
+                products = products.mapValues { product -> product.value.copy(stock = product.value.stock.mapValues { stock -> stock.value - (soldProductsViewModel.sales.find { it.id == product.key }?.quantity ?: 0) }) },
+                branchId = branchId!!,
+                suppliers = suppliers.value
             )
         }
 
@@ -298,6 +319,7 @@ fun POSForm(
             ConfirmationDialog(onCancel = { showConfirmationDialog = false }) {
                 if (delayedPayment) {
                     posViewModel.insert(invoice = Invoice(
+                        id = invoiceId ?: "",
                         branchId = branchId!!,
                         userId = userId,
                         status = Status.WAITING,
@@ -312,6 +334,7 @@ fun POSForm(
                 } else {
                     posViewModel.transact(
                         document = Invoice(
+                            id = invoiceId ?: "",
                             branchId = branchId!!,
                             userId = userId,
                             payment = payment,
@@ -374,7 +397,8 @@ fun AddProductDialog(
     onDismissRequest: () -> Unit,
     branchId: String,
     submit: (String, Double, Int, String) -> Unit,
-    products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>
+    products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>,
+    suppliers: List<Contact>
 ) {
     var search = products
     var expanded by remember { mutableStateOf(false) }
@@ -387,6 +411,8 @@ fun AddProductDialog(
     var productId = ""
     var supplier = ""
     var canSubmit by remember { mutableStateOf(false) }
+    val supplierValue = remember { mutableStateOf("") }
+    var supplierExpanded by remember { mutableStateOf(false) }
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -458,7 +484,47 @@ fun AddProductDialog(
                                 price = it.value.sellingPrice
                                 maxQuantity = it.value.stock.getOrDefault(key = branchId, defaultValue = 0)
                                 supplier = it.value.supplier
+                                supplierValue.value = suppliers.firstOrNull { s -> it.value.supplier == s.id }?.name ?: ""
                                 expanded = false
+                            })
+                        }
+                    }
+                }
+
+                ExposedDropdownMenuBox(expanded = supplierExpanded, onExpandedChange = { supplierExpanded = !supplierExpanded }) {
+                    OutlinedTextField(
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = supplierExpanded) },
+                        colors = GlobalTextFieldColors(),
+                        readOnly = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        value = supplierValue.value,
+                        onValueChange = {  },
+                        label = { Text(text = stringResource(id = R.string.supplier)) }
+                    )
+
+                    DropdownMenu(
+                        modifier = Modifier
+                            .exposedDropdownSize()
+                            .requiredHeightIn(max = 300.dp)
+                            .fillMaxWidth(),
+                        expanded = supplierExpanded,
+                        onDismissRequest = { supplierExpanded = false },
+                        properties = PopupProperties(focusable = false)
+                    ) {
+                        suppliers.filter {
+                            it.id in products.filter { product -> product.value.productName == selectedProduct }.map { product -> product.value.supplier }
+                        }.forEach {
+                            androidx.compose.material3.DropdownMenuItem(text = {
+                                Column {
+                                    Text(text = it.name)
+                                }
+                            }, onClick = {
+                                supplier = it.id
+                                supplierValue.value = it.name
+                                productId = products.toList().first { product ->
+                                    product.second.productName == selectedProduct && product.second.supplier == it.id
+                                }.first
+                                supplierExpanded = false
                             })
                         }
                     }
