@@ -42,10 +42,10 @@ fun UserScreen(
     val state by userViewModel.result.collectAsState()
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
-    val size = users.filterNot { it.value.userLevel == if (userAccountDetails.value.userLevel == UserLevel.Admin) UserLevel.Employee else UserLevel.Admin }.size
+    val size = users.filterNot { it.value.userLevel == if (userAccountDetails.value.userLevel == UserLevel.Admin) UserLevel.Cashier else UserLevel.Admin }.size
     val listOfUsers = remember(userViewModel.update.value) {
         derivedStateOf {
-            users.toList().filterNot { it.second.userLevel == if (userAccountDetails.value.userLevel == UserLevel.Admin) UserLevel.Employee else UserLevel.Admin }.sortedWith(comparator = compareBy<Pair<String, User>> { it.second.userLevel }.thenBy { it.second.lastName.uppercase() })
+            users.toList().filterNot { it.second.userLevel == if (userAccountDetails.value.userLevel == UserLevel.Admin) UserLevel.Cashier else UserLevel.Admin }.sortedWith(comparator = compareBy<Pair<String, User>> { it.second.userLevel }.thenBy { it.second.lastName.uppercase() })
         }
     }
     lateinit var user: Pair<String, User>

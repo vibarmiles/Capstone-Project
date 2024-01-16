@@ -68,7 +68,7 @@ fun Drawer(
 
     LaunchedEffect(key1 = userAccountDetails.value) {
         when (userAccountDetails.value.userLevel) {
-            UserLevel.Employee -> {
+            UserLevel.Cashier -> {
                 navigationList.removeAll { true }
                 navigationList.addAll(listOf(NavigationItems.Dashboard, NavigationItems.Inventory, NavigationItems.POS))
                 subNavigationList.removeAll { true }

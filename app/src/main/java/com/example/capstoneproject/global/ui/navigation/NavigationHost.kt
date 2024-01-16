@@ -176,7 +176,8 @@ fun NavigationHost(
                 setBranchQuantity = { navController.navigate(Routes.Product.SetBranchQuantity.createRoute(productId)) },
                 setMonthlySales = { navController.navigate(Routes.Product.SetMonthlySales.createRoute(productId)) },
                 delete = { navController.popBackStack() },
-                createPO = { navController.navigate(Routes.PurchaseOrder.CreateFromInventory.createRoute(productId)) }
+                createPO = { navController.navigate(Routes.PurchaseOrder.CreateFromInventory.createRoute(productId)) },
+                createSI = { navController.navigate(Routes.POS.CreateFromInventory.createRoute(productId)) }
             )
         }
 
@@ -506,6 +507,7 @@ fun NavigationHost(
                 scaffoldState = scaffoldState,
                 productViewModel = productViewModel,
                 contactViewModel = contactViewModel,
+                branchViewModel = branchViewModel,
                 userAccountDetails = userAccountDetails.value,
                 view = { month, year ->
                     navController.navigate(Routes.Report.View.createRoute(month = month, year = year))
@@ -570,7 +572,34 @@ fun NavigationHost(
                     navController.popBackStack()
                 }
             } else {
+                ReturnAndExchangeForm(
+                    userId = userAccountDetails.value.id,
+                    invoiceId = posViewModel.getDocument(id)!!.originalInvoiceId,
+                    editInvoiceId = id,
+                    posViewModel = posViewModel,
+                    returnOrderViewModel = returnOrderViewModel,
+                    contactViewModel = contactViewModel,
+                    productViewModel = productViewModel,
+                    userViewModel = userViewModel
+                ) {
+                    navController.popBackStack()
+                }
+            }
+        }
 
+        composable(Routes.POS.CreateFromInventory.route) {
+            val id = it.arguments?.getString("productId")!!
+
+            POSForm(
+                userId = userAccountDetails.value.id,
+                posViewModel = posViewModel,
+                contactViewModel = contactViewModel,
+                branchViewModel = branchViewModel,
+                userViewModel = userViewModel,
+                productViewModel = productViewModel,
+                productId = id
+            ) {
+                navController.popBackStack()
             }
         }
 

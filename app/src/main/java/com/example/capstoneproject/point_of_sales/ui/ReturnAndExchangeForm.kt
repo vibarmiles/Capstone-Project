@@ -69,7 +69,7 @@ fun ReturnAndExchangeForm(
     var type by remember { mutableStateOf(InvoiceType.REFUND) }
     var payment by remember { mutableStateOf(Payment.CASH) }
     var paymentTextFieldValue by remember { mutableStateOf(Payment.CASH.name) }
-    var delayedPayment by remember { mutableStateOf(editInvoiceId != null) }
+    var notComplete by remember { mutableStateOf(editInvoiceId != null) }
 
     Scaffold(
         topBar = {
@@ -179,8 +179,8 @@ fun ReturnAndExchangeForm(
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 0.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Checkbox(checked = delayedPayment, onCheckedChange = { delayedPayment = !delayedPayment })
-                Text("Payment is delayed?", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Checkbox(checked = notComplete, onCheckedChange = { notComplete = !notComplete })
+                Text("Not Complete?", maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
 
             androidx.compose.material3.ListItem(
@@ -260,7 +260,7 @@ fun ReturnAndExchangeForm(
 
             if (showConfirmationDialog) {
                 ConfirmationDialogForReturnAndExchange(onCancel = { showConfirmationDialog = false }) { checked ->
-                    if (delayedPayment) {
+                    if (notComplete) {
                         posViewModel.insert(invoice = Invoice(
                             id = editInvoiceId ?: "",
                             branchId = branchId,

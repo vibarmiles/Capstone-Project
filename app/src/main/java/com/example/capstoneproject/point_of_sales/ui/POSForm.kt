@@ -51,6 +51,7 @@ fun POSForm(
     userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
     invoiceId: String? = null,
+    productId: String? = null,
     back: () -> Unit
 ) {
     val soldProductsViewModel: SoldProductsViewModel = viewModel()
@@ -64,13 +65,14 @@ fun POSForm(
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val context = LocalContext.current
     var productToRemove: Product? = null
-    var branchId by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Employee || userAccountDetails.value.userLevel == UserLevel.Manager) userAccountDetails.value.branchId else branches.value.firstOrNull()?.id) }
-    var textFieldValue by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Employee || userAccountDetails.value.userLevel == UserLevel.Manager) branchViewModel.getBranch(userAccountDetails.value.branchId)?.name ?: "Unknown Branch" else branches.value.firstOrNull()?.name ?: "No Branches Found") }
+    var branchId by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Cashier || userAccountDetails.value.userLevel == UserLevel.Manager) userAccountDetails.value.branchId else branches.value.firstOrNull()?.id) }
+    var textFieldValue by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Cashier || userAccountDetails.value.userLevel == UserLevel.Manager) branchViewModel.getBranch(userAccountDetails.value.branchId)?.name ?: "Unknown Branch" else branches.value.firstOrNull()?.name ?: "No Branches Found") }
     var payment by remember { mutableStateOf(Payment.CASH) }
     var paymentTextFieldValue by remember { mutableStateOf(Payment.CASH.name) }
     var discount by remember { mutableStateOf(0.0) }
     var discountTextFieldValue by remember { mutableStateOf("") }
     var delayedPayment by remember { mutableStateOf(invoiceId != null) }
+    var showInitialProductDialog by remember { mutableStateOf(productId != null) }
     val localFocusManager = LocalFocusManager.current
 
     Scaffold(
@@ -119,7 +121,7 @@ fun POSForm(
                 ) {
                     var expandedPayment by remember { mutableStateOf(false) }
 
-                    if (soldProductsViewModel.sales.isEmpty() && userAccountDetails.value.userLevel != UserLevel.Employee && userAccountDetails.value.userLevel != UserLevel.Manager) {
+                    if (soldProductsViewModel.sales.isEmpty() && userAccountDetails.value.userLevel != UserLevel.Cashier && userAccountDetails.value.userLevel != UserLevel.Manager) {
                         var expanded by remember { mutableStateOf(false) }
                         ExposedDropdownMenuBox(
                             expanded = expanded,
@@ -308,6 +310,27 @@ fun POSForm(
             )
         }
 
+        if (showInitialProductDialog) {
+            AddProductDialog(
+                onDismissRequest = { showInitialProductDialog = false },
+                submit = { id, price, quantity, supplier ->
+                    soldProductsViewModel.sales.add(
+                        Product(
+                            id = id,
+                            price = price,
+                            quantity = quantity,
+                            supplier = supplier
+                        )
+                    )
+                    showInitialProductDialog = false
+                },
+                products = products,
+                initial = productId,
+                branchId = branchId!!,
+                suppliers = suppliers.value
+            )
+        }
+
         if (showDeleteDialog) {
             RemoveProductDialog(productName = productViewModel.getProduct(productToRemove!!.id)!!.productName, dismissRequest = { showDeleteDialog = false }) {
                 soldProductsViewModel.sales.remove(productToRemove)
@@ -398,6 +421,7 @@ fun AddProductDialog(
     branchId: String,
     submit: (String, Double, Int, String) -> Unit,
     products: Map<String, com.example.capstoneproject.product_management.data.firebase.product.Product>,
+    initial: String? = null,
     suppliers: List<Contact>
 ) {
     var search = products
@@ -406,12 +430,12 @@ fun AddProductDialog(
     var quantityText by remember { mutableStateOf("") }
     var quantity = 0
     var maxQuantity = 0
-    var selectedProduct by remember { mutableStateOf("") }
+    var selectedProduct by remember { mutableStateOf(if (initial != null) products[initial]?.productName ?: "" else "") }
     var price = 0.0
-    var productId = ""
-    var supplier = ""
+    var productId = initial ?: ""
+    var supplier = if (initial != null) products[initial]?.supplier ?: "" else ""
+    val supplierValue = remember { mutableStateOf(if (supplier.isNotBlank()) suppliers.firstOrNull { it.id == supplier }?.name ?: "" else "") }
     var canSubmit by remember { mutableStateOf(false) }
-    val supplierValue = remember { mutableStateOf("") }
     var supplierExpanded by remember { mutableStateOf(false) }
 
     androidx.compose.material3.AlertDialog(

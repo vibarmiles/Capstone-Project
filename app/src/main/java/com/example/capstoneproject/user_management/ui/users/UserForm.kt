@@ -70,8 +70,8 @@ fun UserForm(
     var branchId by remember { mutableStateOf(branches.value.firstOrNull()?.id)}
     var branchName by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches")}
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
-    var userLevel by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Admin && user.userLevel == UserLevel.Employee) UserLevel.Owner else user.userLevel) }
-    val userLevels = if (userAccountDetails.value.userLevel == UserLevel.Admin) enumValues<UserLevel>().filter { it != UserLevel.Employee } else enumValues<UserLevel>().filter { it != UserLevel.Admin }
+    var userLevel by remember { mutableStateOf(if (userAccountDetails.value.userLevel == UserLevel.Admin && user.userLevel == UserLevel.Cashier) UserLevel.Owner else user.userLevel) }
+    val userLevels = if (userAccountDetails.value.userLevel == UserLevel.Admin) enumValues<UserLevel>().filter { it != UserLevel.Cashier && it != UserLevel.Manager } else enumValues<UserLevel>().filter { it != UserLevel.Admin }
     val localFocusManager = LocalFocusManager.current
     val showConfirmationDialog = remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -140,7 +140,7 @@ fun UserForm(
                 }
             }
 
-            if (userLevel == UserLevel.Employee) {
+            if (userLevel == UserLevel.Cashier || userLevel == UserLevel.Manager) {
                 ExposedDropdownMenuBox(expanded = expandedBranches, onExpandedChange = { expandedBranches = !expandedBranches }) {
                     OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedBranches) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = branchName, onValueChange = {  }, readOnly = true, label = { Text(text = buildAnnotatedString { append(text = stringResource(id = R.string.branch)); withStyle(style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") } }) })
 
@@ -260,7 +260,7 @@ fun UserForm(
                     isLastNameValid = lastName.isNotBlank()
                     isEmailValid = email.let { it.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(it).matches() && users.filterKeys { key -> id != key }.all { entry -> entry.value.email != it } }
                     isPhoneNumber = phoneNumber.let { it.isNotBlank() && Patterns.PHONE.matcher(it).matches() && it.length == 10 && users.filterKeys { key -> id != key }.all { entry -> entry.value.phoneNumber != "0$it" } }
-                    val isBranchValid = if (userLevel == UserLevel.Employee) branchId != null else true
+                    val isBranchValid = if (userLevel == UserLevel.Cashier || userLevel == UserLevel.Manager) branchId != null else true
 
                     if (isFirstNameValid && isLastNameValid && isEmailValid && isBranchValid && isPhoneNumber) {
                         showConfirmationDialog.value = true
@@ -270,7 +270,7 @@ fun UserForm(
 
             if (showConfirmationDialog.value) {
                 ConfirmationForAddingDialog(onCancel = { showConfirmationDialog.value = false }) {
-                    userViewModel.insert(id = id, user = user.copy(id = null, lastName = lastName, firstName = firstName, phoneNumber = "0$phoneNumber", password = if (setToDefaultPassword || id == null) "0$phoneNumber" else password, active = true, email = email, userLevel = userLevel, branchId = if (userLevel == UserLevel.Employee) branchId else null))
+                    userViewModel.insert(id = id, user = user.copy(id = null, lastName = lastName, firstName = firstName, phoneNumber = "0$phoneNumber", password = if (setToDefaultPassword || id == null) "0$phoneNumber" else password, active = true, email = email, userLevel = userLevel, branchId = if (userLevel == UserLevel.Cashier || userLevel == UserLevel.Manager) branchId else null))
                     userViewModel.log("${decision}_user")
                     showConfirmationDialog.value = false
                     back.invoke()

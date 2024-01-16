@@ -120,26 +120,17 @@ fun AddProductDialog(
                         onDismissRequest = {  },
                         properties = PopupProperties(focusable = false)
                     ) {
-                        search.forEach {
+                        search.toList().distinctBy { it.second.productName }.forEach {
                             DropdownMenuItem(text = {
-                                Column {
-                                    Text(text = it.value.productName)
-                                    it.value.stock.getOrDefault(key = branchId, defaultValue = 0).let { count ->
-                                        if (count == 0) {
-                                            Text(text = "Out of Stock", color = MaterialTheme.colors.error)
-                                        } else {
-                                            Text(text = "$count Units", color = Color(red = 0f, green = 0.8f, blue = 0f))
-                                        }
-                                    }
-                                }
+                                Text(text = it.second.productName)
                             }, onClick = {
                                 canSubmit = true
-                                productId = it.key
-                                selectedProduct = it.value.productName
+                                productId = it.first
+                                selectedProduct = it.second.productName
                                 quantityText = ""
-                                maxQuantity = it.value.stock.getOrDefault(key = branchId, defaultValue = 0)
-                                supplier = it.value.supplier
-                                supplierValue.value = suppliers.firstOrNull { s -> it.value.supplier == s.id }?.name ?: ""
+                                maxQuantity = it.second.stock.getOrDefault(key = branchId, defaultValue = 0)
+                                supplier = it.second.supplier
+                                supplierValue.value = suppliers.firstOrNull { s -> it.second.supplier == s.id }?.name ?: ""
                                 expanded = false
                             })
                         }
@@ -172,6 +163,13 @@ fun AddProductDialog(
                             DropdownMenuItem(text = {
                                 Column {
                                     androidx.compose.material.Text(text = it.name)
+                                    products.values.first { product ->  product.productName == selectedProduct && product.supplier == it.id }.stock.getOrDefault(key = branchId, defaultValue = 0).let { count ->
+                                        if (count == 0) {
+                                            Text(text = "Out of Stock", color = MaterialTheme.colors.error)
+                                        } else {
+                                            Text(text = "$count Units", color = Color(red = 0f, green = 0.8f, blue = 0f))
+                                        }
+                                    }
                                 }
                             }, onClick = {
                                 supplier = it.id

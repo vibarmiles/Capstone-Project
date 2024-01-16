@@ -32,5 +32,5 @@ enum class InvoiceType {
 }
 
 enum class Payment {
-    CASH, BANK, GCASH, PAYMAYA
+    CASH, GCASH, PAYMAYA
 }

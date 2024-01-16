@@ -12,7 +12,7 @@ data class User(
     val password: String? = null,
     val firstLogin: Boolean = true,
     val lastLogin: Any = ServerValue.TIMESTAMP,
-    val userLevel: UserLevel = UserLevel.Employee,
+    val userLevel: UserLevel = UserLevel.Cashier,
     val branchId: String? = null,
     val active: Boolean = true
 )

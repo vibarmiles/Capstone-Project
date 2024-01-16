@@ -87,6 +87,9 @@ sealed class Routes(val route: String) {
         object RnE : Routes(this.route + "/RnE/{SIID}") {
             fun createRoute(SIID: String) = POS.route + "/RnE/$SIID"
         }
+        object CreateFromInventory : Routes(this.route + "/Create/{productId}") {
+            fun createRoute(productId: String) = POS.route + "/Create/$productId"
+        }
     }
     object Logout : Routes((R.string.logout).toString())
 }

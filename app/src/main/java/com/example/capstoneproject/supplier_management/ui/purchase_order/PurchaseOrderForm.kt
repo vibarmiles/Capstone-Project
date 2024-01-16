@@ -160,7 +160,8 @@ fun PurchaseOrderForm(
                     showInitialProductDialog = false
                 },
                 products = products,
-                productViewModel = productViewModel, date = Instant.ofEpochMilli(userViewModel.userAccountDetails.collectAsState().value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate(),
+                productViewModel = productViewModel,
+                date = Instant.ofEpochMilli(userViewModel.userAccountDetails.collectAsState().value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate(),
                 initial = productId,
                 suppliers = suppliers.value
             )
@@ -240,9 +241,9 @@ fun AddProductDialog(
     var selectedProduct by remember { mutableStateOf(if (initial != null) products[initial]?.productName ?: "" else "") }
     var price = 0.0
     var productId = initial ?: ""
-    var supplier = ""
+    var supplier = if (initial != null) products[initial]?.supplier ?: "" else ""
+    val supplierValue = remember { mutableStateOf(if (supplier.isNotBlank()) suppliers.firstOrNull { it.id == supplier }?.name ?: "" else "") }
     var canSubmit by remember { mutableStateOf(false) }
-    val supplierValue = remember { mutableStateOf("") }
     var supplierExpanded by remember { mutableStateOf(false) }
 
     androidx.compose.material3.AlertDialog(
@@ -296,11 +297,11 @@ fun AddProductDialog(
                         onDismissRequest = {  },
                         properties = PopupProperties(focusable = false)
                     ) {
-                        search.forEach {
+                        search.toList().distinctBy { it.second.productName }.forEach {
                             DropdownMenuItem(text = {
                                 Column {
-                                    Text(text = it.value.productName)
-                                    it.value.stock.count { stock -> stock.value < productViewModel.getCriticalLevel(product = it.value, date = date) }.let { count ->
+                                    Text(text = it.second.productName)
+                                    it.second.stock.count { stock -> stock.value < productViewModel.getCriticalLevel(product = it.second, date = date) }.let { count ->
                                         Text(text = when (count) {
                                             0 -> return@let
                                             1 -> "Stock is critical in 1 branch"
@@ -310,11 +311,11 @@ fun AddProductDialog(
                                 }
                             }, onClick = {
                                 canSubmit = true
-                                productId = it.key
-                                selectedProduct = it.value.productName
-                                price = it.value.purchasePrice
-                                supplier = it.value.supplier
-                                supplierValue.value = suppliers.firstOrNull { s -> it.value.supplier == s.id }?.name ?: ""
+                                productId = it.first
+                                selectedProduct = it.second.productName
+                                price = it.second.purchasePrice
+                                supplier = it.second.supplier
+                                supplierValue.value = suppliers.firstOrNull { s -> it.second.supplier == s.id }?.name ?: ""
                                 expanded = false
                             })
                         }

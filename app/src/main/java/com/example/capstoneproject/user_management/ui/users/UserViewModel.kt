@@ -31,7 +31,7 @@ data class UserAccountDetails(
     val previousLoginDate: Long = 0,
     val loginDate: Long = 0,
     val firstLogin: Boolean = true,
-    val userLevel: UserLevel = UserLevel.Employee,
+    val userLevel: UserLevel = UserLevel.Cashier,
     val isActive: Boolean = false,
     val errorMessage: String? = null
 )

@@ -56,7 +56,8 @@ fun ViewProduct(
     setBranchQuantity: () -> Unit,
     setMonthlySales: () -> Unit,
     delete: () -> Unit,
-    createPO: () -> Unit
+    createPO: () -> Unit,
+    createSI: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val product = remember { productViewModel.getProduct(productId)!! }
@@ -77,10 +78,10 @@ fun ViewProduct(
                     }
                 },
                 actions = {
-                    if (userLevel != UserLevel.Employee) {
-                        var expanded: Boolean by remember { mutableStateOf(false) }
-                        IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
-                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    var expanded: Boolean by remember { mutableStateOf(false) }
+                    IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        if (userLevel != UserLevel.Cashier) {
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Product") }, onClick = { expanded = false; edit.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.BarChart, contentDescription = null) }, text = { Text(text = "Adjust Quantity") }, onClick = { expanded = false; setBranchQuantity.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.StackedBarChart, contentDescription = null) }, text = { Text(text = "Adjust Monthly Sales") }, onClick = { expanded = false; setMonthlySales.invoke() })
@@ -92,6 +93,8 @@ fun ViewProduct(
                                 dismissRequest.invoke()
                             }
                         }
+
+                        DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Sell, contentDescription = null) }, text = { Text(text = "Issue Sale") }, onClick = { expanded = false; createSI.invoke() })
                     }
                 }
             )

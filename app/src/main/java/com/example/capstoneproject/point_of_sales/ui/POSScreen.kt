@@ -55,7 +55,7 @@ fun POSScreen(
     val invoices = posViewModel.getAll().observeAsState(listOf())
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val invoicesList = remember(invoices.value) {
-        invoices.value.filter { if (userAccountDetails.value.userLevel == UserLevel.Employee) userAccountDetails.value.branchId == it.branchId else true }.groupBy {
+        invoices.value.filter { if (userAccountDetails.value.userLevel == UserLevel.Cashier) userAccountDetails.value.branchId == it.branchId else true }.groupBy {
             val localDate = if (it.date != null) Instant.ofEpochMilli(it.date.time).atZone(ZoneId.systemDefault()).toLocalDate() else LocalDate.now()
             localDate!!
         }
