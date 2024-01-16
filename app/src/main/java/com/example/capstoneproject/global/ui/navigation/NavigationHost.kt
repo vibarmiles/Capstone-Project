@@ -173,6 +173,7 @@ fun NavigationHost(
                 productId = productId,
                 loginDate = userAccountDetails.value.loginDate,
                 edit = { navController.navigate(Routes.Product.Edit.createRoute(productId)) },
+                addSupplier = { navController.navigate(Routes.Product.AddSupplier.createRoute(productId)) },
                 setBranchQuantity = { navController.navigate(Routes.Product.SetBranchQuantity.createRoute(productId)) },
                 setMonthlySales = { navController.navigate(Routes.Product.SetMonthlySales.createRoute(productId)) },
                 delete = { navController.popBackStack() },
@@ -203,6 +204,22 @@ fun NavigationHost(
                 categoryViewModel = categoryViewModel,
                 contactViewModel = contactViewModel,
                 productId = productId,
+                dismissRequest = { navController.popBackStack() },
+                userViewModel = userViewModel
+            )
+        }
+
+        composable(Routes.Product.AddSupplier.route) {
+            val productId: String = it.arguments?.getString("productId")!!
+
+            ProductForm(
+                scaffoldState = scaffoldState,
+                function = "Edit",
+                productViewModel = productViewModel,
+                categoryViewModel = categoryViewModel,
+                contactViewModel = contactViewModel,
+                productId = productId,
+                newSupplier = true,
                 dismissRequest = { navController.popBackStack() },
                 userViewModel = userViewModel
             )
@@ -509,6 +526,7 @@ fun NavigationHost(
                 contactViewModel = contactViewModel,
                 branchViewModel = branchViewModel,
                 userAccountDetails = userAccountDetails.value,
+                posViewModel = posViewModel,
                 view = { month, year ->
                     navController.navigate(Routes.Report.View.createRoute(month = month, year = year))
                 }

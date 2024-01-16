@@ -75,7 +75,7 @@ fun ViewInvoice(
                                 )
                             }
 
-                            if (userAccountDetails.userLevel == UserLevel.Owner && invoice.status == Status.WAITING) {
+                            if (invoice.status == Status.WAITING) {
                                 androidx.compose.material3.DropdownMenuItem(
                                     leadingIcon = {
                                         Icon(imageVector = Icons.Outlined.Edit, contentDescription = null)

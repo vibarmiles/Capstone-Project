@@ -117,8 +117,7 @@ fun UserForm(
                 }
             )
         }
-    ) {
-            paddingValues ->
+    ) { paddingValues ->
         Column(modifier = Modifier
             .padding(paddingValues)
             .padding(16.dp)

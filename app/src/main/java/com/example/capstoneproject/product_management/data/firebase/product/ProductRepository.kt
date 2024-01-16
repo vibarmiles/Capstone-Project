@@ -381,7 +381,7 @@ class ProductRepository : IProductRepository {
                                 monthlySale[date.year.toString()].let { _ ->
                                     if (!monthlySale.containsKey(date.year.toString())) {
                                         if (!didYearChange) {
-                                            monthlySale.putIfAbsent(lastEditDate.year.toString(), mapOf(Pair(date.minusMonths(1).month.name, transaction.soldThisMonth)))
+                                            monthlySale.putIfAbsent(date.minusYears(1).year.toString(), mapOf(Pair(date.minusMonths(1).month.name, transaction.soldThisMonth)))
                                         } else {
                                             monthlySale.putIfAbsent(date.year.toString(), mapOf(Pair(date.minusMonths(1).month.name, transaction.soldThisMonth)))
                                         }

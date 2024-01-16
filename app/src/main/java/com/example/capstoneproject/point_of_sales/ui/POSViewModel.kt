@@ -28,12 +28,24 @@ class POSViewModel : ViewModel() {
     private val resultState = MutableStateFlow(FirebaseResult())
     val result = resultState.asStateFlow()
     val returnSize = mutableStateOf(0)
+    var taken = mutableStateOf(false)
 
     fun getAll(): MutableLiveData<List<Invoice>> {
         if (!this::salesInvoices.isInitialized) {
             salesInvoices = salesInvoiceRepository.getAll(callback = { updateLoadingState(); returnSize.value = it }) { result ->
                 resultState.update { result }
             }
+        }
+
+        return salesInvoices
+    }
+
+    fun getCurrent(): MutableLiveData<List<Invoice>> {
+        if (!taken.value) {
+            salesInvoices = salesInvoiceRepository.getAll(callback = { updateLoadingState(); returnSize.value = it }) { result ->
+                resultState.update { result }
+            }
+            taken.value = true
         }
 
         return salesInvoices

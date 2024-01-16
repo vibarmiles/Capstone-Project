@@ -56,6 +56,7 @@ fun ProductForm(
     dismissRequest: () -> Unit,
     function: String,
     productId: String? = null,
+    newSupplier: Boolean = false,
     productViewModel: ProductViewModel,
     categoryViewModel: CategoryViewModel,
     contactViewModel: ContactViewModel,
@@ -189,7 +190,7 @@ fun ProductForm(
                     expanded = expandedContacts,
                     onDismissRequest = { expandedContacts = false }
                 ) {
-                    supplier.value.forEach {
+                    supplier.value.filter { if (newSupplier) it.id != product.supplier else true }.forEach {
                         androidx.compose.material3.DropdownMenuItem(
                             text = { Text(text = it.name) },
                             onClick = {
@@ -367,7 +368,9 @@ fun ProductForm(
 
             if (showConfirmationDialog.value) {
                 ConfirmationForAddingDialog(onCancel = { showConfirmationDialog.value = false }) {
-                    productViewModel.insert(id = id, product = product.copy(
+                    productViewModel.insert(
+                        id = if (newSupplier) null else id,
+                        product = product.copy(
                         image = if (imageUri != null) imageUri.toString() else null,
                         productName = name,
                         purchasePrice = purchasePrice.toDouble(),

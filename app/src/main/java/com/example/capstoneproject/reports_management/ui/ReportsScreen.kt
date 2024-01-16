@@ -2,6 +2,7 @@ package com.example.capstoneproject.reports_management.ui
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
@@ -9,10 +10,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Inventory
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Inventory
 import androidx.compose.material.icons.outlined.Report
@@ -23,10 +24,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.capstoneproject.R
+import com.example.capstoneproject.global.ui.misc.GlobalTextFieldColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
+import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
+import com.example.capstoneproject.point_of_sales.ui.POSViewModel
 import com.example.capstoneproject.product_management.data.firebase.branch.Branch
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
@@ -34,8 +41,11 @@ import com.example.capstoneproject.product_management.ui.product.ProductViewMode
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.user_management.ui.users.UserAccountDetails
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
+import java.time.Month
 import java.time.ZoneId
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -46,6 +56,7 @@ fun ReportsScreen(
     productViewModel: ProductViewModel,
     contactViewModel: ContactViewModel,
     branchViewModel: BranchViewModel,
+    posViewModel: POSViewModel,
     userAccountDetails: UserAccountDetails,
     view: (String, Int) -> Unit
 ) {
@@ -56,6 +67,7 @@ fun ReportsScreen(
     val suppliers = contactViewModel.getAll().observeAsState(listOf())
     val branches = branchViewModel.getAll().observeAsState(listOf())
     val context = LocalContext.current
+    var showDateDialog by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     var showBranchDialog by remember { mutableStateOf(false) }
     val productsWithInventoryTurnoverRatio = products
@@ -76,16 +88,16 @@ fun ReportsScreen(
                 actions = {
                     IconButton(onClick = { expanded = !expanded }, content = { Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null) })
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                        androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Report, contentDescription = null) }, text = { Text(text = "Generate FSN Analysis") }, onClick = { expanded = false; reportsViewModel.generateFSNReport(products = productsWithInventoryTurnoverRatio) {
-                            Handler(Looper.getMainLooper()).post {
-                                Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                        androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Report, contentDescription = null) }, text = { Text(text = "Generate FSN Analysis") }, onClick = {
+                            expanded = false
+
+                            reportsViewModel.generateFSNReport(products = productsWithInventoryTurnoverRatio) {
+                                Handler(Looper.getMainLooper()).post {
+                                    Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                                }
                             }
-                        } })
-                        androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.CalendarMonth, contentDescription = null) }, text = { Text(text = "Generate Monthly Sales Report") }, onClick = { expanded = false; reportsViewModel.generateMonthlySalesReport(products = products.values.toList(), date = date) {
-                            Handler(Looper.getMainLooper()).post {
-                                Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
-                            }
-                        } })
+                        })
+                        androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.CalendarMonth, contentDescription = null) }, text = { Text(text = "Generate Sales Report") }, onClick = { expanded = false; showDateDialog = true })
                         androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Inventory, contentDescription = null) }, text = { Text(text = "Generate Inventory Report") }, onClick = { expanded = false; showBranchDialog = true })
                     }
                 }
@@ -123,6 +135,61 @@ fun ReportsScreen(
             }
         }
 
+        if (showDateDialog) {
+            DatesDialog(date = date, onCancel = { showDateDialog = false }) { report, from, to ->
+                when (report) {
+                    ReportDateFormat.Day -> {
+                        scope.launch {
+                            var invoices: List<Invoice>?
+                            if (!posViewModel.taken.value) {
+                                invoices = posViewModel.getCurrent().value
+                                delay(3000)
+                                Log.e("Invoice", invoices.toString())
+                            }
+                            invoices = posViewModel.getCurrent().value
+                            reportsViewModel.generateDailySalesReport(invoices = invoices ?: listOf(), fromDate = from, toDate = to) {
+                                Handler(Looper.getMainLooper()).post {
+                                    Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    }
+                    ReportDateFormat.Week -> {
+                        scope.launch {
+                            var invoices: List<Invoice>?
+                            if (!posViewModel.taken.value) {
+                                invoices = posViewModel.getCurrent().value
+                                delay(3000)
+                                Log.e("Invoice", invoices.toString())
+                            }
+                            invoices = posViewModel.getCurrent().value
+                            reportsViewModel.generateWeeklySalesReport(invoices = invoices ?: listOf(), fromDate = from, toDate = to) {
+                                Handler(Looper.getMainLooper()).post {
+                                    Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    }
+                    ReportDateFormat.Month -> {
+                        reportsViewModel.generateMonthlySalesReport(products = products.values.toList(), fromDate = from, toDate = to, date = date) {
+                            Handler(Looper.getMainLooper()).post {
+                                Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                    ReportDateFormat.Year -> {
+                        reportsViewModel.generateYearlySalesReport(products = products.values.toList(), fromDate = from, toDate = to, date = date) {
+                            Handler(Looper.getMainLooper()).post {
+                                Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
+
+                showDateDialog = false
+            }
+        }
+
         if (showBranchDialog) {
             BranchDialog(branches = branches.value, onCancel = { showBranchDialog = false }) { listOfBranches ->
                 reportsViewModel.generateInventoryReport(products = products.mapValues { it.value.copy(stock = it.value.stock.filterKeys { key -> key in listOfBranches.map { branch -> branch.id } }) }) {
@@ -130,11 +197,183 @@ fun ReportsScreen(
                         Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
                     }
                 }
-                
+
                 showBranchDialog = false
             }
         }
     }
+}
+
+enum class ReportDateFormat {
+    Day, Week, Month, Year
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun DatesDialog(
+    date: LocalDate,
+    onCancel: () -> Unit,
+    onSubmit: (ReportDateFormat, LocalDate, LocalDate) -> Unit
+) {
+    val reportDateFormat = remember { mutableStateOf(ReportDateFormat.Month) }
+    val fromDate = remember { mutableStateOf(date.minusMonths(11)) }
+    val toDate = remember { mutableStateOf(date) }
+    val from = remember { mutableStateOf(date.minusMonths(11)) }
+    val to = remember { mutableStateOf(date) }
+    val fromDateTextFieldValue = remember { mutableStateOf("${fromDate.value.month.value.toString().padStart(2, '0')}/${fromDate.value.dayOfMonth.toString().padStart(2, '0')}/${fromDate.value.year.toString().padStart(4, '0')}") }
+    val toDateTextFieldValue = remember { mutableStateOf("${toDate.value.month.value.toString().padStart(2, '0')}/${toDate.value.dayOfMonth.toString().padStart(2, '0')}/${toDate.value.year.toString().padStart(4, '0')}") }
+    val isFromDateValid = remember { mutableStateOf(true) }
+    val isToDateValid = remember { mutableStateOf(true) }
+    var expanded by remember { mutableStateOf(false) }
+    var selectedCategory by remember { mutableStateOf(reportDateFormat.value.name) }
+
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onCancel,
+        title = {
+            Text(text = "Date")
+        },
+        text = {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, top = 16.dp, end = 16.dp)) {
+
+                ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                    OutlinedTextField(trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, colors = GlobalTextFieldColors(), modifier = Modifier.fillMaxWidth(), value = selectedCategory, onValueChange = {  }, readOnly = true, label = { Text(text = stringResource(id = R.string.category)) })
+
+                    DropdownMenu(
+                        properties = PopupProperties(focusable = false),
+                        modifier = Modifier
+                            .exposedDropdownSize()
+                            .requiredHeightIn(max = 300.dp)
+                            .fillMaxWidth(),
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        enumValues<ReportDateFormat>().forEach {
+                            androidx.compose.material3.DropdownMenuItem(text = {
+                                Text(text = it.name) },
+                                onClick = {
+                                    reportDateFormat.value = it
+                                    selectedCategory = it.name
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                OutlinedTextField(
+                    trailingIcon = {
+                        if (fromDateTextFieldValue.value.isNotEmpty()) {
+                            IconButton(onClick = {
+                                fromDateTextFieldValue.value = ""
+                                fromDate.value = date
+                            }) {
+                                Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                            }
+                        }
+                    },
+                    label = { Text(text = "From this Date", color = MaterialTheme.colors.onSurface) },
+                    placeholder = { Text(text = "mm/dd/yyyy", color = MaterialTheme.colors.onSurface) },
+                    maxLines = 1,
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = { Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null) },
+                    value = fromDateTextFieldValue.value,
+                    isError = !isFromDateValid.value,
+                    onValueChange = {
+                        if (it.length <= 10) {
+                            fromDateTextFieldValue.value = it
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                )
+                OutlinedTextField(
+                    trailingIcon = {
+                        if (fromDateTextFieldValue.value.isNotEmpty()) {
+                            IconButton(onClick = {
+                                toDateTextFieldValue.value = ""
+                                toDate.value = date.minusMonths(11)
+                            }) {
+                                Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                            }
+                        }
+                    },
+                    label = { Text(text = "To this Date", color = MaterialTheme.colors.onSurface) },
+                    placeholder = { Text(text = "mm/dd/yyyy", color = MaterialTheme.colors.onSurface) },
+                    maxLines = 1,
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = !isToDateValid.value,
+                    leadingIcon = { Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null) },
+                    value = toDateTextFieldValue.value,
+                    onValueChange = {
+                        if (it.length <= 10) {
+                            toDateTextFieldValue.value = it
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                val newFromDate = fromDateTextFieldValue.value
+                val newToDate = toDateTextFieldValue.value
+
+                if (newFromDate[2] == '/' && newFromDate[5] == '/' && newFromDate.length == 10) {
+                    val month = newFromDate.substring(0, 2).toIntOrNull()
+                    val day = newFromDate.substring(3, 5).toIntOrNull()
+                    val year = newFromDate.substring(6).toIntOrNull()
+                    isFromDateValid.value = Month.values().any { it.value == month } && (2020..date.year).any { it == year }
+                    if (isFromDateValid.value) {
+                        val current = LocalDate.of(year!!, month!!, 1).lengthOfMonth()
+                        if (day != null) {
+                            fromDate.value = LocalDate.of(year, month, if (day > current) current else if (day < 1) 1 else day)
+                        }
+                    }
+                }
+
+                if (newToDate[2] == '/' && newToDate[5] == '/' && newToDate.length == 10) {
+                    val month = newToDate.substring(0, 2).toIntOrNull()
+                    val day = newToDate.substring(3, 5).toIntOrNull()
+                    val year = newToDate.substring(6).toIntOrNull()
+                    isToDateValid.value = Month.values().any { it.value == month } && (2020..date.year).any { it == year }
+                    if (isToDateValid.value) {
+                        val current = LocalDate.of(year!!, month!!, 1).lengthOfMonth()
+                        if (day != null) {
+                            toDate.value = LocalDate.of(year, month, if (day > current) current else if (day < 1) 1 else day)
+
+                            if (fromDate.value < toDate.value) {
+                                from.value = fromDate.value
+                                to.value = toDate.value
+                            } else {
+                                isFromDateValid.value = false
+                                isToDateValid.value = false
+                            }
+                        } else {
+                            isFromDateValid.value = false
+                            isToDateValid.value = false
+                        }
+                    }
+                }
+                if (isToDateValid.value && isFromDateValid.value) {
+                    onSubmit.invoke(reportDateFormat.value, from.value, to.value)
+                }
+            }, enabled = fromDateTextFieldValue.value.length == 10 && toDateTextFieldValue.value.length == 10) {
+                Text(text = stringResource(id = R.string.submit_button))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                colors = ButtonDefaults.buttonColors(contentColor = Color.Black, backgroundColor = Color.Transparent),
+                onClick = onCancel,
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button))
+            }
+        },
+        icon = {
+            Icon(imageVector = Icons.Default.Inventory, contentDescription = null)
+        }
+    )
 }
 
 @Composable
@@ -169,7 +408,10 @@ fun BranchDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onSubmit.invoke(pairs.filter { it.value }.keys.toList()) }) {
+            Button(
+                onClick = { onSubmit.invoke(pairs.filter { it.value }.keys.toList()) },
+                enabled = pairs.values.contains(true)
+            ) {
                 Text(text = stringResource(id = R.string.submit_button))
             }
         },
@@ -177,13 +419,12 @@ fun BranchDialog(
             TextButton(
                 colors = ButtonDefaults.buttonColors(contentColor = Color.Black, backgroundColor = Color.Transparent),
                 onClick = onCancel,
-                enabled = pairs.values.contains(true)
             ) {
                 Text(text = stringResource(id = R.string.cancel_button))
             }
         },
         icon = {
-            Icon(imageVector = Icons.Default.Inventory, contentDescription = null)
+            Icon(imageVector = Icons.Default.CalendarToday, contentDescription = null)
         }
     )
 }

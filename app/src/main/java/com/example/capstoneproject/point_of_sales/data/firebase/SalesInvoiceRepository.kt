@@ -69,6 +69,53 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
         return si
     }
 
+    override fun getCurrent(
+        callback: (Int) -> Unit,
+        result: (FirebaseResult) -> Unit
+    ): MutableLiveData<List<Invoice>> {
+        salesInvoiceCollectionReference.orderBy("date", Query.Direction.DESCENDING).addSnapshotListener { value, error ->
+            error?.let {
+                result.invoke(FirebaseResult(result = false, errorMessage = error.message))
+                return@addSnapshotListener
+            }
+            value?.let {
+                val current = si.value?.toMutableList() ?: mutableListOf()
+
+                if (it.size() > 0) {
+                    document = it.documents[it.size() - 1]
+                    currentSize = it.size()
+                } else {
+                    currentSize = 0
+                }
+
+                for (queryDocumentSnapshot in it) {
+                    try {
+                        val new = queryDocumentSnapshot.toObject<Invoice>()
+                        current.firstOrNull { invoice -> invoice.id == new.id }.let { found ->
+                            if (found != null) {
+                                current[current.indexOf(found)] = new
+                            } else {
+                                current.add(new)
+                            }
+                        }
+                    } catch (e: Exception) {  }
+                }
+
+                si.value = current
+
+                Log.e("CURRENT SIZE", currentSize.toString())
+
+                if (currentSize > 0) {
+                    callback.invoke(it.size())
+                } else {
+                    callback.invoke(0)
+                }
+            }
+        }
+
+        return si
+    }
+
     override fun insert(invoice: Invoice, access: Boolean, result: (FirebaseResult) -> Unit) {
         if (invoice.id.isNotBlank()) {
             var check = false

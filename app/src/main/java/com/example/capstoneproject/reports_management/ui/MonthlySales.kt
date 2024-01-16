@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.capstoneproject.product_management.data.firebase.product.Product
 import com.example.capstoneproject.ui.theme.success
@@ -94,7 +95,7 @@ fun MonthlySales(
                             fromDateTextFieldValue.value = it
                         }
                     },
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = {
                         val newDate = fromDateTextFieldValue.value
                         if (newDate[2] == '/' && newDate.length == 7) {
@@ -132,7 +133,7 @@ fun MonthlySales(
                             toDateTextFieldValue.value = it
                         }
                     },
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = {
                         val newDate = toDateTextFieldValue.value
                         if (newDate[2] == '/' && newDate.length == 7) {
@@ -166,10 +167,9 @@ fun MonthlySales(
             val percent = (((totalSales - previousTotalSales) / previousTotalSales)) * 100
 
             Column(
-                modifier = Modifier
-                    .clickable {
-                        showData.invoke(date.minusMonths(month.toLong()).month.name, to.value.minusMonths(month.toLong()).year)
-                    }
+                modifier = Modifier.clickable {
+                    showData.invoke(date.minusMonths(month.toLong()).month.name, to.value.minusMonths(month.toLong()).year)
+                }
             ) {
                 ListItem(
                     headlineContent = {

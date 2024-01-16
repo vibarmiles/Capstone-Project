@@ -20,6 +20,9 @@ sealed class Routes(val route: String) {
         object Edit : Routes("$route/Edit/{productId}") {
             fun createRoute(productId: String) = Product.route + "/Edit/$productId"
         }
+        object AddSupplier : Routes("$route/Add/Supplier/{productId}") {
+            fun createRoute(productId: String) = Product.route + "/Add/Supplier/$productId"
+        }
     }
     object Branch : Routes((R.string.branch).toString()) {
         object Add : Routes(this.route + "/Add")

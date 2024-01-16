@@ -53,6 +53,7 @@ fun ViewProduct(
     loginDate: Long,
     productId: String,
     edit: () -> Unit,
+    addSupplier: () -> Unit,
     setBranchQuantity: () -> Unit,
     setMonthlySales: () -> Unit,
     delete: () -> Unit,
@@ -83,6 +84,7 @@ fun ViewProduct(
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         if (userLevel != UserLevel.Cashier) {
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) }, text = { Text(text = "Edit Product") }, onClick = { expanded = false; edit.invoke() })
+                            DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Add, contentDescription = null) }, text = { Text(text = "Add Supplier") }, onClick = { expanded = false; addSupplier.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.BarChart, contentDescription = null) }, text = { Text(text = "Adjust Quantity") }, onClick = { expanded = false; setBranchQuantity.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.StackedBarChart, contentDescription = null) }, text = { Text(text = "Adjust Monthly Sales") }, onClick = { expanded = false; setMonthlySales.invoke() })
                             DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Create, contentDescription = null) }, text = { Text(text = "Restock") }, onClick = { expanded = false; createPO.invoke() })
