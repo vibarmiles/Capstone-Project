@@ -134,6 +134,7 @@ class UserRepository : IUserRepository {
                     if (!committed) {
                         result.invoke(FirebaseResult(errorMessage = "Error has occurred. Please check current users then try again later!"))
                     } else {
+                        auth.createUserWithEmailAndPassword(user.email, user.password!!)
                         result.invoke(FirebaseResult(result = true))
                     }
                 }
