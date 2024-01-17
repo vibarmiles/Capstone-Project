@@ -64,8 +64,6 @@ fun UserForm(
     var isEmailValid by remember { mutableStateOf(true) }
     var phoneNumber by remember { mutableStateOf(user.phoneNumber.let { if (it.length > 10) it.removeRange(0, 1) else "" }) }
     var isPhoneNumber by remember { mutableStateOf(true) }
-    val password by remember { mutableStateOf(user.password) }
-    var setToDefaultPassword by remember { mutableStateOf(true) }
     val branches = branchViewModel.getAll().observeAsState(listOf())
     var branchId by remember { mutableStateOf(branches.value.firstOrNull()?.id)}
     var branchName by remember { mutableStateOf(branches.value.firstOrNull()?.name ?: "No Branches")}
@@ -245,14 +243,6 @@ fun UserForm(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(checked = setToDefaultPassword, onCheckedChange = { setToDefaultPassword = !setToDefaultPassword })
-                Text("Set to Default Password? (Phone Number)", maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 FormButtons(cancel = back) {
                     isFirstNameValid = firstName.isNotBlank()
@@ -269,7 +259,7 @@ fun UserForm(
 
             if (showConfirmationDialog.value) {
                 ConfirmationForAddingDialog(onCancel = { showConfirmationDialog.value = false }) {
-                    userViewModel.insert(id = id, user = user.copy(id = null, lastName = lastName, firstName = firstName, phoneNumber = "0$phoneNumber", password = if (setToDefaultPassword || id == null) "0$phoneNumber" else password, active = true, email = email, userLevel = userLevel, branchId = if (userLevel == UserLevel.Cashier || userLevel == UserLevel.Manager) branchId else null))
+                    userViewModel.insert(id = id, user = user.copy(id = null, lastName = lastName, firstName = firstName, phoneNumber = "0$phoneNumber", password = "0$phoneNumber", active = true, email = email, userLevel = userLevel, branchId = if (userLevel == UserLevel.Cashier || userLevel == UserLevel.Manager) branchId else null))
                     userViewModel.log("${decision}_user")
                     showConfirmationDialog.value = false
                     back.invoke()

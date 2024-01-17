@@ -128,14 +128,6 @@ class UserRepository : IUserRepository {
                     if (!committed) {
                         result.invoke(FirebaseResult(errorMessage = "Error has occurred. Please check current users then try again later!"))
                     } else {
-                        auth.currentUser?.run {
-                            updateEmail(user.email).addOnCompleteListener {
-                                Log.e("User", "Email")
-                            }
-                            updatePassword(user.password!!).addOnCompleteListener {
-                                Log.e("User", "Password")
-                            }
-                        }
                         result.invoke(FirebaseResult(result = true))
                     }
                 }
