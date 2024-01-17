@@ -121,7 +121,6 @@ fun ContactFormScreen(
                 label = {
                     Text(text = buildAnnotatedString {
                         append("Contact Person's Name")
-                        withStyle( style = SpanStyle(color = MaterialTheme.colors.error)) { append(text = " *") }
                     })
                 },
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),

@@ -548,6 +548,8 @@ fun AddProductDialog(
                                 productId = products.toList().first { product ->
                                     product.second.productName == selectedProduct && product.second.supplier == it.id
                                 }.first
+                                maxQuantity = products[productId]?.stock?.getOrDefault(key = branchId, defaultValue = 0) ?: 0
+                                quantityText = "0"
                                 supplierExpanded = false
                             })
                         }

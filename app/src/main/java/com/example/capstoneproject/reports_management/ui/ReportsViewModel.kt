@@ -14,6 +14,7 @@ import com.example.capstoneproject.R
 import com.example.capstoneproject.point_of_sales.data.firebase.Invoice
 import com.example.capstoneproject.point_of_sales.data.firebase.InvoiceType
 import com.example.capstoneproject.product_management.data.firebase.product.Product
+import com.example.capstoneproject.supplier_management.data.firebase.contact.Contact
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
@@ -498,6 +499,70 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
             }
 
             val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),  "/Monthly_Sales_Report(${LocalDate.now()}).pdf")
+
+            try {
+                pdfDocument.writeTo(FileOutputStream(file))
+            } catch (e: IOException) {
+                Log.e("IO Exception", e.message.toString())
+            }
+
+            pdfDocument.close()
+            callback.invoke()
+        }
+    }
+
+    fun GenerateSupplierMasterList(
+        list: List<Contact>,
+        callback: () -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val context = getApplication<Application>().applicationContext
+            val supplierList = list
+                .sortedBy { it.name.uppercase() }
+                .chunked(35)
+
+            val pdfDocument = PdfDocument()
+
+            val paint = Paint()
+            val text = Paint()
+            val line = Paint()
+
+            val startY = 350f
+
+            text.color = Color.Black.toArgb()
+            text.textSize = 25f
+
+            line.strokeWidth = 2f
+
+            Log.e("Supplier List", supplierList.toString())
+
+            supplierList.forEachIndexed { index, pair ->
+                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1920, index + 1).create()
+                val myPage = pdfDocument.startPage(myPageInfo)
+                val canvas = myPage.canvas
+
+                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), 50f, 50f, paint)
+                canvas.drawText("Sam Speed Motorcycle Parts and Accessories", 239f, 120f, text)
+                canvas.drawText("Inventory Management System", 239f, 150f, text)
+                canvas.drawText("Supplier Master List", 239f, 180f, text)
+
+                canvas.drawLine(50f, startY - 25, 1030f, startY - 25, line)
+                canvas.drawText("Suppliers", 60f, startY, text)
+                canvas.drawText("Contact Person", 530f, startY, text)
+                canvas.drawText("Contact Number", 880f, startY, text)
+                canvas.drawLine(50f, startY + 10, 1030f, startY + 10, line)
+
+                pair.forEachIndexed { index2, contact ->
+                    canvas.drawText(contact.name, 60f, startY + (index2 * 35) + 35, text)
+                    canvas.drawText(contact.person ?: "N/A", 530f, startY + (index2 * 35) + 35, text)
+                    canvas.drawText("0${contact.contact}", 880f, startY + (index2 * 35) + 35, text)
+                    canvas.drawLine(50f, startY + (index2 * 35) + 45, 1030f, startY + (index2 * 35) + 45, line)
+                }
+
+                pdfDocument.finishPage(myPage)
+            }
+
+            val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),  "/Supplier_Master_List_(${LocalDate.now()}).pdf")
 
             try {
                 pdfDocument.writeTo(FileOutputStream(file))

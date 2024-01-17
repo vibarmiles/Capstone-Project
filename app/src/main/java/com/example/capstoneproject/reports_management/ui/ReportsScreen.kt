@@ -8,6 +8,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Inventory
+import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Report
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -70,6 +72,7 @@ fun ReportsScreen(
     var showDateDialog by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     var showBranchDialog by remember { mutableStateOf(false) }
+    var showActiveListDialog by remember { mutableStateOf(false) }
     val productsWithInventoryTurnoverRatio = products
         .map {
             val averageStock = (it.value.transaction.openingStock + it.value.transaction.closingStock).toDouble() / 2
@@ -99,6 +102,7 @@ fun ReportsScreen(
                         })
                         androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.CalendarMonth, contentDescription = null) }, text = { Text(text = "Generate Sales Report") }, onClick = { expanded = false; showDateDialog = true })
                         androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Inventory, contentDescription = null) }, text = { Text(text = "Generate Inventory Report") }, onClick = { expanded = false; showBranchDialog = true })
+                        androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Phone, contentDescription = null) }, text = { Text(text = "Generate Supplier Master List") }, onClick = { expanded = false; showActiveListDialog = true })
                     }
                 }
             )
@@ -132,6 +136,20 @@ fun ReportsScreen(
                     0 -> FSNAnalysis(products = productsWithInventoryTurnoverRatio, suppliers = suppliers.value)
                     1 -> MonthlySales(date = date, products = products.values.toList(), showData = { month, year -> view.invoke(month, year) })
                 }
+            }
+        }
+
+        if (showActiveListDialog) {
+            ActiveListDialog(onCancel = { showActiveListDialog = false }) {
+                reportsViewModel.GenerateSupplierMasterList(suppliers.value.filter { supplier ->
+                    supplier.active && it.first() || !supplier.active && it.last()
+                }) {
+                    Handler(Looper.getMainLooper()).post {
+                        Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                showActiveListDialog = false
             }
         }
 
@@ -191,8 +209,8 @@ fun ReportsScreen(
         }
 
         if (showBranchDialog) {
-            BranchDialog(branches = branches.value, onCancel = { showBranchDialog = false }) { listOfBranches ->
-                reportsViewModel.generateInventoryReport(products = products.mapValues { it.value.copy(stock = it.value.stock.filterKeys { key -> key in listOfBranches.map { branch -> branch.id } }) }) {
+            BranchDialog(branches = branches.value, onCancel = { showBranchDialog = false }) { listOfBranches, inactive ->
+                reportsViewModel.generateInventoryReport(products = products.filter { it.value.active || !it.value.active == inactive }.mapValues { it.value.copy(stock = it.value.stock.filterKeys { key -> key in listOfBranches.map { branch -> branch.id } }) }) {
                     Handler(Looper.getMainLooper()).post {
                         Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
                     }
@@ -377,14 +395,62 @@ fun DatesDialog(
 }
 
 @Composable
+fun ActiveListDialog(
+    onCancel: () -> Unit,
+    onSubmit: (List<Boolean>) -> Unit
+) {
+    val pairs = remember {
+        mutableStateListOf(true, true)
+    }
+
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onCancel,
+        title = {
+            Text(text = "Select whether active/inactive items are included")
+        },
+        text = {
+            LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                itemsIndexed(pairs.toList()) { index, it ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = it, onCheckedChange = { value -> pairs[index] = value })
+                        Text(text = if (index == 0) "Active" else "Inactive")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSubmit.invoke(pairs) },
+                enabled = pairs.contains(true)
+            ) {
+                Text(text = stringResource(id = R.string.submit_button))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                colors = ButtonDefaults.buttonColors(contentColor = Color.Black, backgroundColor = Color.Transparent),
+                onClick = onCancel,
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button))
+            }
+        },
+        icon = {
+            Icon(imageVector = Icons.Default.Phone, contentDescription = null)
+        }
+    )
+}
+
+@Composable
 fun BranchDialog(
     branches: List<Branch>,
     onCancel: () -> Unit,
-    onSubmit: (List<Branch>) -> Unit
+    onSubmit: (List<Branch>, Boolean) -> Unit
 ) {
     val pairs = remember {
         mutableStateMapOf(*branches.map { it to false}.toTypedArray())
     }
+
+    val inactive = remember { mutableStateOf(false) }
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onCancel,
@@ -405,11 +471,17 @@ fun BranchDialog(
                         Text(text = it.name)
                     }
                 }
+                item {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = inactive.value, onCheckedChange = { value -> inactive.value = value })
+                        Text(text = "Include Inactive Items")
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onSubmit.invoke(pairs.filter { it.value }.keys.toList()) },
+                onClick = { onSubmit.invoke(pairs.filter { it.value }.keys.toList(), inactive.value) },
                 enabled = pairs.values.contains(true)
             ) {
                 Text(text = stringResource(id = R.string.submit_button))
@@ -424,7 +496,7 @@ fun BranchDialog(
             }
         },
         icon = {
-            Icon(imageVector = Icons.Default.CalendarToday, contentDescription = null)
+            Icon(imageVector = Icons.Default.Inventory, contentDescription = null)
         }
     )
 }
