@@ -7,6 +7,7 @@ import com.example.capstoneproject.user_management.ui.users.UserAccountDetails
 interface IUserRepository {
     fun getAll(callback: () -> Unit, update: () -> Unit, result: (FirebaseResult) -> Unit): SnapshotStateMap<String, User>
     fun getUser(email: String, user: (UserAccountDetails) -> Unit)
+    fun resetPassword(email: String, result: (FirebaseResult) -> Unit)
     fun updatePassword(key: String, password: String, result: (FirebaseResult) -> Unit)
     fun authenticate(key: String, password: String, newPassword: String, result: (FirebaseResult) -> Unit)
     fun insert(key: String?, user: User, result: (FirebaseResult) -> Unit)

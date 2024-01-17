@@ -102,6 +102,7 @@ fun NavigationHost(
 
             LoginScreen(
                 scope = scope,
+                userViewModel = userViewModel,
                 login = { username, password ->
                     scope.launch {
                         viewModel.loadLogin(true)

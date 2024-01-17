@@ -78,6 +78,12 @@ class UserRepository : IUserRepository {
         }
     }
 
+    override fun resetPassword(email: String, result: (FirebaseResult) -> Unit) {
+        auth.sendPasswordResetEmail(email).addOnSuccessListener {
+            result.invoke(FirebaseResult(errorMessage = "Email Sent!"))
+        }
+    }
+
     override fun updatePassword(key: String, password: String, result: (FirebaseResult) -> Unit) {
         userCollectionReference.child(key).child("firstLogin").setValue(false).addOnSuccessListener {
             auth.currentUser?.updatePassword(password)

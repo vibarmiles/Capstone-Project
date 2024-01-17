@@ -170,4 +170,12 @@ class UserViewModel : ViewModel() {
             User()
         }
     }
+
+    fun resetPassword(email: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            userRepository.resetPassword(email) {
+                resultState.update { it }
+            }
+        }
+    }
 }
