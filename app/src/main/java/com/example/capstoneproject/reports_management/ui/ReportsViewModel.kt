@@ -35,7 +35,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
             val productList = products
                 .sortedBy { it.second.value.productName.uppercase() }
                 .sortedByDescending { it.first }
-                .chunked(35)
+                .chunked(25)
 
             val pdfDocument = PdfDocument()
 
@@ -51,7 +51,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
             line.strokeWidth = 2f
 
             productList.forEachIndexed { index, pair ->
-                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1920, index + 1).create()
+                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1397, index + 1).create()
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
@@ -101,7 +101,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                 .map { map -> map.key to map.value.sumOf { it.second.stock.values.sum() } }
                 .sortedBy { it.first.uppercase() }
                 .sortedByDescending { it.first }
-                .chunked(35)
+                .chunked(25)
 
             val pdfDocument = PdfDocument()
 
@@ -117,7 +117,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
             line.strokeWidth = 2f
 
             productList.forEachIndexed { index, chunk ->
-                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1920, index + 1).create()
+                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1397, index + 1).create()
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
@@ -190,8 +190,8 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                 dates.toList()
             }
 
-            value.chunked(35).forEachIndexed { index, list ->
-                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1920, index + 1).create()
+            value.chunked(25).forEachIndexed { index, list ->
+                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1397, index + 1).create()
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
@@ -281,8 +281,8 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                 dates.toList()
             }
 
-            value.chunked(35).forEachIndexed { index, list ->
-                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1920, index + 1).create()
+            value.chunked(25).forEachIndexed { index, list ->
+                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1397, index + 1).create()
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
@@ -368,8 +368,8 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                 dates.toList()
             }
 
-            value.chunked(35).forEachIndexed { index, list ->
-                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1920, index + 1).create()
+            value.chunked(25).forEachIndexed { index, list ->
+                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1397, index + 1).create()
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
@@ -456,8 +456,8 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                 dates.toList()
             }
 
-            value.chunked(35).forEachIndexed { index, list ->
-                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1920, index + 1).create()
+            value.chunked(25).forEachIndexed { index, list ->
+                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1397, index + 1).create()
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
@@ -519,7 +519,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
             val context = getApplication<Application>().applicationContext
             val supplierList = list
                 .sortedBy { it.name.uppercase() }
-                .chunked(35)
+                .chunked(25)
 
             val pdfDocument = PdfDocument()
 
@@ -537,7 +537,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
             Log.e("Supplier List", supplierList.toString())
 
             supplierList.forEachIndexed { index, pair ->
-                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1920, index + 1).create()
+                val myPageInfo = PdfDocument.PageInfo.Builder(1080, 1397, index + 1).create()
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
