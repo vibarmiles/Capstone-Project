@@ -16,6 +16,7 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
+import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -371,7 +372,8 @@ class ProductRepository : IProductRepository {
         productCollectionReference.get().addOnSuccessListener {
             val products = it.getValue<Map<String, Product>>()
             val numberOfProducts = products?.size ?: 0
-            products?.toList()?.forEachIndexed { index, product ->
+            var float = 0f
+            products?.toList()?.forEachIndexed { _, product ->
                 val lastEditDate = Instant.ofEpochMilli(product.second.lastEdit as Long).atZone(ZoneId.systemDefault()).toLocalDate()
                 if (lastEditDate.month != date.month) {
                     product.second.let { current ->
@@ -381,9 +383,9 @@ class ProductRepository : IProductRepository {
                                 monthlySale[date.year.toString()].let { _ ->
                                     if (!monthlySale.containsKey(date.year.toString())) {
                                         if (!didYearChange) {
-                                            monthlySale.putIfAbsent(date.minusYears(1).year.toString(), mapOf(Pair(date.minusMonths(1).month.name, transaction.soldThisMonth)))
-                                        } else {
                                             monthlySale.putIfAbsent(date.year.toString(), mapOf(Pair(date.minusMonths(1).month.name, transaction.soldThisMonth)))
+                                        } else {
+                                            monthlySale.putIfAbsent(date.minusYears(1).year.toString(), mapOf(Pair(date.minusMonths(1).month.name, transaction.soldThisMonth)))
                                         }
                                     } else {
                                         val map = monthlySale[date.year.toString()]!!.toMutableMap()
@@ -405,11 +407,13 @@ class ProductRepository : IProductRepository {
                                 monthlySales = yearSale
                             )
                         })).addOnCompleteListener {
-                            callback.invoke((index + 1).toFloat() / numberOfProducts)
+                            float += (1 / numberOfProducts.toFloat())
+                            callback.invoke(String.format("%.2f", float).toFloat())
                         }
                     }
                 } else {
-                    callback.invoke((index + 1).toFloat() / numberOfProducts)
+                    float += (1 / numberOfProducts.toFloat())
+                    callback.invoke(String.format("%.2f", float).toFloat())
                 }
             }
         }

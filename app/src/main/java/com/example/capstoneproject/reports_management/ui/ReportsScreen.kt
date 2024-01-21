@@ -360,7 +360,7 @@ fun DatesDialog(
                         if (day != null) {
                             toDate.value = LocalDate.of(year, month, if (day > current) current else if (day < 1) 1 else day)
 
-                            if (fromDate.value < toDate.value) {
+                            if (fromDate.value < toDate.value && toDate.value <= date) {
                                 from.value = fromDate.value
                                 to.value = toDate.value
                             } else {
