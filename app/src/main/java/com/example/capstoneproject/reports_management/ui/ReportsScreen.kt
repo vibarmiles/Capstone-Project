@@ -42,6 +42,7 @@ import com.example.capstoneproject.product_management.ui.branch.BranchViewModel
 import com.example.capstoneproject.product_management.ui.product.ProductViewModel
 import com.example.capstoneproject.supplier_management.ui.contact.ContactViewModel
 import com.example.capstoneproject.user_management.ui.users.UserAccountDetails
+import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -57,6 +58,7 @@ fun ReportsScreen(
     scaffoldState: ScaffoldState,
     productViewModel: ProductViewModel,
     contactViewModel: ContactViewModel,
+    userViewModel: UserViewModel,
     branchViewModel: BranchViewModel,
     posViewModel: POSViewModel,
     userAccountDetails: UserAccountDetails,
@@ -72,6 +74,7 @@ fun ReportsScreen(
     var showDateDialog by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     var showBranchDialog by remember { mutableStateOf(false) }
+    val userName = userViewModel.getAll()[userAccountDetails.id]?.let { it.lastName + ", " + it.firstName } ?: "Unknown User"
     var showActiveListDialog by remember { mutableStateOf(false) }
     val productsWithInventoryTurnoverRatio = products
         .map {
@@ -94,7 +97,7 @@ fun ReportsScreen(
                         androidx.compose.material3.DropdownMenuItem(leadingIcon = { Icon(imageVector = Icons.Outlined.Report, contentDescription = null) }, text = { Text(text = "Generate FSN Analysis") }, onClick = {
                             expanded = false
 
-                            reportsViewModel.generateFSNReport(products = productsWithInventoryTurnoverRatio) {
+                            reportsViewModel.generateFSNReport(products = productsWithInventoryTurnoverRatio, user = userName) {
                                 Handler(Looper.getMainLooper()).post {
                                     Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
                                 }
@@ -141,9 +144,9 @@ fun ReportsScreen(
 
         if (showActiveListDialog) {
             ActiveListDialog(onCancel = { showActiveListDialog = false }) {
-                reportsViewModel.GenerateSupplierMasterList(suppliers.value.filter { supplier ->
+                reportsViewModel.generateSupplierMasterList(suppliers.value.filter { supplier ->
                     supplier.active && it.first() || !supplier.active && it.last()
-                }) {
+                }, user = userName) {
                     Handler(Looper.getMainLooper()).post {
                         Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
                     }
@@ -165,7 +168,7 @@ fun ReportsScreen(
                                 Log.e("Invoice", invoices.toString())
                             }
                             invoices = posViewModel.getCurrent().value
-                            reportsViewModel.generateDailySalesReport(invoices = invoices ?: listOf(), fromDate = from, toDate = to) {
+                            reportsViewModel.generateDailySalesReport(invoices = invoices ?: listOf(), fromDate = from, toDate = to, user = userName) {
                                 Handler(Looper.getMainLooper()).post {
                                     Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
                                 }
@@ -181,7 +184,7 @@ fun ReportsScreen(
                                 Log.e("Invoice", invoices.toString())
                             }
                             invoices = posViewModel.getCurrent().value
-                            reportsViewModel.generateWeeklySalesReport(invoices = invoices ?: listOf(), fromDate = from, toDate = to) {
+                            reportsViewModel.generateWeeklySalesReport(invoices = invoices ?: listOf(), fromDate = from, toDate = to, user = userName) {
                                 Handler(Looper.getMainLooper()).post {
                                     Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
                                 }
@@ -189,14 +192,14 @@ fun ReportsScreen(
                         }
                     }
                     ReportDateFormat.Month -> {
-                        reportsViewModel.generateMonthlySalesReport(products = products.values.toList(), fromDate = from, toDate = to, date = date) {
+                        reportsViewModel.generateMonthlySalesReport(products = products.values.toList(), fromDate = from, toDate = to, date = date, user = userName) {
                             Handler(Looper.getMainLooper()).post {
                                 Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
                     ReportDateFormat.Year -> {
-                        reportsViewModel.generateYearlySalesReport(products = products.values.toList(), fromDate = from, toDate = to, date = date) {
+                        reportsViewModel.generateYearlySalesReport(products = products.values.toList(), fromDate = from, toDate = to, date = date, user = userName) {
                             Handler(Looper.getMainLooper()).post {
                                 Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
                             }
@@ -210,7 +213,7 @@ fun ReportsScreen(
 
         if (showBranchDialog) {
             BranchDialog(branches = branches.value, onCancel = { showBranchDialog = false }) { listOfBranches, inactive ->
-                reportsViewModel.generateInventoryReport(products = products.filter { it.value.active || !it.value.active == inactive }.mapValues { it.value.copy(stock = it.value.stock.filterKeys { key -> key in listOfBranches.map { branch -> branch.id } }) }) {
+                reportsViewModel.generateInventoryReport(products = products.filter { it.value.active || !it.value.active == inactive }.mapValues { it.value.copy(stock = it.value.stock.filterKeys { key -> key in listOfBranches.map { branch -> branch.id } }) }, user = userName) {
                     Handler(Looper.getMainLooper()).post {
                         Toast.makeText(context, "File Generated", Toast.LENGTH_SHORT).show()
                     }

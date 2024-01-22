@@ -3,6 +3,7 @@ package com.example.capstoneproject.reports_management.ui
 import android.app.Application
 import android.graphics.BitmapFactory
 import android.graphics.Paint
+import android.graphics.Rect
 import android.graphics.pdf.PdfDocument
 import android.os.Environment
 import android.util.Log
@@ -22,12 +23,16 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import kotlin.math.abs
 
 class ReportsViewModel(application: Application) : AndroidViewModel(application = application) {
     fun generateFSNReport(
         products: List<Pair<Double, Map.Entry<String, Product>>>,
+        user: String,
         callback: () -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -55,7 +60,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
-                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), 50f, 50f, paint)
+                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), null, Rect(40, 40, 250, 250), paint)
                 canvas.drawText("Sam Speed Motorcycle Parts and Accessories", 239f, 120f, text)
                 canvas.drawText("Inventory Management System", 239f, 150f, text)
                 canvas.drawText("FSN Analysis", 239f, 180f, text)
@@ -72,6 +77,10 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                     canvas.drawText(if (pair2.first > 3) "Fast" else if (pair2.first in 1.0..3.0) "Slow" else "Non", 930f, startY + (index2 * 35) + 35, text)
                     canvas.drawLine(50f, startY + (index2 * 35) + 45, 1030f, startY + (index2 * 35) + 45, line)
                 }
+
+                text.textSize = 18f
+                canvas.drawText("Printed on: " + LocalDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withZone(ZoneId.systemDefault())).toString(), 650f, 1280f, text)
+                canvas.drawText("Printed by: $user", 650f, 1310f, text)
 
                 pdfDocument.finishPage(myPage)
             }
@@ -91,6 +100,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
 
     fun generateInventoryReport(
         products: Map<String, Product>,
+        user: String,
         callback: () -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -121,7 +131,8 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
-                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), 50f, 50f, paint)
+                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), null, Rect(40, 40, 250, 250), paint)
+
                 canvas.drawText("Sam Speed Motorcycle Parts and Accessories", 239f, 120f, text)
                 canvas.drawText("Inventory Management System", 239f, 150f, text)
                 canvas.drawText("Inventory Report", 239f, 180f, text)
@@ -136,6 +147,10 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                     canvas.drawText(pair.second.toString(), 830f, startY + (index2 * 35) + 35, text)
                     canvas.drawLine(50f, startY + (index2 * 35) + 45, 1030f, startY + (index2 * 35) + 45, line)
                 }
+
+                text.textSize = 18f
+                canvas.drawText("Printed on: " + LocalDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withZone(ZoneId.systemDefault())).toString(), 650f, 1280f, text)
+                canvas.drawText("Printed by: $user", 650f, 1310f, text)
 
                 pdfDocument.finishPage(myPage)
             }
@@ -158,6 +173,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
         fromDate: LocalDate,
         toDate: LocalDate,
         products: List<Product>,
+        user: String,
         callback: () -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -195,7 +211,8 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
-                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), 50f, 50f, paint)
+                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), null, Rect(40, 40, 250, 250), paint)
+
                 canvas.drawText("Sam Speed Motorcycle Parts and Accessories", 239f, 120f, text)
                 canvas.drawText("Inventory Management System", 239f, 150f, text)
                 canvas.drawText("Yearly Sales", 239f, 180f, text)
@@ -229,6 +246,10 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                     canvas.drawLine(50f, startY + (index2 * 35) + 45, 1030f, startY + (index2 * 35) + 45, line)
                 }
 
+                text.textSize = 18f
+                canvas.drawText("Printed on: " + LocalDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withZone(ZoneId.systemDefault())).toString(), 650f, 1280f, text)
+                canvas.drawText("Printed by: $user", 650f, 1310f, text)
+
                 pdfDocument.finishPage(myPage)
             }
 
@@ -249,6 +270,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
         fromDate: LocalDate,
         toDate: LocalDate,
         invoices: List<Invoice>,
+        user: String,
         callback: () -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -286,7 +308,8 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
-                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), 50f, 50f, paint)
+                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), null, Rect(40, 40, 250, 250), paint)
+
                 canvas.drawText("Sam Speed Motorcycle Parts and Accessories", 239f, 120f, text)
                 canvas.drawText("Inventory Management System", 239f, 150f, text)
                 canvas.drawText("Daily Sales", 239f, 180f, text)
@@ -316,6 +339,10 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                     canvas.drawLine(50f, startY + (index2 * 35) + 45, 1030f, startY + (index2 * 35) + 45, line)
                 }
 
+                text.textSize = 18f
+                canvas.drawText("Printed on: " + LocalDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withZone(ZoneId.systemDefault())).toString(), 650f, 1280f, text)
+                canvas.drawText("Printed by: $user", 650f, 1310f, text)
+
                 pdfDocument.finishPage(myPage)
             }
 
@@ -336,6 +363,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
         fromDate: LocalDate,
         toDate: LocalDate,
         invoices: List<Invoice>,
+        user: String,
         callback: () -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -373,7 +401,8 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
-                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), 50f, 50f, paint)
+                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), null, Rect(40, 40, 250, 250), paint)
+
                 canvas.drawText("Sam Speed Motorcycle Parts and Accessories", 239f, 120f, text)
                 canvas.drawText("Inventory Management System", 239f, 150f, text)
                 canvas.drawText("Weekly Sales", 239f, 180f, text)
@@ -403,6 +432,10 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                     canvas.drawLine(50f, startY + (index2 * 35) + 45, 1030f, startY + (index2 * 35) + 45, line)
                 }
 
+                text.textSize = 18f
+                canvas.drawText("Printed on: " + LocalDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withZone(ZoneId.systemDefault())).toString(), 650f, 1280f, text)
+                canvas.drawText("Printed by: $user", 650f, 1310f, text)
+
                 pdfDocument.finishPage(myPage)
             }
 
@@ -424,6 +457,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
         fromDate: LocalDate,
         toDate: LocalDate,
         products: List<Product>,
+        user: String,
         callback: () -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -461,7 +495,8 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
-                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), 50f, 50f, paint)
+                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), null, Rect(40, 40, 250, 250), paint)
+
                 canvas.drawText("Sam Speed Motorcycle Parts and Accessories", 239f, 120f, text)
                 canvas.drawText("Inventory Management System", 239f, 150f, text)
                 canvas.drawText("Monthly Sales", 239f, 180f, text)
@@ -495,6 +530,10 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                     canvas.drawLine(50f, startY + (index2 * 35) + 45, 1030f, startY + (index2 * 35) + 45, line)
                 }
 
+                text.textSize = 18f
+                canvas.drawText("Printed on: " + LocalDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withZone(ZoneId.systemDefault())).toString(), 650f, 1280f, text)
+                canvas.drawText("Printed by: $user", 650f, 1310f, text)
+
                 pdfDocument.finishPage(myPage)
             }
 
@@ -511,8 +550,9 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
         }
     }
 
-    fun GenerateSupplierMasterList(
+    fun generateSupplierMasterList(
         list: List<Contact>,
+        user: String,
         callback: () -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -541,7 +581,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                 val myPage = pdfDocument.startPage(myPageInfo)
                 val canvas = myPage.canvas
 
-                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), 50f, 50f, paint)
+                canvas.drawBitmap(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon), null, Rect(40, 40, 250, 250), paint)
                 canvas.drawText("Sam Speed Motorcycle Parts and Accessories", 239f, 120f, text)
                 canvas.drawText("Inventory Management System", 239f, 150f, text)
                 canvas.drawText("Supplier Master List", 239f, 180f, text)
@@ -558,6 +598,10 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
                     canvas.drawText("0${contact.contact}", 880f, startY + (index2 * 35) + 35, text)
                     canvas.drawLine(50f, startY + (index2 * 35) + 45, 1030f, startY + (index2 * 35) + 45, line)
                 }
+
+                text.textSize = 18f
+                canvas.drawText("Printed on: " + LocalDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withZone(ZoneId.systemDefault())).toString(), 650f, 1280f, text)
+                canvas.drawText("Printed by: $user", 650f, 1310f, text)
 
                 pdfDocument.finishPage(myPage)
             }
@@ -585,7 +629,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application 
     }
 
     private fun totalSalesInWeekOrDay(
-        invoices: List<Invoice>
+        invoices: List<Invoice>,
     ): Double {
         return invoices.sumOf { invoice ->
             (invoice.products.values.sumOf { product -> product.quantity * product.price } - invoice.discount) * if (invoice.invoiceType == InvoiceType.SALE) 1 else -1

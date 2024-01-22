@@ -527,6 +527,7 @@ fun NavigationHost(
                 contactViewModel = contactViewModel,
                 branchViewModel = branchViewModel,
                 userAccountDetails = userAccountDetails.value,
+                userViewModel = userViewModel,
                 posViewModel = posViewModel,
                 view = { month, year ->
                     navController.navigate(Routes.Report.View.createRoute(month = month, year = year))
