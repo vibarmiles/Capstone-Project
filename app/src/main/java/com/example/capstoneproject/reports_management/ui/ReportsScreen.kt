@@ -468,7 +468,10 @@ fun BranchDialog(
                         Text(text = "All Branches")
                     }
                 }
-                items(branches) {
+                items(
+                    items = branches,
+                    key = { it.id }
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = pairs.getOrDefault(it, false), onCheckedChange = { value -> pairs[it] = value })
                         Text(text = it.name)

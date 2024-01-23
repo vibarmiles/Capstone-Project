@@ -1,11 +1,14 @@
 package com.example.capstoneproject.product_management.ui.product
 
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -25,6 +28,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +36,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.SubcomposeAsyncImage
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ImageNotAvailable
@@ -47,6 +52,9 @@ import com.example.capstoneproject.supplier_management.ui.contact.ContactViewMod
 import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -77,10 +85,35 @@ fun ProductScreen(
     val loading = productViewModel.isLoading.value || branchViewModel.isLoading.value || categoryViewModel.isLoading.value
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
     val date = Instant.ofEpochMilli(userAccountDetails.value.loginDate).atZone(ZoneId.systemDefault()).toLocalDate()
+    val context = LocalContext.current
+    val showImportDialog = remember { mutableStateOf(false) }
+    var listsOfImports = listOf<Product>()
+    val textUriLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent(), onResult = {
+        if (it != null) {
+            val item = context.contentResolver.openInputStream(it)
+            if (item != null) {
+                listsOfImports = productViewModel.readFromTabDelimited(item)
+
+                showImportDialog.value = true
+
+                runBlocking {
+                    withContext(Dispatchers.IO) {
+                        item.close()
+                    }
+                }
+            }
+        }
+    })
 
     Scaffold(
         topBar = {
-            BaseTopAppBar(title = stringResource(id = R.string.product), scope = scope, scaffoldState = scaffoldState)
+            BaseTopAppBar(title = stringResource(id = R.string.product), scope = scope, scaffoldState = scaffoldState) {
+                IconButton(onClick = {
+                    textUriLauncher.launch("text/plain")
+                }) {
+                    Icon(imageVector = Icons.Filled.Upload, contentDescription = null)
+                }
+            }
         },
         floatingActionButton = {
             if (userAccountDetails.value.userLevel != UserLevel.Cashier) {
@@ -109,6 +142,20 @@ fun ProductScreen(
                         productViewModel = productViewModel,
                         date = date
                     ) { page = it }
+                }
+
+                if (showImportDialog.value) {
+                    ImportProductsDialog(
+                        products = listsOfImports,
+                        suppliers = suppliers.value,
+                        onCancel = { showImportDialog.value = false },
+                        onSubmit = {
+                            for (product in it) {
+                                productViewModel.insert(product = product)
+                            }
+                            showImportDialog.value = false
+                        }
+                    )
                 }
 
                 ProductScreenContent(
@@ -349,8 +396,8 @@ fun ProductScreenContent(
                         .fillMaxWidth()
                         .padding(16.dp)) {
                         Text(text = "Under Reorder Point", fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
-                        Divider()
                     }
+                    Divider()
                 }
 
                 items(
@@ -442,5 +489,70 @@ fun Products(
             )
         },
         modifier = Modifier.clickable { view.invoke() }
+    )
+}
+
+@Composable
+fun ImportProductsDialog(
+    products: List<Product>,
+    suppliers: List<Contact>,
+    onCancel: () -> Unit,
+    onSubmit: (List<Product>) -> Unit
+) {
+    val list = remember { mutableStateListOf(*products.toTypedArray()) }
+    androidx.compose.material3.AlertDialog(
+        modifier = Modifier.fillMaxSize(),
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
+        onDismissRequest = onCancel,
+        text = {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                itemsIndexed(list) { index, it ->
+                    androidx.compose.material3.ListItem(
+                        colors = ProjectListItemColors(),
+                        headlineContent = { Text(
+                            text = it.productName,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            fontWeight = FontWeight.Bold,
+                        ) },
+                        supportingContent = {
+                            Column {
+                                Text(
+                                    text = "${suppliers.firstOrNull { supplier -> supplier.id == it.supplier }?.name ?: " Unknown Supplier"} -> ₱${String.format("%,.2f", it.purchasePrice)}",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = "₱${String.format("%,.2f", it.sellingPrice)}",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        },
+                        trailingContent = {
+                            IconButton(onClick = { list.removeAt(index) }) {
+                                Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                            }
+                        }
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onSubmit.invoke(list) }) {
+                Text(text = stringResource(id = R.string.submit_button))
+            }
+        },
+        dismissButton = {
+            TextButton(colors = ButtonDefaults.buttonColors(contentColor = Color.Black, backgroundColor = Color.Transparent), onClick = onCancel) {
+                Text(text = stringResource(id = R.string.cancel_button))
+            }
+        }
     )
 }

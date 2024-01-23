@@ -39,8 +39,7 @@ class ProductViewModel : ViewModel() {
             products = productRepository.getAll(callback = { updateLoadingState() }, update = {
                 update.value = update.value.not()
                 Log.e("Update", "Finished ${update.value}")
-            }) {
-                    result ->
+            }) { result ->
                 resultState.update { result }
             }
         }
@@ -50,8 +49,7 @@ class ProductViewModel : ViewModel() {
 
     fun insert(id: String? = null, product: Product) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.insert(key = id, product = product) {
-                    result ->
+            productRepository.insert(key = id, product = product) { result ->
                 resultState.update { result }
             }
         }
@@ -59,8 +57,7 @@ class ProductViewModel : ViewModel() {
 
     fun delete(key: String, product: Product) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.delete(key = key, product = product) {
-                    result ->
+            productRepository.delete(key = key, product = product) { result ->
                 resultState.update { result }
             }
         }
@@ -68,8 +65,7 @@ class ProductViewModel : ViewModel() {
 
     fun setStock(key: String, value: Map<String, Int>) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.setQuantityForBranch(key = key, value = value) {
-                    result ->
+            productRepository.setQuantityForBranch(key = key, value = value) { result ->
                 resultState.update { result }
             }
         }
@@ -77,8 +73,7 @@ class ProductViewModel : ViewModel() {
 
     fun setMonthlySales(key: String, value: Map<Month, Int>, year: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.setMonthlySales(key = key, value = value.mapKeys { it.key.name }, year = year) {
-                    result ->
+            productRepository.setMonthlySales(key = key, value = value.mapKeys { it.key.name }, year = year) { result ->
                 resultState.update { result }
             }
         }
@@ -86,8 +81,7 @@ class ProductViewModel : ViewModel() {
 
     fun removeCategory(categoryId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.removeCategory(categoryId = categoryId) {
-                    result ->
+            productRepository.removeCategory(categoryId = categoryId) { result ->
                 resultState.update { result }
             }
         }
@@ -95,8 +89,7 @@ class ProductViewModel : ViewModel() {
 
     fun removeBranchStock(branchId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            productRepository.removeBranchStock(branchId = branchId) {
-                    result ->
+            productRepository.removeBranchStock(branchId = branchId) { result ->
                 resultState.update { result }
             }
         }
@@ -186,6 +179,20 @@ class ProductViewModel : ViewModel() {
             Log.e("Error", e.message.toString())
             Product()
         }
+    }
+
+    fun readFromTabDelimited(file: InputStream): List<Product> {
+        val list = mutableListOf<Product>()
+        file.bufferedReader().use {
+            for (line in it.lines()) {
+                line.split("\t").apply {
+                    if (this.count() == 5) {
+                        list.add(Product(productName = this[0], supplier = this[1], purchasePrice = this[2].toDoubleOrNull() ?: 1.0, sellingPrice = this[3].toDoubleOrNull() ?: 2.0, leadTime = this[4].toIntOrNull() ?: 3))
+                    }
+                }
+            }
+        }
+        return list
     }
 }
 
