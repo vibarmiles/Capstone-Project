@@ -48,6 +48,7 @@ import com.example.capstoneproject.supplier_management.ui.transfer_order.Transfe
 import com.example.capstoneproject.supplier_management.ui.transfer_order.TransferOrderScreen
 import com.example.capstoneproject.supplier_management.ui.transfer_order.TransferOrderViewModel
 import com.example.capstoneproject.supplier_management.ui.transfer_order.ViewTransferOrder
+import com.example.capstoneproject.user_management.data.firebase.UserLevel
 import com.example.capstoneproject.user_management.ui.users.UserForm
 import com.example.capstoneproject.user_management.ui.users.UserViewModel
 import com.example.capstoneproject.user_management.ui.users.UserScreen
@@ -141,7 +142,7 @@ fun NavigationHost(
                 loginDate = userAccountDetails.value.loginDate,
                 goToBranches = { callback.invoke(R.string.branch) },
                 goToProducts = { callback.invoke(R.string.product) },
-                goToPO = { callback.invoke(R.string.purchase_order) },
+                goToPO = { if (userAccountDetails.value.userLevel != UserLevel.Cashier) callback.invoke(R.string.purchase_order) },
                 goToPOS = { callback.invoke(R.string.pos) }
             )
         }
