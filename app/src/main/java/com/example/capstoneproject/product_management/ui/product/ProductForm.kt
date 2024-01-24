@@ -1,7 +1,6 @@
 package com.example.capstoneproject.product_management.ui.product
 
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
@@ -360,7 +359,6 @@ fun ProductForm(
                     }
                 }
 
-                Log.d("PATH",imageUri.toString())
                 if (isNameValid && isPurchasePriceValid && contactId != null && isSellingPriceValid && isLeadTimeValid) {
                     showConfirmationDialog.value = true
                 }

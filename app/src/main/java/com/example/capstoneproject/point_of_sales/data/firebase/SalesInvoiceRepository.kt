@@ -1,6 +1,5 @@
 package com.example.capstoneproject.point_of_sales.data.firebase
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
 import com.google.firebase.firestore.AggregateSource
@@ -56,8 +55,6 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
 
                 si.value = current
 
-                Log.e("CURRENT SIZE", currentSize.toString())
-
                 if (currentSize > 0) {
                     callback.invoke(it.size())
                 } else {
@@ -103,8 +100,6 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
 
                 si.value = current
 
-                Log.e("CURRENT SIZE", currentSize.toString())
-
                 if (currentSize > 0) {
                     callback.invoke(it.size())
                 } else {
@@ -122,10 +117,8 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
             firestore.runTransaction {
                 val snapshot = it.get(salesInvoiceCollectionReference.document(invoice.id)).toObject<Invoice>()
                 if (snapshot != null) {
-                    Log.d("SNAPSHOT", snapshot.toString())
                     if (!snapshot.lock || access) {
                         check = true
-                        Log.d("SNAPSHOT", snapshot.toString())
 
                         if (snapshot.products != invoice.products) {
                             it.delete(salesInvoiceCollectionReference.document(invoice.id))
@@ -174,10 +167,8 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
                 firestore.runTransaction {
                     val snapshot = it.get(salesInvoiceCollectionReference.document(invoice.originalInvoiceId)).toObject<Invoice>()
                     if (snapshot != null) {
-                        Log.d("SNAPSHOT", snapshot.toString())
                         if (!snapshot.lock || access) {
                             check = true
-                            Log.d("SNAPSHOT", snapshot.toString())
                             it.set(salesInvoiceCollectionReference.document(invoice.originalInvoiceId), snapshot.copy(lock = snapshot.lock.not()), SetOptions.merge())
                         } else {
                             result.invoke(FirebaseResult(result = false, errorMessage = "Document waiting to be unlocked..."))
@@ -189,12 +180,9 @@ class SalesInvoiceRepository : ISalesInvoiceRepository {
                     }
                 }.addOnSuccessListener {
                     if (check && !access) {
-                        Log.d("ADDING NEW DOCUMENT", invoice.toString().uppercase())
                         salesInvoiceCollectionReference.add(invoice).addOnSuccessListener {
-                            Log.d("ADDING NEW DOCUMENT", "SUCCESS")
                             result.invoke(FirebaseResult(result = true))
                         }.addOnFailureListener {
-                            Log.d("ADDING NEW DOCUMENT", "FAILED")
                             result.invoke(FirebaseResult(result = false, errorMessage = it.message))
                         }
                     } else {

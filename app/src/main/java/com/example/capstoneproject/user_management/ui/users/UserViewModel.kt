@@ -1,7 +1,6 @@
 package com.example.capstoneproject.user_management.ui.users
 
 import android.os.Environment
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.ViewModel
@@ -52,7 +51,6 @@ class UserViewModel : ViewModel() {
             isLoading.value = true
             users = userRepository.getAll(callback = { updateLoadingState() }, update = {
                 update.value = update.value.not()
-                Log.d("Update", "Finished")
             }) { result ->
                 resultState.update { result }
             }
@@ -166,7 +164,6 @@ class UserViewModel : ViewModel() {
             json = file.bufferedReader().use { it.readText() }
             gson.fromJson(json, User::class.java)
         } catch (e: Exception) {
-            Log.e("Error", e.message.toString())
             User()
         }
     }

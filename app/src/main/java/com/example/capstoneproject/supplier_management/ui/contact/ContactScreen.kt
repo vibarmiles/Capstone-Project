@@ -2,6 +2,7 @@ package com.example.capstoneproject.supplier_management.ui.contact
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContactPhone
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material3.ListItem
 import androidx.compose.runtime.*
@@ -86,10 +86,10 @@ fun ContactScreen(
 
         LaunchedEffect(key1 = state.result, state.errorMessage) {
             if (!state.result && state.errorMessage != null) {
-                scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
+                Toast.makeText(context, state.errorMessage!!, Toast.LENGTH_SHORT).show()
                 contactViewModel.resetMessage()
             } else if (state.result) {
-                scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                Toast.makeText(context, "Successfully Done!", Toast.LENGTH_SHORT).show()
                 contactViewModel.resetMessage()
             }
         }

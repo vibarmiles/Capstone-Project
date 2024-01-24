@@ -1,7 +1,6 @@
 package com.example.capstoneproject.product_management.ui.branch
 
 import android.os.Environment
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
@@ -99,7 +98,6 @@ class BranchViewModel : ViewModel() {
             json = file.bufferedReader().use { it.readText() }
             gson.fromJson(json, Branch::class.java)
         } catch (e: Exception) {
-            Log.e("Error", e.message.toString())
             Branch()
         }
     }

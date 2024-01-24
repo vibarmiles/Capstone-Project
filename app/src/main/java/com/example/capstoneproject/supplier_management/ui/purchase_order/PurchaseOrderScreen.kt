@@ -1,6 +1,5 @@
 package com.example.capstoneproject.supplier_management.ui.purchase_order
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -118,12 +117,11 @@ fun PurchaseOrderScreen(
             }
 
             LaunchedEffect(key1 = state.value) {
-                Log.e("PURCHASE ORDER", state.value.toString())
                 if (!state.value.result && state.value.errorMessage != null) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = state.value.errorMessage!!, duration = SnackbarDuration.Short)
+                    Toast.makeText(context, state.value.errorMessage!!, Toast.LENGTH_SHORT).show()
                     purchaseOrderViewModel.resetMessage()
                 } else if (state.value.result) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                    Toast.makeText(context, "Successfully Done!", Toast.LENGTH_SHORT).show()
                     purchaseOrderViewModel.resetMessage()
                 }
             }

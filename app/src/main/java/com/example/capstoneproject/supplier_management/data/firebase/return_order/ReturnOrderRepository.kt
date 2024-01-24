@@ -50,7 +50,9 @@ class ReturnOrderRepository : IReturnOrderRepository {
                                 current.add(new)
                             }
                         }
-                    } catch (e: Exception) {  }
+                    } catch (e: Exception) {
+                        result.invoke(FirebaseResult(errorMessage = e.message))
+                    }
                 }
 
                 ro.value = current

@@ -1,6 +1,5 @@
 package com.example.capstoneproject.user_management.data.firebase
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.example.capstoneproject.global.data.firebase.FirebaseResult
@@ -62,7 +61,6 @@ class UserRepository : IUserRepository {
         userCollectionReference.get().addOnSuccessListener {
             val found = it.getValue<Map<String, User>>()?.entries?.firstOrNull { foundUser -> foundUser.value.email == email }
             if (found != null) {
-                Log.e("Found User", found.value.active.toString())
                 userCollectionReference.child(found.key).setValue(found.value.copy(lastLogin = ServerValue.TIMESTAMP)).addOnSuccessListener {
                     userCollectionReference.child(found.key).get().addOnSuccessListener { u ->
                         u.getValue<User>()!!.let { thisUser ->

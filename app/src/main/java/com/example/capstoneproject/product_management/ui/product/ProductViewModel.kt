@@ -1,7 +1,6 @@
 package com.example.capstoneproject.product_management.ui.product
 
 import android.os.Environment
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
@@ -38,7 +37,6 @@ class ProductViewModel : ViewModel() {
         if (!this::products.isInitialized) {
             products = productRepository.getAll(callback = { updateLoadingState() }, update = {
                 update.value = update.value.not()
-                Log.e("Update", "Finished ${update.value}")
             }) { result ->
                 resultState.update { result }
             }
@@ -176,7 +174,6 @@ class ProductViewModel : ViewModel() {
             json = file.bufferedReader().use { it.readText() }
             gson.fromJson(json, Product::class.java)
         } catch (e: Exception) {
-            Log.e("Error", e.message.toString())
             Product()
         }
     }

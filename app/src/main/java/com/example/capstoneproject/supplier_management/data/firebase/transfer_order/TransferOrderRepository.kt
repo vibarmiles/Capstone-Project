@@ -51,7 +51,9 @@ class TransferOrderRepository : ITransferOrderRepository {
                                 current.add(new)
                             }
                         }
-                    } catch (e: Exception) {  }
+                    } catch (e: Exception) {
+                        result.invoke(FirebaseResult(errorMessage = e.message))
+                    }
                 }
 
                 to.value = current

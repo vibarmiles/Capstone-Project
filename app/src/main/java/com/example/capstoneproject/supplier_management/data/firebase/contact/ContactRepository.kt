@@ -12,7 +12,7 @@ class ContactRepository : IContactRepository {
     private val contactCollectionReference = firestore.collection("contacts")
 
     override fun getAll(callback: () -> Unit, result: (FirebaseResult) -> Unit): MutableLiveData<List<Contact>> {
-        var contacts = MutableLiveData<List<Contact>>()
+        val contacts = MutableLiveData<List<Contact>>()
         contactCollectionReference.addSnapshotListener { value, error ->
             error?.let {
                 result.invoke(FirebaseResult(result = false, errorMessage = error.message))

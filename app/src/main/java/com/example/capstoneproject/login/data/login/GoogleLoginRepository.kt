@@ -3,19 +3,14 @@ package com.example.capstoneproject.login.data.login
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
-import androidx.core.text.isDigitsOnly
 import com.example.capstoneproject.R
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.BeginSignInRequest.GoogleIdTokenRequestOptions
 import com.google.android.gms.auth.api.identity.SignInClient
-import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.tasks.await
 
-enum class Provider {
-    Google, Email, Phone
-}
 
 class GoogleLoginRepository(
     private val context: Context,
@@ -51,7 +46,7 @@ class GoogleLoginRepository(
 
     fun getSignInResultFromEmail(email: String, password: String, callback: (SignInResult) -> Unit) {
         auth.signInWithEmailAndPassword(email, password).addOnSuccessListener {
-            val user = auth.currentUser
+            val user = it.user
             try {
                 callback.invoke(SignInResult(
                     data = user?.run {
@@ -75,7 +70,6 @@ class GoogleLoginRepository(
     suspend fun signOut() {
         try {
             oneTapClient.signOut().await()
-            auth.signOut()
         } catch (_: Exception) {
 
         }

@@ -1,6 +1,5 @@
 package com.example.capstoneproject.global.data.firebase
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -17,11 +16,10 @@ class ConnectionRepository {
         connectionReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 connection.value = snapshot.getValue<Boolean>() ?: false
-                Log.d("Connection", connection.toString())
             }
 
             override fun onCancelled(error: DatabaseError) {
-                TODO("Not yet implemented")
+
             }
         })
     }

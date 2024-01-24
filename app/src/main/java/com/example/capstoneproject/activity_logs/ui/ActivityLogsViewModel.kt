@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 class ActivityLogsViewModel : ViewModel() {
     private lateinit var logs: MutableLiveData<List<Log>>
-    val activityLogsRepository: IActivityLogsRepository = ActivityLogsRepository()
+    private val activityLogsRepository: IActivityLogsRepository = ActivityLogsRepository()
     val isLoading = mutableStateOf(true)
     val update = mutableStateOf(true)
     private val resultState = MutableStateFlow(FirebaseResult())

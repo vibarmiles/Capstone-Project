@@ -1,7 +1,6 @@
 package com.example.capstoneproject.product_management.ui.category
 
 import android.os.Environment
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
@@ -96,7 +95,6 @@ class CategoryViewModel : ViewModel() {
             json = file.bufferedReader().use { it.readText() }
             gson.fromJson(json, Category::class.java)
         } catch (e: Exception) {
-            Log.e("Error", e.message.toString())
             Category()
         }
     }

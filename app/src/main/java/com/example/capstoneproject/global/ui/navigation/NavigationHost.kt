@@ -1,7 +1,6 @@
 package com.example.capstoneproject.global.ui.navigation
 
 import android.app.Activity
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -645,7 +644,6 @@ fun NavigationHost(
 
         composable(Routes.POS.RnE.route) {
             val id = it.arguments?.getString("SIID")!!
-            Log.e("SALES INVOICE ID", id)
 
             ReturnAndExchangeForm(
                 userId = userAccountDetails.value.id,
@@ -681,10 +679,10 @@ fun NavigationHost(
 
         composable(Routes.Logout.route) {
             LaunchedEffect(key1 = Unit) {
-                callback.invoke(R.string.login)
                 viewModel.resetUiState()
                 userViewModel.logout()
                 googleAuthUiClient.signOut()
+                callback.invoke(R.string.login)
                 scaffoldState.snackbarHostState.showSnackbar(message = "Signed Out Successfully!", duration = SnackbarDuration.Short)
             }
         }

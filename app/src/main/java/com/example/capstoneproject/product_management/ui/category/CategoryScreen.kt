@@ -1,5 +1,6 @@
 package com.example.capstoneproject.product_management.ui.category
 
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -159,10 +160,10 @@ fun CategoryScreen(
 
         LaunchedEffect(key1 = state.result, state.errorMessage) {
             if (!state.result && state.errorMessage != null) {
-                scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
+                Toast.makeText(context, state.errorMessage!!, Toast.LENGTH_SHORT).show()
                 viewModel.resetMessage()
             } else if (state.result) {
-                scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                Toast.makeText(context, "Successfully Done!", Toast.LENGTH_SHORT).show()
                 viewModel.resetMessage()
             }
         }

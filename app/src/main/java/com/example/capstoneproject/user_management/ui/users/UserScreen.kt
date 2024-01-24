@@ -1,5 +1,6 @@
 package com.example.capstoneproject.user_management.ui.users
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -41,6 +43,7 @@ fun UserScreen(
     val users = userViewModel.getAll()
     val state by userViewModel.result.collectAsState()
     val userAccountDetails = userViewModel.userAccountDetails.collectAsState()
+    val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
     val size = users.filterNot { it.value.userLevel == if (userAccountDetails.value.userLevel == UserLevel.Admin) UserLevel.Cashier else UserLevel.Admin }.size
     val listOfUsers = remember(userViewModel.update.value) {
@@ -102,10 +105,10 @@ fun UserScreen(
 
             LaunchedEffect(key1 = state.result, state.errorMessage) {
                 if (!state.result && state.errorMessage != null) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
+                    Toast.makeText(context, state.errorMessage!!, Toast.LENGTH_SHORT).show()
                     userViewModel.resetMessage()
                 } else if (state.result) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                    Toast.makeText(context, "Successfully Done!", Toast.LENGTH_SHORT).show()
                     userViewModel.resetMessage()
                 }
             }

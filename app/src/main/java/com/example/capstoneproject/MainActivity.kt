@@ -1,7 +1,6 @@
 package com.example.capstoneproject
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -199,7 +198,6 @@ fun GlobalContent(
         }
 
         LaunchedEffect(key1 = userAccountDetails.value) {
-            Log.e("LOGIN", userAccountDetails.value.toString())
             userAccountDetails.value.let {
                 if (it.id.isNotBlank() && it.isActive && it.errorMessage == null) {
                     val previous = Instant.ofEpochMilli(userAccountDetails.value.previousLoginDate).atZone(ZoneId.systemDefault()).toLocalDate()

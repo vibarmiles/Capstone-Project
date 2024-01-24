@@ -1,6 +1,5 @@
 package com.example.capstoneproject.product_management.ui.branch
 
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*

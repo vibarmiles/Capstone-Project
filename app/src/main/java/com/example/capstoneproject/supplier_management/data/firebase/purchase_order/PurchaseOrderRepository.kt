@@ -51,7 +51,9 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
                                 current.add(new)
                             }
                         }
-                    } catch (e: Exception) {  }
+                    } catch (e: Exception) {
+                        result.invoke(FirebaseResult(errorMessage = e.message))
+                    }
                 }
 
                 po.value = current
@@ -77,7 +79,9 @@ class PurchaseOrderRepository : IPurchaseOrderRepository {
                 try {
                     waitingPO.value = value.toObjects()
                     result.invoke(FirebaseResult(result = true))
-                } catch (e: Exception) {  }
+                } catch (e: Exception) {
+                    result.invoke(FirebaseResult(errorMessage = e.message))
+                }
             }
         }
         return waitingPO

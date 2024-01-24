@@ -1,6 +1,5 @@
 package com.example.capstoneproject.point_of_sales.ui
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
@@ -73,7 +72,6 @@ class POSViewModel : ViewModel() {
 
     private fun updateLoadingState() {
         isLoading.value = false
-        Log.e("LOADING", isLoading.value.toString())
     }
 
     fun getDocument(id: String): Invoice? {
@@ -94,10 +92,8 @@ class POSViewModel : ViewModel() {
                 viewModelScope.launch {
                     if (!result.result) {
                         insert(invoice = document.copy(status = Status.FAILED))
-                        Log.e("TRANSACTION", "FAILED")
                     } else {
                         insert(invoice = document.copy(status = Status.COMPLETE))
-                        Log.e("TRANSACTION", "FINISHED")
                     }
                 }.let {
                     if (it.isCompleted) {
@@ -128,16 +124,12 @@ class POSViewModel : ViewModel() {
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            Log.e("TRANSACTION", "BEGIN ${document.toString().uppercase()}")
             insert(invoice = document.copy(status = Status.COMPLETE), returnResult = false) { current ->
-                Log.e("TRANSACTION", "ORIGINAL INVOICE ${current.result.toString().uppercase()}")
                 if (current.result) {
                     productRepository.transact(document = document) { result ->
-                        Log.e("TRANSACTION", "PRODUCTS ${result.result.toString().uppercase()}")
                         viewModelScope.launch {
                             if (result.result) {
                                 insert(getDocument(document.originalInvoiceId)!!.let { it.copy(products = it.products.toMutableMap().let { products ->
-                                    Log.e("TRANSACTION", "ORIGINAL DOCUMENT ${it.toString().uppercase()}")
                                     for (currentProduct in products) {
                                         if (document.products.any { product -> product.value.id == currentProduct.value.id}) {
                                             products[currentProduct.key] = currentProduct.value.copy(returned = true)
@@ -146,10 +138,8 @@ class POSViewModel : ViewModel() {
 
                                     products
                                 }) }, access = true)
-                                Log.e("TRANSACTION", "FINISHED")
                             } else {
                                 insert(invoice = document.copy(status = Status.FAILED), access = true)
-                                Log.e("TRANSACTION", "FAILED")
                             }
                         }.let { job ->
                             if (job.isCompleted) {

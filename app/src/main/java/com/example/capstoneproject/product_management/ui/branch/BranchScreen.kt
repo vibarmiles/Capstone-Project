@@ -1,5 +1,6 @@
 package com.example.capstoneproject.product_management.ui.branch
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +16,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -48,6 +50,7 @@ fun BranchScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     val state by viewModel.result.collectAsState()
     val size = branchesList.size
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -107,10 +110,10 @@ fun BranchScreen(
 
         LaunchedEffect(state.result, state.errorMessage) {
             if (!state.result && state.errorMessage != null) {
-                scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
+                Toast.makeText(context, state.errorMessage!!, Toast.LENGTH_SHORT).show()
                 viewModel.resetMessage()
             } else if (state.result) {
-                scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                Toast.makeText(context, "Successfully Done!", Toast.LENGTH_SHORT).show()
                 viewModel.resetMessage()
             }
         }

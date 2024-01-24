@@ -1,6 +1,5 @@
 package com.example.capstoneproject.supplier_management.ui.return_order
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
@@ -80,10 +79,8 @@ class ReturnOrderViewModel : ViewModel() {
                     viewModelScope.launch {
                         if (!result.result) {
                             insert(returnOrder = document.copy(status = Status.FAILED), returnResult = false, fail = true)
-                            Log.e("TRANSACTION", "FAILED")
                         } else {
                             insert(returnOrder = document.copy(status = Status.COMPLETE), returnResult = false, fail = true)
-                            Log.e("TRANSACTION", "FINISHED")
                         }
                     }.let {
                         if (it.isCompleted) {

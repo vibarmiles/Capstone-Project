@@ -1,6 +1,7 @@
 package com.example.capstoneproject.product_management.ui.product
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
@@ -203,11 +204,11 @@ fun ProductScreen(
 
         LaunchedEffect(key1 = state.result, state.errorMessage) {
             if (!state.result && state.errorMessage != null) {
+                Toast.makeText(context, state.errorMessage!!, Toast.LENGTH_SHORT).show()
                 productViewModel.resetMessage()
-                scaffoldState.snackbarHostState.showSnackbar(message = state.errorMessage!!, duration = SnackbarDuration.Short)
             } else if (state.result) {
+                Toast.makeText(context, "Successfully Done!", Toast.LENGTH_SHORT).show()
                 productViewModel.resetMessage()
-                scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
             }
         }
     }

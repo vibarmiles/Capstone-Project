@@ -1,6 +1,5 @@
 package com.example.capstoneproject.supplier_management.ui.transfer_order
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
@@ -14,7 +13,6 @@ import com.example.capstoneproject.supplier_management.data.firebase.transfer_or
 import com.example.capstoneproject.supplier_management.data.firebase.transfer_order.TransferOrder
 import com.example.capstoneproject.supplier_management.data.firebase.transfer_order.TransferOrderRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -73,7 +71,6 @@ class TransferOrderViewModel : ViewModel() {
     }
 
     fun transact(document: TransferOrder) {
-        Log.e("TRANSACTION", "STARTED")
         viewModelScope.launch(Dispatchers.IO) {
             if (document.status == Status.CANCELLED) {
                 insert(transferOrder = document)
@@ -83,10 +80,8 @@ class TransferOrderViewModel : ViewModel() {
                     viewModelScope.launch {
                         if (!result.result) {
                             insert(transferOrder = document.copy(status = Status.FAILED), returnResult = false, fail = true)
-                            Log.e("TRANSACTION", "FAILED")
                         } else {
                             insert(transferOrder = document.copy(status = Status.COMPLETE), returnResult = false, fail = true)
-                            Log.e("TRANSACTION", "FINISHED")
                         }
                         delay(1000)
                     }.let {

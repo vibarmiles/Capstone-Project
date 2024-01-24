@@ -129,10 +129,10 @@ fun TransferOrderScreen(
             
             LaunchedEffect(key1 = state.value.result, state.value.errorMessage) {
                 if (!state.value.result && state.value.errorMessage != null) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = state.value.errorMessage!!, duration = SnackbarDuration.Short)
+                    Toast.makeText(context, state.value.errorMessage!!, Toast.LENGTH_SHORT).show()
                     transferOrderViewModel.resetMessage()
                 } else if (state.value.result) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                    Toast.makeText(context, "Successfully Done!", Toast.LENGTH_SHORT).show()
                     transferOrderViewModel.resetMessage()
                 }
             }

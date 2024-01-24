@@ -1,7 +1,6 @@
 package com.example.capstoneproject.supplier_management.ui.contact
 
 import android.os.Environment
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
@@ -101,7 +100,6 @@ class ContactViewModel : ViewModel() {
             json = file.bufferedReader().use { it.readText() }
             gson.fromJson(json, Contact::class.java)
         } catch (e: Exception) {
-            Log.e("Error", e.message.toString())
             Contact()
         }
     }

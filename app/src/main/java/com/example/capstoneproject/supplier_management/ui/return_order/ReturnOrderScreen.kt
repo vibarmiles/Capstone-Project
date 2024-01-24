@@ -16,14 +16,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.ColorUtils
 import com.example.capstoneproject.R
 import com.example.capstoneproject.global.ui.misc.ProjectListItemColors
 import com.example.capstoneproject.global.ui.navigation.BaseTopAppBar
@@ -123,10 +121,10 @@ fun ReturnOrderScreen(
 
             LaunchedEffect(key1 = state.value) {
                 if (!state.value.result && state.value.errorMessage != null) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = state.value.errorMessage!!, duration = SnackbarDuration.Short)
+                    Toast.makeText(context, state.value.errorMessage!!, Toast.LENGTH_SHORT).show()
                     returnOrderViewModel.resetMessage()
                 } else if (state.value.result) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                    Toast.makeText(context, "Successfully Done!", Toast.LENGTH_SHORT).show()
                     returnOrderViewModel.resetMessage()
                 }
             }

@@ -127,10 +127,10 @@ fun POSScreen(
 
             LaunchedEffect(key1 = state.value) {
                 if (!state.value.result && state.value.errorMessage != null) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = state.value.errorMessage!!, duration = SnackbarDuration.Short)
+                    Toast.makeText(context, state.value.errorMessage!!, Toast.LENGTH_SHORT).show()
                     posViewModel.resetMessage()
                 } else if (state.value.result) {
-                    scaffoldState.snackbarHostState.showSnackbar(message = "Successfully Done!", duration = SnackbarDuration.Short)
+                    Toast.makeText(context, "Successfully Done!", Toast.LENGTH_SHORT).show()
                     posViewModel.resetMessage()
                 }
             }
